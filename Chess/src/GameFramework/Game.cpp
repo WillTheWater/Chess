@@ -20,7 +20,6 @@ namespace we
 		SetCustomCursor();
 		weak<World> ChessWorld = LoadWorld<World>();
 		ChessBoard = ChessWorld.lock()->SpawnActor<Board>();
-		ChessBoard.lock()->SetActorLocation(sf::Vector2f{ 1280 / 2, 720 / 2 });
 	}
 	void Game::Tick(float DeltaTime)
 	{

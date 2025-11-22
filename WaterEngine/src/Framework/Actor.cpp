@@ -46,12 +46,18 @@ namespace we
 	{
 	}
 
+	void Actor::Render(sf::RenderWindow& Window)
+	{
+		if (IsPendingDestroy() || !ASprite) { return; }
+		Window.draw(*ASprite);
+	}
+
 	sf::Vector2u Actor::GetWindowSize() const
 	{
 		return OwningWorld->GetWindowSize();
 	}
 
-	void Actor::SetTexture(const std::string& TexturePath, int FrameWidth, int FrameHeight, float SpriteScale)
+	void Actor::SetTexture(const std::string& TexturePath, float SpriteScale)
 	{
 		ATexture = AssetManager::GetAssetManager().LoadTexture(TexturePath);
 		if (!ATexture)
@@ -65,32 +71,28 @@ namespace we
 		int TextureWidth = static_cast<int>(ATexture->getSize().x);
 		int TextureHeight = static_cast<int>(ATexture->getSize().y);
 
-		FrameSize = { FrameWidth, FrameHeight };
-
-		if (FrameWidth > 0 && FrameHeight > 0)
-		{
-			ASprite->setTextureRect(sf::IntRect({ 0, 0 }, { FrameWidth, FrameHeight }));
-		}
-		else
-		{
-			ASprite->setTextureRect(sf::IntRect({ 0, 0 }, { TextureWidth, TextureHeight }));
-		}
+		// Set the texture rectangle to the full size of the loaded texture by default.
+		ASprite->setTextureRect(sf::IntRect({ 0, 0 }, { TextureWidth, TextureHeight }));
 
 		ASprite->setScale({ SpriteScale, SpriteScale });
 
 		CenterPivot();
 	}
+
+	void Actor::SetTextureRect(const sf::IntRect& Rect)
+	{
+		if (!ASprite) { return; }
+		ASprite->setTextureRect(Rect);
+		CenterPivot();
+	}
+
 	void Actor::SetActorScale(float NewScale)
 	{
 		if (!ASprite) { return; }
 
 		ASprite->setScale({ NewScale, NewScale });
 	}
-	void Actor::Render(sf::RenderWindow& Window)
-	{
-		if (IsPendingDestroy() || !ASprite) { return; }
-		Window.draw(*ASprite);
-	}
+	
 	bool Actor::IsOutOfBounds() const
 	{
 		float WindowWidth = GetWindowSize().x;

@@ -18,14 +18,15 @@ namespace we
 		void TickGlobal(float DeltaTime);
 		virtual void BeginPlay();
 		virtual void Tick(float DeltaTime);
+		virtual void Render(sf::RenderWindow& Window);
 
 		World* GetWorld() const { return OwningWorld; }
 
 		sf::Vector2u GetWindowSize() const;
 
-		void SetTexture(const std::string& TexturePath, int FrameWidth = 0, int FrameHeight = 0, float SpriteScale = 1.f);
+		void SetTexture(const std::string& TexturePath, float SpriteScale = 1.f);
+		void SetTextureRect(const sf::IntRect& Rect);
 		void SetActorScale(float NewScale);
-		void Render(sf::RenderWindow& Window);
 		bool IsOutOfBounds() const;
 
 		void SetActorLocation(const sf::Vector2f& NewLocation);

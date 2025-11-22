@@ -19,7 +19,7 @@ namespace we
 		void GarbageCollectionCycle();
 
 		template<typename ActorType, typename... Args>
-		weak<ActorType> SpawnActor(Args... args);
+		weak<ActorType> SpawnActor(Args&&... args);
 
 		sf::Vector2u GetWindowSize() const;
 
@@ -36,9 +36,9 @@ namespace we
 
 
 	template<typename ActorType, typename... Args>
-	weak<ActorType> World::SpawnActor(Args... args)
+	weak<ActorType> World::SpawnActor(Args&&... args)
 	{
-		shared<ActorType> NewActor{ new ActorType(this, args...) };
+		shared<ActorType> NewActor{ new ActorType(this, std::forward<Args>(args)...) };
 		PendingActors.push_back(NewActor);
 		return NewActor;
 	}

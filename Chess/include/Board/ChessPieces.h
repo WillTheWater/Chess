@@ -22,23 +22,27 @@ namespace we
 
 	class ChessPiece : public Actor
 	{
-		ChessPiece(World* OwningWorld, EChessPieceType Type, EChessColor Color, int GridX, int GridY);
+	public:
+		ChessPiece(World* OwningWorld, EChessPieceType Type, EChessColor Color, const std::string& TexturePath = "/pieces.png");
 
 		EChessPieceType GetPieceType() const { return PieceType; }
 		EChessColor GetColor() const { return Color; }
-		sf::Vector2i GetGridPosition() const { return { GridX, GridY }; }
 
-		void SetGridPosition(int NewX, int NewY);
+		sf::Vector2i GetGridPosition() const { return GridPosition; } // Now returns the Vector2i member
+
+		void SetGridPosition(sf::Vector2i& NewPosition);
 
 	private:
-		sf::Vector2i PieceSize = { 80,90 };
+		static constexpr int PIECE_SIZE = 78;
+		static constexpr float GRID_ABS_OFFSET_X = 328.0f;
+		static constexpr float GRID_ABS_OFFSET_Y = 49.0f;
 
 		EChessPieceType PieceType;
 		EChessColor Color;
-		int GridX;
-		int GridY;
 
-		void SetupPieceTexture(const std::string& TexturePath);
+		sf::Vector2i GridPosition{ 0, 0 };
+
+		void ApplyPieceSubFrame();
 		void UpdateSpritePosition();
 	};
 }
