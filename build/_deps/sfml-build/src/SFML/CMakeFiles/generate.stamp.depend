@@ -1,0 +1,5 @@
+# CMake generation dependency list for this directory.
+C:/Dev/Chess/build/_deps/sfml-src/cmake/CompilerWarnings.cmake
+C:/Dev/Chess/build/_deps/sfml-src/cmake/Macros.cmake
+C:/Dev/Chess/build/_deps/sfml-src/src/SFML/CMakeLists.txt
+C:/Program Files/CMake/share/cmake-3.30/Modules/CMakeParseArguments.cmake

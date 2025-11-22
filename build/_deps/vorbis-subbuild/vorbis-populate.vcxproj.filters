@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\68c3cbcecd2e7fe0b595c66884d1ee60\vorbis-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\55a4d2b1aff84a6e632f71c6fff9e1e6\vorbis-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\62996bd93236d6a03ab2c5ec1ef08c0f\vorbis-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Dev\Chess\build\_deps\vorbis-subbuild\CMakeFiles\vorbis-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{711B038D-95B9-3559-AC4A-F5D8D4EDE164}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

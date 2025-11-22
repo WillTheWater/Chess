@@ -1,0 +1,6 @@
+# CMake generation dependency list for this directory.
+C:/Dev/Chess/build/_deps/vorbis-src/cmake/VorbisConfig.cmake.in
+C:/Dev/Chess/build/_deps/vorbis-src/lib/CMakeLists.txt
+C:/Program Files/CMake/share/cmake-3.30/Modules/BasicConfigVersion-SameMajorVersion.cmake.in
+C:/Program Files/CMake/share/cmake-3.30/Modules/CMakePackageConfigHelpers.cmake
+C:/Program Files/CMake/share/cmake-3.30/Modules/WriteBasicConfigVersionFile.cmake

@@ -1,0 +1,14 @@
+# Target labels
+ freetype-populate
+# Source files and their labels
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/freetype-populate
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/20e3240c123dfe60543af3fc4756291c/freetype-populate.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/95e4e3d8d7554a85813467cf4ccbfea0/freetype-populate-complete.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-build.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-configure.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-download.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-install.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-mkdir.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-patch.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-test.rule
+C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/1358a0925e0a5164226f516aa79e5850/freetype-populate-update.rule

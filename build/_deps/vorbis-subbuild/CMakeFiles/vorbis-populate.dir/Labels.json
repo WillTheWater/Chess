@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/vorbis-populate"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/62996bd93236d6a03ab2c5ec1ef08c0f/vorbis-populate.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/55a4d2b1aff84a6e632f71c6fff9e1e6/vorbis-populate-complete.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-build.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-configure.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-download.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-install.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-mkdir.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-patch.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-test.rule"
+		},
+		{
+			"file" : "C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/68c3cbcecd2e7fe0b595c66884d1ee60/vorbis-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"vorbis-populate"
+		],
+		"name" : "vorbis-populate"
+	}
+}
