@@ -77,6 +77,11 @@ namespace we
 		}
 	}
 
+	sf::RenderWindow* World::GetRenderWindow() const
+	{
+		return OwningApp->GetRenderWindowPointer();
+	}
+
 	sf::Vector2u World::GetWindowSize() const
 	{
 		return OwningApp->GetWindowSize();

@@ -71,7 +71,6 @@ namespace we
 		int TextureWidth = static_cast<int>(ATexture->getSize().x);
 		int TextureHeight = static_cast<int>(ATexture->getSize().y);
 
-		// Set the texture rectangle to the full size of the loaded texture by default.
 		ASprite->setTextureRect(sf::IntRect({ 0, 0 }, { TextureWidth, TextureHeight }));
 
 		ASprite->setScale({ SpriteScale, SpriteScale });
@@ -106,48 +105,64 @@ namespace we
 		}
 		return false;
 	}
+
 	void Actor::SetActorLocation(const sf::Vector2f& NewLocation)
 	{
 		if (!ASprite) { return; }
 		ASprite->setPosition(NewLocation);
 		UpdatePhysicsTransforms();
 	}
+
 	void Actor::SetActorRotation(const sf::Angle& NewRotation)
 	{
 		if (!ASprite) { return; }
 		ASprite->setRotation(NewRotation);
 		UpdatePhysicsTransforms();
 	}
+
 	sf::Vector2f Actor::GetActorLocation() const
 	{
 		if (!ASprite) { return sf::Vector2f{}; }
 		return ASprite->getPosition();
 	}
+
 	sf::Angle Actor::GetActorRotation() const
 	{
 		if (!ASprite) { return sf::Angle{}; }
 		return ASprite->getRotation();
 	}
+
 	void Actor::AddActorLocationOffset(const sf::Vector2f& Offset)
 	{
 		SetActorLocation(GetActorLocation() + Offset);
 	}
+
 	void Actor::AddActorRotationOffset(const sf::Angle& RotOffset)
 	{
 		SetActorRotation(GetActorRotation() + RotOffset);
 	}
+
 	sf::Vector2f Actor::GetActorFowardVector() const
 	{
 		return RotationToVector(GetActorRotation());
 	}
+
 	sf::Vector2f Actor::GetActorRightVector() const
 	{
 		return RotationToVector(GetActorRotation() + sf::degrees(90.f));
 	}
+
 	sf::FloatRect Actor::GetSpriteBounds() const
 	{
 		return ASprite->getGlobalBounds();
 	}
+
+	bool Actor::IsPointInBounds(const sf::Vector2f& Point) const
+	{
+		if (!ASprite) { return false; }
+		return GetSpriteBounds().contains(Point);
+	}
+
 	void Actor::SetEnablePhysics(bool Enabled)
 	{
 		bPhysicsEnabled = Enabled;

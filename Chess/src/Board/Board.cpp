@@ -17,6 +17,34 @@ namespace we
         DrawDebugGrid();
 		InitializePieces();
 	}
+
+    static bool bLeftMouseButtonPressedLastFrame = false;
+
+    void Board::Tick(float DeltaTime)
+    {
+        sf::RenderWindow* Window = GetWorld()->GetRenderWindow();
+
+        // 2. TRACK MOUSE POSITION
+        sf::Vector2i PixelPosition = sf::Mouse::getPosition(*Window);
+        sf::Vector2f MousePosition = Window->mapPixelToCoords(PixelPosition);
+
+
+        // 3. APPLY HOVER LOGIC
+        HandleMouseHover(MousePosition);
+
+        // 4. APPLY CLICK LOGIC
+        bool bLeftMouseButtonPressed = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+
+        if (bLeftMouseButtonPressed && !bLeftMouseButtonPressedLastFrame)
+        {
+            HandleMouseClick(MousePosition);
+        }
+
+        bLeftMouseButtonPressedLastFrame = bLeftMouseButtonPressed;
+
+        Actor::Tick(DeltaTime);
+    }
+
     void Board::Render(sf::RenderWindow& Window)
     {
         Actor::Render(Window);
@@ -39,21 +67,18 @@ namespace we
 	{
         const std::string PieceTexturePath = "/pieces.png";
 
-        for (int y = 0; y < GridSize; ++y) // y is the row index (0 to 7)
+        for (int y = 0; y < GridSize; ++y)
         {
-            for (int x = 0; x < GridSize; ++x) // x is the column index (0 to 7)
+            for (int x = 0; x < GridSize; ++x)
             {
                 int pieceValue = InitialBoard[y][x];
 
-                if (pieceValue != 0) // Only spawn a piece if the square is not empty (value 0)
+                if (pieceValue != 0)
                 {
                     EChessColor color = (pieceValue > 0) ? EChessColor::White : EChessColor::Black;
 
-                    // FIX: The InitialBoard values are (EChessPieceType + 1).
-                    // We must subtract 1 from the absolute value to get the correct EChessPieceType index (0-5).
                     EChessPieceType type = static_cast<EChessPieceType>(std::abs(pieceValue) - 1);
 
-                    // Passing the explicit std::string object (PieceTexturePath)
                     weak<ChessPiece> newPieceWeak = GetWorld()->SpawnActor<ChessPiece>(
                         type,
                         color,
@@ -62,7 +87,6 @@ namespace we
 
                     if (shared<ChessPiece> newPiece = newPieceWeak.lock())
                     {
-                        // Pass the new sf::Vector2i for grid position
                         newPiece->SetGridPosition(sf::Vector2i{ x, y });
                         Pieces.push_back(newPiece);
                     }
@@ -75,7 +99,6 @@ namespace we
 
     void Board::DrawDebugGrid()
     {
-        // Define the size for each square
         sf::Vector2f SquareDimensions{ (float)SquareSize, (float)SquareSize };
 
         DebugGridSquares.clear();
@@ -87,22 +110,85 @@ namespace we
                 sf::RectangleShape Square;
                 Square.setSize(SquareDimensions);
 
-                // Calculate position: absolute offset + grid position * square size
+                
                 float PosX = GRID_ABS_OFFSET_X + x * SquareSize;
                 float PosY = GRID_ABS_OFFSET_Y + y * SquareSize;
 
                 Square.setPosition(sf::Vector2f{ PosX, PosY });
 
-                // Using the high-visibility colors
-                Square.setFillColor(sf::Color(0, 255, 0, 100)); // Bright Green, semi-transparent fill
-                Square.setOutlineColor(sf::Color::Blue);       // Blue outline
-                Square.setOutlineThickness(-2.0f);             // Thinner, inside border
+                Square.setFillColor(sf::Color(0, 255, 0, 100));
+                Square.setOutlineColor(sf::Color::Blue);
+                Square.setOutlineThickness(-2.0f); 
 
                 DebugGridSquares.push_back(Square);
             }
         }
 
-        LOG("Debug: Drawing 8x8 grid of %dx%d squares starting at (%f, %f).",
-            SquareSize, SquareSize, GRID_ABS_OFFSET_X, GRID_ABS_OFFSET_Y);
+        //LOG("Debug: Drawing 8x8 grid of %dx%d squares starting at (%f, %f).", SquareSize, SquareSize, GRID_ABS_OFFSET_X, GRID_ABS_OFFSET_Y);
+    }
+    void Board::HandleMouseHover(const sf::Vector2f& MousePos)
+    {
+        bool pieceWasHovered = false;
+
+        for (auto it = Pieces.rbegin(); it != Pieces.rend(); ++it)
+        {
+            shared<ChessPiece> Piece = *it;
+            if (Piece && !Piece->IsPendingDestroy())
+            {
+                if (!pieceWasHovered && Piece->IsPointInBounds(MousePos))
+                {
+                    Piece->SetHovered(true);
+                    pieceWasHovered = true;
+                }
+                else
+                {
+                    Piece->SetHovered(false);
+                }
+            }
+        }
+    }
+    void Board::HandleMouseClick(const sf::Vector2f& MousePos)
+    {
+        shared<ChessPiece> ClickedPiece = nullptr;
+        for (auto it = Pieces.rbegin(); it != Pieces.rend(); ++it)
+        {
+            shared<ChessPiece> Piece = *it;
+            if (Piece && !Piece->IsPendingDestroy() && Piece->IsPointInBounds(MousePos))
+            {
+                ClickedPiece = Piece;
+                break;
+            }
+        }
+
+        shared<ChessPiece> CurrentSelectedPiece = SelectedPiece.lock();
+
+        if (ClickedPiece)
+        {
+            if (ClickedPiece == CurrentSelectedPiece)
+            {
+                ClickedPiece->SetSelected(false);
+                SelectedPiece.reset();
+                LOG("Deselected piece at (%d, %d)", ClickedPiece->GetGridPosition().x, ClickedPiece->GetGridPosition().y);
+            }
+            else
+            {
+                if (CurrentSelectedPiece)
+                {
+                    CurrentSelectedPiece->SetSelected(false);
+                }
+
+                ClickedPiece->SetSelected(true);
+                SelectedPiece = ClickedPiece;
+                LOG("Selected piece: %s at (%d, %d)",
+                    (ClickedPiece->GetColor() == EChessColor::White ? "White" : "Black"),
+                    ClickedPiece->GetGridPosition().x, ClickedPiece->GetGridPosition().y);
+            }
+        }
+        else if (CurrentSelectedPiece)
+        {
+            CurrentSelectedPiece->SetSelected(false);
+            SelectedPiece.reset();
+            LOG("Deselected piece (clicked empty space)");
+        }
     }
 }

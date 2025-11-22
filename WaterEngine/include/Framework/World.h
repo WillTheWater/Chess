@@ -21,6 +21,7 @@ namespace we
 		template<typename ActorType, typename... Args>
 		weak<ActorType> SpawnActor(Args&&... args);
 
+		sf::RenderWindow* GetRenderWindow() const;
 		sf::Vector2u GetWindowSize() const;
 
 	private:

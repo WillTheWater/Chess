@@ -11,8 +11,6 @@ namespace we
         ApplyPieceSubFrame();
 	}
 
-    
-
     void ChessPiece::ApplyPieceSubFrame()
     {
         int x_index = static_cast<int>(PieceType);
@@ -30,18 +28,49 @@ namespace we
         UpdateSpritePosition();
     }
 
+    void ChessPiece::SetHovered(bool bNewHovered)
+    {
+        if (bIsHovered != bNewHovered)
+        {
+            bIsHovered = bNewHovered;
+            UpdateVisualState();
+        }
+    }
+
+    void ChessPiece::SetSelected(bool bNewSelected)
+    {
+        if (bIsSelected != bNewSelected)
+        {
+            bIsSelected = bNewSelected;
+            UpdateVisualState();
+        }
+    }
+
     void ChessPiece::UpdateSpritePosition()
     {
-        float CenterOffset = PIECE_SIZE / 2.0f; // 40.0f
+        float CenterOffset = PIECE_SIZE / 2.0f;
 
-        // 1. Calculate the position relative to the grid's (0, 0) top-left corner.
         float RelativeX = GridPosition.x * PIECE_SIZE + CenterOffset;
         float RelativeY = GridPosition.y * PIECE_SIZE + CenterOffset;
 
-        // 2. Add the absolute screen offset of the grid's top-left corner.
         float PixelX = GRID_ABS_OFFSET_X + RelativeX;
         float PixelY = GRID_ABS_OFFSET_Y + RelativeY;
 
         SetActorLocation(sf::Vector2f{ PixelX, PixelY });
+    }
+    void ChessPiece::UpdateVisualState()
+    {
+        if (bIsSelected)
+        {
+            GetSprite().setColor(sf::Color(180, 255, 180));
+        }
+        else if (bIsHovered)
+        {
+            GetSprite().setColor(sf::Color(220, 220, 220));
+        }
+        else
+        {
+            GetSprite().setColor(sf::Color::White);
+        }
     }
 }

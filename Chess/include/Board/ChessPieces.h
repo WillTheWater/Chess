@@ -28,9 +28,15 @@ namespace we
 		EChessPieceType GetPieceType() const { return PieceType; }
 		EChessColor GetColor() const { return Color; }
 
-		sf::Vector2i GetGridPosition() const { return GridPosition; } // Now returns the Vector2i member
+		sf::Vector2i GetGridPosition() const { return GridPosition; }
 
 		void SetGridPosition(sf::Vector2i& NewPosition);
+
+		void SetHovered(bool bNewHovered);
+		bool IsHovered() const { return bIsHovered; }
+
+		void SetSelected(bool bNewSelected);
+		bool IsSelected() const { return bIsSelected; }
 
 	private:
 		static constexpr int PIECE_SIZE = 78;
@@ -39,10 +45,13 @@ namespace we
 
 		EChessPieceType PieceType;
 		EChessColor Color;
+		bool bIsHovered = false;
+		bool bIsSelected = false;
 
 		sf::Vector2i GridPosition{ 0, 0 };
 
 		void ApplyPieceSubFrame();
 		void UpdateSpritePosition();
+		void UpdateVisualState();
 	};
 }

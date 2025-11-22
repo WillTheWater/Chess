@@ -21,6 +21,7 @@ namespace we
 		virtual void Render(sf::RenderWindow& Window);
 
 		World* GetWorld() const { return OwningWorld; }
+		sf::Sprite& GetSprite() const { return *ASprite; }
 
 		sf::Vector2u GetWindowSize() const;
 
@@ -38,6 +39,7 @@ namespace we
 		sf::Vector2f GetActorFowardVector() const;
 		sf::Vector2f GetActorRightVector() const;
 		sf::FloatRect GetSpriteBounds() const;
+		bool IsPointInBounds(const sf::Vector2f& Point) const;
 
 		void SetEnablePhysics(bool Enabled);
 

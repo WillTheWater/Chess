@@ -16,7 +16,8 @@ namespace we
 
 		template<typename WorldType>
 		weak<WorldType> LoadWorld();
-
+		
+		sf::RenderWindow* GetRenderWindowPointer() const { return (sf::RenderWindow*)&Window; }
 		sf::Vector2u GetWindowSize() const { return Window.getSize(); }
 		void SetWindowIcon(const std::string& IconPath);
 		void SetCustomCursor();
