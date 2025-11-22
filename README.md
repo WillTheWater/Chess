@@ -1,6 +1,6 @@
-# ♟️ Chess Game — Built on the Water Engine
+# ♟️ Chess — Built on the Water Engine
 
-A **2D Chess game** developed as a **university project**, built entirely on my custom C++ framework: **The Water Engine**.  
+A **2D Chess game** developed as a **university project**, built on my custom C++ framework: **The Water Engine**.  
 This project is currently a **Work in Progress (WIP)**.
 
 ---
