@@ -19,6 +19,7 @@ namespace we
 		virtual void BeginPlay();
 		virtual void Tick(float DeltaTime);
 		virtual void Render(sf::RenderWindow& Window);
+		virtual bool ShouldTextureBeSmooth() const { return false; }
 
 		World* GetWorld() const { return OwningWorld; }
 		sf::Sprite& GetSprite() const { return *ASprite; }

@@ -67,12 +67,12 @@ namespace we
 		}
 
 		ASprite = shared<sf::Sprite>(new sf::Sprite(*ATexture));
+		ATexture->setSmooth(ShouldTextureBeSmooth());
 
 		int TextureWidth = static_cast<int>(ATexture->getSize().x);
 		int TextureHeight = static_cast<int>(ATexture->getSize().y);
 
 		ASprite->setTextureRect(sf::IntRect({ 0, 0 }, { TextureWidth, TextureHeight }));
-
 		ASprite->setScale({ SpriteScale, SpriteScale });
 
 		CenterPivot();

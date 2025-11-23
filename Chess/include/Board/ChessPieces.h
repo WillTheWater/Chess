@@ -4,54 +4,81 @@
 
 namespace we
 {
-	enum class EChessPieceType
-	{
-		King = 0, 
-		Queen = 1, 
-		Bishop = 2, 
-		Knight = 3, 
-		Rook = 4, 
-		Pawn = 5
-	};
+    // ----------------------------------------------------
+    // Enums
+    // ----------------------------------------------------
+    enum class EChessPieceType
+    {
+        King = 0,
+        Queen,
+        Bishop,
+        Knight,
+        Rook,
+        Pawn
+    };
 
-	enum class EChessColor 
-	{ 
-		White, 
-		Black 
-	};
+    enum class EChessColor
+    {
+        White,
+        Black
+    };
 
-	class ChessPiece : public Actor
-	{
-	public:
-		ChessPiece(World* OwningWorld, EChessPieceType Type, EChessColor Color, const std::string& TexturePath = "/pieces.png");
+    // ----------------------------------------------------
+    // Chess Piece Actor
+    // ----------------------------------------------------
+    class ChessPiece : public Actor
+    {
+    public:
+        // ------------------------------------------------
+        // Constructor & Engine Overrides
+        // ------------------------------------------------
+        ChessPiece(World* OwningWorld, EChessPieceType Type, EChessColor Color, const std::string& TexturePath = "/pieces.png");
 
-		EChessPieceType GetPieceType() const { return PieceType; }
-		EChessColor GetColor() const { return Color; }
+        virtual bool ShouldTextureBeSmooth() const override { return true; }
 
-		sf::Vector2i GetGridPosition() const { return GridPosition; }
+        // ------------------------------------------------
+        // Accessors
+        // ------------------------------------------------
+        EChessPieceType GetPieceType() const { return PieceType; }
+        EChessColor GetColor() const { return Color; }
 
-		void SetGridPosition(sf::Vector2i& NewPosition);
+        sf::Vector2i GetGridPosition() const { return GridPosition; }
+        void SetGridPosition(const sf::Vector2i& NewPosition);
 
-		void SetHovered(bool bNewHovered);
-		bool IsHovered() const { return bIsHovered; }
+        // ------------------------------------------------
+        // Hover / Selection
+        // ------------------------------------------------
+        void SetHovered(bool bNewHovered);
+        bool IsHovered() const { return bIsHovered; }
 
-		void SetSelected(bool bNewSelected);
-		bool IsSelected() const { return bIsSelected; }
+        void SetSelected(bool bNewSelected);
+        bool IsSelected() const { return bIsSelected; }
 
-	private:
-		static constexpr int PIECE_SIZE = 78;
-		static constexpr float GRID_ABS_OFFSET_X = 328.0f;
-		static constexpr float GRID_ABS_OFFSET_Y = 49.0f;
+    private:
+        // ------------------------------------------------
+        // Constants
+        // ------------------------------------------------
+        static constexpr int PIECE_SIZE = 78;
+        static constexpr float GRID_ABS_OFFSET_X = 328.0f;
+        static constexpr float GRID_ABS_OFFSET_Y = 49.0f;
 
-		EChessPieceType PieceType;
-		EChessColor Color;
-		bool bIsHovered = false;
-		bool bIsSelected = false;
+        // ------------------------------------------------
+        // Piece State
+        // ------------------------------------------------
+        EChessPieceType PieceType;
+        EChessColor Color;
 
-		sf::Vector2i GridPosition{ 0, 0 };
+        bool bIsHovered = false;
+        bool bIsSelected = false;
 
-		void ApplyPieceSubFrame();
-		void UpdateSpritePosition();
-		void UpdateVisualState();
-	};
+        sf::Vector2i GridPosition{ 0, 0 };
+        
+
+        // ------------------------------------------------
+        // Internals
+        // ------------------------------------------------
+        void ApplyPieceSubFrame();
+        void UpdateSpritePosition();
+        void UpdateVisualState();
+    };
 }
