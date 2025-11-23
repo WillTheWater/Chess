@@ -62,11 +62,11 @@ namespace we
     {
         if (bIsSelected)
         {
-            GetSprite().setColor(sf::Color(180, 255, 180));
+            GetSprite().setColor(sf::Color(255, 255, 255, 80));
         }
         else if (bIsHovered)
         {
-            GetSprite().setColor(sf::Color(220, 220, 220));
+            GetSprite().setColor(sf::Color(255, 255, 255, 150));
         }
         else
         {

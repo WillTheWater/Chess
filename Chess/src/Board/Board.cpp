@@ -1,5 +1,6 @@
 #include "Board/Board.h"
 #include "Framework/World.h"
+#include <sstream>
 
 namespace we
 {
@@ -10,6 +11,7 @@ namespace we
 		SetTexture(TexturePath);
         
 	}
+
 	void Board::BeginPlay()
 	{
 		Actor::BeginPlay();
@@ -17,8 +19,6 @@ namespace we
         DrawDebugGrid();
 		InitializePieces();
 	}
-
-    static bool bLeftMouseButtonPressedLastFrame = false;
 
     void Board::Tick(float DeltaTime)
     {
@@ -63,7 +63,62 @@ namespace we
             }
         }
     }
-	void Board::InitializePieces()
+
+    sf::Vector2i Board::WorldToGrid(const sf::Vector2f& WorldPos)
+    {
+        float RelativeX = WorldPos.x - GRID_ABS_OFFSET_X;
+        float RelativeY = WorldPos.y - GRID_ABS_OFFSET_Y;
+
+        int GridX = static_cast<int>(std::floor(RelativeX / SquareSize));
+        int GridY = static_cast<int>(std::floor(RelativeY / SquareSize));
+
+        GridX = std::max(0, std::min(GridSize - 1, GridX));
+        GridY = std::max(0, std::min(GridSize - 1, GridY));
+
+        return { GridX, GridY };
+    }
+
+    sf::Vector2f Board::GridToWorld(const sf::Vector2i& GridPos)
+    {
+        float PixelX = GRID_ABS_OFFSET_X + GridPos.x * SquareSize;
+        float PixelY = GRID_ABS_OFFSET_Y + GridPos.y * SquareSize;
+
+        return { PixelX, PixelY };
+    }
+
+    std::string Board::GetPieceName(EChessPieceType Type)
+    {
+        switch (Type)
+        {
+        case EChessPieceType::King: return "King";
+        case EChessPieceType::Queen: return "Queen";
+        case EChessPieceType::Bishop: return "Bishop";
+        case EChessPieceType::Knight: return "Knight";
+        case EChessPieceType::Rook: return "Rook";
+        case EChessPieceType::Pawn: return "Pawn";
+        default: return "Unknown";
+        }
+    }
+
+    std::string Board::GridToAlgebraic(const sf::Vector2i& GridPos)
+    {
+        if (GridPos.x < 0 || GridPos.x >= 8 || GridPos.y < 0 || GridPos.y >= 8)
+        {
+            return "Invalid";
+        }
+
+        // Convert 0-7 x-coordinate to 'a'-'h' file character
+        char File = 'a' + GridPos.x;
+
+        // Convert 0-7 y-coordinate to '8'-'1' rank character
+        char Rank = '8' - GridPos.y;
+
+        std::stringstream ss;
+        ss << File << Rank;
+        return ss.str();
+    }
+
+    void Board::InitializePieces()
 	{
         const std::string PieceTexturePath = "/pieces.png";
 
@@ -126,6 +181,7 @@ namespace we
 
         //LOG("Debug: Drawing 8x8 grid of %dx%d squares starting at (%f, %f).", SquareSize, SquareSize, GRID_ABS_OFFSET_X, GRID_ABS_OFFSET_Y);
     }
+
     void Board::HandleMouseHover(const sf::Vector2f& MousePos)
     {
         bool pieceWasHovered = false;
@@ -147,6 +203,7 @@ namespace we
             }
         }
     }
+
     void Board::HandleMouseClick(const sf::Vector2f& MousePos)
     {
         shared<ChessPiece> ClickedPiece = nullptr;
@@ -164,14 +221,21 @@ namespace we
 
         if (ClickedPiece)
         {
+            std::string pieceName = GetPieceName(ClickedPiece->GetPieceType());
+            std::string algebraicPos = GridToAlgebraic(ClickedPiece->GetGridPosition());
+
             if (ClickedPiece == CurrentSelectedPiece)
             {
+                // Case 1: Clicked the piece that is already selected -> Deselect it.
                 ClickedPiece->SetSelected(false);
                 SelectedPiece.reset();
-                LOG("Deselected piece at (%d, %d)", ClickedPiece->GetGridPosition().x, ClickedPiece->GetGridPosition().y);
+                
+                LOG("Deselected %s at (%s)", pieceName.c_str(), algebraicPos.c_str());
             }
             else
             {
+                // Case 2: Clicked a new piece -> Select new.
+
                 if (CurrentSelectedPiece)
                 {
                     CurrentSelectedPiece->SetSelected(false);
@@ -179,16 +243,23 @@ namespace we
 
                 ClickedPiece->SetSelected(true);
                 SelectedPiece = ClickedPiece;
-                LOG("Selected piece: %s at (%d, %d)",
+
+                LOG("Selected %s: %s at (%s)",
                     (ClickedPiece->GetColor() == EChessColor::White ? "White" : "Black"),
-                    ClickedPiece->GetGridPosition().x, ClickedPiece->GetGridPosition().y);
+                    pieceName.c_str(), algebraicPos.c_str());
             }
         }
         else if (CurrentSelectedPiece)
         {
+            // Case 3: Clicked empty space while a piece was selected -> Deselect it.
             CurrentSelectedPiece->SetSelected(false);
+
+            std::string pieceName = GetPieceName(CurrentSelectedPiece->GetPieceType());
+            std::string algebraicPos = GridToAlgebraic(CurrentSelectedPiece->GetGridPosition());
+
             SelectedPiece.reset();
-            LOG("Deselected piece (clicked empty space)");
+
+            LOG("Deselected %s at (%s) (clicked empty space)", pieceName.c_str(), algebraicPos.c_str());
         }
     }
 }
