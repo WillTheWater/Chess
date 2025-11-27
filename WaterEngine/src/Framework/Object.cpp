@@ -11,7 +11,7 @@ namespace we
 
 	Object::~Object()
 	{
-		LOG("Object Destroyed");
+		//LOG("Object Destroyed");
 	}
 
 	void Object::Destroy()

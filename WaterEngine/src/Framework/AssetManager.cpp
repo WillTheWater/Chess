@@ -35,7 +35,7 @@ namespace we
 		{
 			if (i->second.unique())
 			{
-				LOG("Texture Collected: %s", i->first.c_str())
+				//LOG("Texture Collected: %s", i->first.c_str())
 				i = LoadedTextures.erase(i);
 			}
 			else

@@ -304,15 +304,16 @@ namespace we
 
         if (bMoveIsSuccessful && FinalGridPos != DragStartGridPosition)
         {
-            LOG("Moved %s from %s to %s", name.c_str(), start.c_str(), end.c_str());
+            //LOG("Moved %s from %s to %s", name.c_str(), start.c_str(), end.c_str());
+            LOG("%s to %s", name.c_str(), end.c_str());
         }
         else if (!bMoveIsSuccessful)
         {
-            LOG("Invalid Move: Collision detected. %s returned to %s.", name.c_str(), start.c_str());
+            //LOG("Invalid Move: Collision detected. %s returned to %s.", name.c_str(), start.c_str());
         }
         else
         {
-            LOG("Dropped %s on its starting position %s. No change.", name.c_str(), start.c_str());
+           // LOG("Dropped %s on its starting position %s. No change.", name.c_str(), start.c_str());
         }
     }
 
@@ -336,9 +337,7 @@ namespace we
                 Piece->SetSelected(true);
                 Piece->SetHovered(false);
 
-                LOG("Started dragging %s from %s",
-                    GetPieceName(Piece->GetPieceType()).c_str(),
-                    GridToAlgebraic(DragStartGridPosition).c_str());
+                //LOG("Started dragging %s from %s", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(DragStartGridPosition).c_str());
 
                 return;
             }
@@ -380,5 +379,4 @@ namespace we
         bIsDragging = false;
         DraggingPiece.reset();
     }
-
-} // namespace we
+}
