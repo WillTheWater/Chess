@@ -15,6 +15,12 @@
     <ClInclude Include="C:\Dev\Chess\Chess\include\GameFramework\Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="C:\Dev\Chess\Chess\include\GameFramework\MoveStruct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Dev\Chess\Chess\include\GameFramework\EnumTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="C:\Dev\Chess\Chess\include\Board\Board.h">
       <Filter>Header Files</Filter>
     </ClInclude>

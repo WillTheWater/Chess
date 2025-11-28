@@ -1,31 +1,10 @@
 #pragma once
 
 #include "Framework/Actor.h"
+#include "GameFramework/EnumTypes.h"
 
 namespace we
 {
-    // ----------------------------------------------------
-    // Enums
-    // ----------------------------------------------------
-    enum class EChessPieceType
-    {
-        King = 0,
-        Queen,
-        Bishop,
-        Knight,
-        Rook,
-        Pawn
-    };
-
-    enum class EChessColor
-    {
-        White,
-        Black
-    };
-
-    // ----------------------------------------------------
-    // Chess Piece Actor
-    // ----------------------------------------------------
     class ChessPiece : public Actor
     {
     public:
@@ -44,6 +23,7 @@ namespace we
 
         sf::Vector2i GetGridPosition() const { return GridPosition; }
         void SetGridPosition(const sf::Vector2i& NewPosition);
+        bool HasMoved() const { return bHasMoved; }
 
         // ------------------------------------------------
         // Hover / Selection
@@ -70,9 +50,9 @@ namespace we
 
         bool bIsHovered = false;
         bool bIsSelected = false;
+        bool bHasMoved = false;
 
         sf::Vector2i GridPosition{ 0, 0 };
-        
 
         // ------------------------------------------------
         // Internals
