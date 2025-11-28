@@ -3,6 +3,8 @@ add_executable(${WATER_GAME}
 	${CMAKE_CURRENT_SOURCE_DIR}/src/GameFramework/Game.cpp
 
     ${CMAKE_CURRENT_SOURCE_DIR}/include/GameFramework/MovementStruct.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/GameFramework/MovementStruct.cpp
+
     ${CMAKE_CURRENT_SOURCE_DIR}/include/GameFramework/EnumTypes.h
 
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Board/Board.h

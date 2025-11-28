@@ -26,7 +26,6 @@ namespace we
         sf::Vector2i GetGridPosition() const { return GridPosition; }
         void SetGridPosition(const sf::Vector2i& NewPosition);
         bool HasMoved() const { return bHasMoved; }
-        const List<MovePattern>& GetMovePatterns(EChessPieceType PieceType) const { return MovePatterns.at(PieceType); }
 
         // ------------------------------------------------
         // Hover / Selection
@@ -56,12 +55,6 @@ namespace we
         bool bHasMoved = false;
 
         sf::Vector2i GridPosition{ 0, 0 };
-
-        // ------------------------------------------------
-        // Movement Logic
-        // ------------------------------------------------
-        Map<EChessPieceType, List<MovePattern>> MovePatterns;
-        void SetMovePattern();
 
         // ------------------------------------------------
         // Internals

@@ -17,15 +17,4 @@ namespace we
         White,
         Black
     };
-
-    enum class EMoveType
-    {
-        Normal,
-        DoubleAdvance,
-        Capture,
-        EnPassant,
-        Promotion,
-        CastleKingSide,
-        CastleQueenSide
-    };
 }

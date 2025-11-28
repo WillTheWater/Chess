@@ -54,12 +54,13 @@ namespace we
         // ----------------------------------------------------
         void InitializePieces();
         std::string GetPieceName(EChessPieceType Type);
+        shared<ChessPiece> GetPieceAtGrid(const sf::Vector2i& GridPos) const;
 
         List<shared<ChessPiece>> Pieces;
         weak<ChessPiece> SelectedPiece;
 
         // ----------------------------------------------------
-        // Drag & Drop Handling
+        // Drag & Drop Handling / Movement Logic
         // ----------------------------------------------------
         void HandleDragStart(const sf::Vector2f& MousePos);
         void HandleDragTick(const sf::Vector2f& MousePos);
@@ -73,6 +74,9 @@ namespace we
         bool bIsDragging = false;
         weak<ChessPiece> DraggingPiece;
         sf::Vector2i DragStartGridPosition{ -1, -1 };
+        bool IsMoveValid(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos);
+        bool CalculateMovement(const sf::Vector2i& MovePath, const sf::Vector2i& MovementVector, sf::Vector2i& OutDirection);
+        bool CheckForObstruction(const sf::Vector2i& StartPos, const sf::Vector2i& EndPos, const sf::Vector2i& Direction);
 
         // ----------------------------------------------------
         // Debug Visualization

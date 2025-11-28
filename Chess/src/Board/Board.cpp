@@ -1,6 +1,6 @@
 #include "Board/Board.h"
 #include "Framework/World.h"
-#include <sstream>
+#include "GameFramework/MovementStruct.h"
 
 namespace we
 {
@@ -158,10 +158,18 @@ namespace we
         }
     }
 
+    shared<ChessPiece> Board::GetPieceAtGrid(const sf::Vector2i& GridPos) const
+    {
+        for (const auto& Piece : Pieces)
+        {
+            if (Piece && !Piece->IsPendingDestroy() && Piece->GetGridPosition() == GridPos)
+                return Piece;
+        }
+        return nullptr;
+    }
+
     void Board::InitializePieces()
     {
-        const std::string Texture = "/pieces.png";
-
         for (int y = 0; y < GridSize; ++y)
         {
             for (int x = 0; x < GridSize; ++x)
@@ -169,15 +177,11 @@ namespace we
                 int value = InitialBoard[y][x];
                 if (value == 0) continue;
 
-                EChessColor color = (value > 0)
-                    ? EChessColor::White
-                    : EChessColor::Black;
+                EChessColor color = (value > 0)? EChessColor::White : EChessColor::Black;
 
                 EChessPieceType type = static_cast<EChessPieceType>(std::abs(value) - 1);
 
-                weak<ChessPiece> newPieceWeak = GetWorld()->SpawnActor<ChessPiece>(
-                    type, color, Texture
-                );
+                weak<ChessPiece> newPieceWeak = GetWorld()->SpawnActor<ChessPiece>(type, color);
 
                 if (auto newPiece = newPieceWeak.lock())
                 {
@@ -275,46 +279,110 @@ namespace we
     }
 
     // -------------------------------------------------------------------------
-    // Movement / Drag-End Logic
+    // Movement Logic
     // -------------------------------------------------------------------------
     void Board::TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos)
     {
-        sf::Vector2i FinalGridPos = TargetGridPos;
-        bool bMoveIsSuccessful = true;
-
-        for (const auto& OtherPiece : Pieces)
+        if (IsMoveValid(Piece, TargetGridPos))
         {
-            if (OtherPiece && OtherPiece != Piece && !OtherPiece->IsPendingDestroy())
+            Piece->SetGridPosition(TargetGridPos);
+        }
+    }
+
+    bool Board::IsMoveValid(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos)
+    {
+        const auto MovePieceType = Piece->GetPieceType();
+        const auto MovePieceColor = Piece->GetColor();
+
+        const auto& MovePiecePatterns = PieceMovePatterns.at(MovePieceType);
+
+        const auto MovePieceStart = Piece->GetGridPosition();
+        const auto MovePieceEnd = TargetGridPos;
+
+        auto TargetPiece = GetPieceAtGrid(TargetGridPos);
+
+        const auto MovePath = TargetGridPos - MovePieceStart;
+        sf::Vector2i NormalizedDirection = { 0, 0 };
+
+        // Start = Target
+        if (MovePieceStart == TargetGridPos)
+            return false;
+
+        // Target has a piece AND it is the same color
+        if (TargetPiece && TargetPiece->GetColor() == MovePieceColor)
+            return false;
+
+        // Pattern matching
+        for (const auto& Pattern : MovePiecePatterns)
+        {
+            // Non-repeated movement
+            if (!Pattern.bRepeatable)
             {
-                if (OtherPiece->GetGridPosition() == TargetGridPos)
+                if (MovePath == Pattern.MovementVector)
+                    return true;
+            }
+            else // Repeated movement (rook, bishop, queen)
+            {
+                if (CalculateMovement(MovePath, Pattern.MovementVector, NormalizedDirection))
                 {
-                    FinalGridPos = DragStartGridPosition;
-                    bMoveIsSuccessful = false;
-                    break;
+                    if (CheckForObstruction(MovePieceStart, TargetGridPos, NormalizedDirection))
+                        return true;
                 }
             }
         }
 
-        Piece->SetGridPosition(FinalGridPos);
-        CleanupDragState(Piece);
+        return false;
+    }
 
-        std::string name = GetPieceName(Piece->GetPieceType());
-        std::string start = GridToAlgebraic(DragStartGridPosition);
-        std::string end = GridToAlgebraic(FinalGridPos);
+    bool Board::CalculateMovement(const sf::Vector2i& MovePath, const sf::Vector2i& MovementVector, sf::Vector2i& OutDirection)
+    {
+        // Not Moved
+        if (MovementVector.x == 0 && MovementVector.y == 0) return false;
 
-        if (bMoveIsSuccessful && FinalGridPos != DragStartGridPosition)
+        // Horizontal/Vertical Movement
+        if (MovementVector.x == 0 && MovePath.x == 0)
         {
-            //LOG("Moved %s from %s to %s", name.c_str(), start.c_str(), end.c_str());
-            LOG("%s to %s", name.c_str(), end.c_str());
+            if (MovePath.y % MovementVector.y == 0)
+            {
+                OutDirection = { 0, MovePath.y > 0 ? 1 : -1 };
+                return true;
+            }
         }
-        else if (!bMoveIsSuccessful)
+        else if (MovementVector.y == 0 && MovePath.y == 0)
         {
-            //LOG("Invalid Move: Collision detected. %s returned to %s.", name.c_str(), start.c_str());
+            if (MovePath.x % MovementVector.x == 0)
+            {
+                OutDirection = { MovePath.x > 0 ? 1 : -1, 0 };
+                return true;
+            }
         }
-        else
+        // Diagonal Movement
+        else if (std::abs(MovePath.x) == std::abs(MovePath.y) && MovePath.x % MovementVector.x == 0)
         {
-           // LOG("Dropped %s on its starting position %s. No change.", name.c_str(), start.c_str());
+            OutDirection = { MovePath.x > 0 ? 1 : -1, MovePath.y > 0 ? 1 : -1 };
+            return true;
         }
+
+        return false;
+    }
+
+    bool Board::CheckForObstruction(const sf::Vector2i& StartPos, const sf::Vector2i& EndPos, const sf::Vector2i& Direction)
+    {
+        sf::Vector2i CurrentPos = StartPos;
+
+        CurrentPos += Direction;
+
+        while (CurrentPos != EndPos)
+        {
+            if (GetPieceAtGrid(CurrentPos))
+            {
+                LOG("Obstruction found along the path")
+                return false;
+            }
+            CurrentPos += Direction;
+        }
+
+        return true;
     }
 
     // -------------------------------------------------------------------------

@@ -4,6 +4,9 @@
     <ClCompile Include="C:\Dev\Chess\Chess\src\GameFramework\Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="C:\Dev\Chess\Chess\src\GameFramework\MovementStruct.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="C:\Dev\Chess\Chess\src\Board\Board.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

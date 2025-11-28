@@ -2,20 +2,26 @@
 
 #include <SFML/System/Vector2.hpp>
 #include "GameFramework/EnumTypes.h"
+#include "Framework/Core.h"
 
 namespace we
 {
     struct MovePattern
     {
-        sf::Vector2i Offset;
+        sf::Vector2i MovementVector;
         bool bRepeatable;
-        EMoveType DefaultMoveType;
 
-        MovePattern(const sf::Vector2i& InOffset, bool InRepeatable = false, EMoveType InMoveType = EMoveType::Normal)
-            : Offset(InOffset), 
-            bRepeatable(InRepeatable), 
-            DefaultMoveType(InMoveType)
+        MovePattern(const sf::Vector2i& InMovement, bool InRepeatable = false)
+            : MovementVector(InMovement), 
+              bRepeatable(InRepeatable)
         {
         }
+
+        
     };
+
+    // ----------------------------------------------------
+    // Piece Movement Patterns
+    // ----------------------------------------------------
+    extern const Map<EChessPieceType, List<MovePattern>> PieceMovePatterns;
 }
