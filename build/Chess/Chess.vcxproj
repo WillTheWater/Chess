@@ -414,7 +414,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
   <ItemGroup>
     <ClInclude Include="C:\Dev\Chess\Chess\include\GameFramework\Game.h" />
     <ClCompile Include="C:\Dev\Chess\Chess\src\GameFramework\Game.cpp" />
-    <ClInclude Include="C:\Dev\Chess\Chess\include\GameFramework\MoveStruct.h" />
+    <ClInclude Include="C:\Dev\Chess\Chess\include\GameFramework\MovementStruct.h" />
     <ClInclude Include="C:\Dev\Chess\Chess\include\GameFramework\EnumTypes.h" />
     <ClInclude Include="C:\Dev\Chess\Chess\include\Board\Board.h" />
     <ClCompile Include="C:\Dev\Chess\Chess\src\Board\Board.cpp" />
