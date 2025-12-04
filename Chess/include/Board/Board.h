@@ -5,6 +5,12 @@
 
 namespace we
 {
+    enum class EPlayerTurn
+    {
+        White,
+        Black
+    };
+
     // ----------------------------------------------------
     // Board Actor
     // ----------------------------------------------------
@@ -19,6 +25,8 @@ namespace we
         virtual void BeginPlay() override;
         virtual void Tick(float DeltaTime) override;
         virtual void Render(sf::RenderWindow& Window) override;
+
+        EPlayerTurn GetCurrentTurn() const { return CurrentTurn; }
 
     private:
         // ----------------------------------------------------
@@ -42,6 +50,8 @@ namespace we
             { 5,  4,  3,  2,  1,  3,  4,  5}
         };
 
+        EPlayerTurn CurrentTurn = EPlayerTurn::White;
+
         // ----------------------------------------------------
         // Board World Conversion
         // ----------------------------------------------------
@@ -64,6 +74,9 @@ namespace we
         void HandleDragStart(const sf::Vector2f& MousePos);
         void HandleDragTick(const sf::Vector2f& MousePos);
         void HandleDragEnd(const sf::Vector2f& MousePos);
+
+        bool IsPlayersPiece(const ChessPiece* Piece) const;
+        void SwitchTurn();
 
         void TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos);
         void HandleMouseHover(const sf::Vector2f& MousePos);

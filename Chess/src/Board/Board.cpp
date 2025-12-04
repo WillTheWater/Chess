@@ -27,6 +27,7 @@ namespace we
             });
 
         InitializePieces();
+        LOG("White's Turn!")
     }
 
     static bool bLeftMouseButtonPressedLastFrame = false;
@@ -234,6 +235,9 @@ namespace we
             if (!Piece || Piece->IsPendingDestroy())
                 continue;
 
+            // ---- SKIP PIECES NOT BELONGING TO CURRENT PLAYER ----
+            if (!IsPlayersPiece(Piece.get())) { continue; }
+
             if (Piece->IsPointInBounds(MousePos))
                 HoveredPiece = Piece;
 
@@ -251,6 +255,7 @@ namespace we
             HoveredPiece->SetHovered(true);
         }
     }
+
 
     bool Board::IsWorldPositionInGridBounds(const sf::Vector2f& WorldPos)
     {
@@ -282,20 +287,47 @@ namespace we
         sf::Vector2i FinalGridPos = TargetGridPos;
         bool bMoveIsSuccessful = true;
 
+        shared<ChessPiece> CapturedPiece = nullptr;
+
         for (const auto& OtherPiece : Pieces)
         {
-            if (OtherPiece && OtherPiece != Piece && !OtherPiece->IsPendingDestroy())
+            if (!OtherPiece || OtherPiece->IsPendingDestroy() || OtherPiece == Piece) { continue; }
+
+            if (OtherPiece->GetGridPosition() == TargetGridPos)
             {
-                if (OtherPiece->GetGridPosition() == TargetGridPos)
+                // ---- CAPTURE LOGIC ------------------------------------------
+                if (OtherPiece->GetColor() == Piece->GetColor())
                 {
+                    // Cannot move onto your own piece
                     FinalGridPos = DragStartGridPosition;
                     bMoveIsSuccessful = false;
-                    break;
                 }
+                else if (OtherPiece->GetPieceType() == EChessPieceType::King)
+                {
+                    // Cannot capture king
+                    FinalGridPos = DragStartGridPosition;
+                    bMoveIsSuccessful = false;
+                }
+                else
+                {
+                    // Valid capture
+                    CapturedPiece = OtherPiece;
+                }
+                break;
             }
         }
 
+        // ---- EXECUTE MOVE -----------------------------------------------
         Piece->SetGridPosition(FinalGridPos);
+
+        if (CapturedPiece)
+        {
+            CapturedPiece->Destroy();
+            LOG("Captured %s at %s!",
+                GetPieceName(CapturedPiece->GetPieceType()).c_str(),
+                GridToAlgebraic(FinalGridPos).c_str());
+        }
+
         CleanupDragState(Piece);
 
         std::string name = GetPieceName(Piece->GetPieceType());
@@ -304,18 +336,20 @@ namespace we
 
         if (bMoveIsSuccessful && FinalGridPos != DragStartGridPosition)
         {
-            //LOG("Moved %s from %s to %s", name.c_str(), start.c_str(), end.c_str());
             LOG("%s to %s", name.c_str(), end.c_str());
+
+            SwitchTurn();
         }
         else if (!bMoveIsSuccessful)
         {
-            //LOG("Invalid Move: Collision detected. %s returned to %s.", name.c_str(), start.c_str());
+            LOG("Invalid Move: %s returned to %s.", name.c_str(), start.c_str());
         }
         else
         {
-           // LOG("Dropped %s on its starting position %s. No change.", name.c_str(), start.c_str());
+            // No movement
         }
     }
+
 
     // -------------------------------------------------------------------------
     // Drag Start
@@ -330,14 +364,18 @@ namespace we
                 !Piece->IsPendingDestroy() &&
                 Piece->IsPointInBounds(MousePos))
             {
+                // ---- TURN CHECK -------------------------------------------------
+                if (!IsPlayersPiece(Piece.get()))
+                {
+                    return;
+                }
+
                 bIsDragging = true;
                 DraggingPiece = Piece;
                 DragStartGridPosition = Piece->GetGridPosition();
 
                 Piece->SetSelected(true);
                 Piece->SetHovered(false);
-
-                //LOG("Started dragging %s from %s", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(DragStartGridPosition).c_str());
 
                 return;
             }
@@ -362,11 +400,22 @@ namespace we
     {
         if (auto Piece = DraggingPiece.lock())
         {
+            // SAFETY: In case something slipped through
+            if (!IsPlayersPiece(Piece.get()))
+            {
+                Piece->SetGridPosition(DragStartGridPosition);
+                CleanupDragState(Piece);
+                bIsDragging = false;
+                DraggingPiece.reset();
+                return;
+            }
+
             if (!IsWorldPositionInGridBounds(MousePos))
             {
                 Piece->SetGridPosition(DragStartGridPosition);
-
-                LOG("Invalid Move: Dropped out of bounds. %s returned to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(DragStartGridPosition).c_str());
+                LOG("Invalid Move: Dropped out of bounds. %s returned to %s.",
+                    GetPieceName(Piece->GetPieceType()).c_str(),
+                    GridToAlgebraic(DragStartGridPosition).c_str());
 
                 CleanupDragState(Piece);
                 return;
@@ -378,5 +427,21 @@ namespace we
 
         bIsDragging = false;
         DraggingPiece.reset();
+    }
+
+
+    bool Board::IsPlayersPiece(const ChessPiece* Piece) const
+    {
+        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) ||
+            (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
+    }
+
+    void Board::SwitchTurn()
+    {
+        CurrentTurn = (CurrentTurn == EPlayerTurn::White)
+            ? EPlayerTurn::Black
+            : EPlayerTurn::White;
+        const char* TurnName = (CurrentTurn == EPlayerTurn::White) ? "White" : "Black";
+        LOG("It's %s's turn.", TurnName);
     }
 }
