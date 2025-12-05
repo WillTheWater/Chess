@@ -120,18 +120,18 @@ namespace we
 
     bool Board::IsRookMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
     {
-        // 1) Move must be straight
+        // Move must be straight
         bool sameRow = (From.y == To.y);
         bool sameCol = (From.x == To.x);
 
         if (!sameRow && !sameCol)
             return false;
 
-        // 2) Step direction
+        // Step direction
         int dx = (To.x > From.x) ? 1 : (To.x < From.x ? -1 : 0);
         int dy = (To.y > From.y) ? 1 : (To.y < From.y ? -1 : 0);
 
-        // 3) Check intermediate squares for blockers
+        // Check intermediate squares for blockers
         sf::Vector2i pos = From;
         pos.x += dx;
         pos.y += dy;
@@ -152,8 +152,6 @@ namespace we
             pos.x += dx;
             pos.y += dy;
         }
-
-        // destination handled by TryMovePiece()
         return true;
     }
 
