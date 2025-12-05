@@ -50,7 +50,12 @@ namespace we
             { 5,  4,  3,  2,  1,  3,  4,  5}
         };
 
+        // ----------------------------------------------------
+        // Move Logic
+        // ----------------------------------------------------
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
+        bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsRookMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
 
         // ----------------------------------------------------
         // Board World Conversion

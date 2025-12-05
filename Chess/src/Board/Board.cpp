@@ -104,6 +104,60 @@ namespace we
         }
     }
 
+    bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    {
+        switch (Piece->GetPieceType())
+        {
+        case EChessPieceType::Rook:   return IsRookMoveValid(From, To, Piece->GetColor());
+        //case EChessPieceType::Bishop: return IsBishopMoveValid(From, To, Piece->GetColor());
+        //case EChessPieceType::Queen:  return IsQueenMoveValid(From, To, Piece->GetColor());
+        //case EChessPieceType::Knight: return IsKnightMoveValid(From, To, Piece->GetColor());
+        //case EChessPieceType::Pawn:   return IsPawnMoveValid(From, To, Piece->GetColor());
+        //case EChessPieceType::King:   return IsKingMoveValid(From, To, Piece->GetColor());
+        default: return true;
+        }
+    }
+
+    bool Board::IsRookMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    {
+        // 1) Move must be straight
+        bool sameRow = (From.y == To.y);
+        bool sameCol = (From.x == To.x);
+
+        if (!sameRow && !sameCol)
+            return false;
+
+        // 2) Step direction
+        int dx = (To.x > From.x) ? 1 : (To.x < From.x ? -1 : 0);
+        int dy = (To.y > From.y) ? 1 : (To.y < From.y ? -1 : 0);
+
+        // 3) Check intermediate squares for blockers
+        sf::Vector2i pos = From;
+        pos.x += dx;
+        pos.y += dy;
+
+        while (pos != To)
+        {
+            for (const auto& OtherPiece : Pieces)
+            {
+                if (!OtherPiece || OtherPiece->IsPendingDestroy())
+                    continue;
+
+                if (OtherPiece->GetGridPosition() == pos)
+                {
+                    return false; // path blocked
+                }
+            }
+
+            pos.x += dx;
+            pos.y += dy;
+        }
+
+        // destination handled by TryMovePiece()
+        return true;
+    }
+
+
     // -------------------------------------------------------------------------
     // Grid World Conversion
     // -------------------------------------------------------------------------
@@ -284,72 +338,81 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos)
     {
-        sf::Vector2i FinalGridPos = TargetGridPos;
+        if (!Piece) return;
+
+        sf::Vector2i From = Piece->GetGridPosition();
+        sf::Vector2i To = TargetGridPos;
+        sf::Vector2i FinalGridPos = To;
         bool bMoveIsSuccessful = true;
 
-        shared<ChessPiece> CapturedPiece = nullptr;
-
-        for (const auto& OtherPiece : Pieces)
+        // ------ Check move validity --------------------
+        if (!IsMoveValid(Piece, From, To))
         {
-            if (!OtherPiece || OtherPiece->IsPendingDestroy() || OtherPiece == Piece) { continue; }
+            FinalGridPos = DragStartGridPosition;
+            bMoveIsSuccessful = false;
 
-            if (OtherPiece->GetGridPosition() == TargetGridPos)
+            LOG("Invalid Move: %s cannot move from %s to %s.",
+                GetPieceName(Piece->GetPieceType()).c_str(),
+                GridToAlgebraic(From).c_str(),
+                GridToAlgebraic(To).c_str()
+            );
+        }
+        else
+        {
+            // ---- Check for captures ----------------
+            shared<ChessPiece> CapturedPiece = nullptr;
+
+            for (const auto& OtherPiece : Pieces)
             {
-                // ---- CAPTURE LOGIC ------------------------------------------
-                if (OtherPiece->GetColor() == Piece->GetColor())
+                if (!OtherPiece || OtherPiece->IsPendingDestroy() || OtherPiece == Piece)
+                    continue;
+
+                if (OtherPiece->GetGridPosition() == To)
                 {
-                    // Cannot move onto your own piece
-                    FinalGridPos = DragStartGridPosition;
-                    bMoveIsSuccessful = false;
+                    if (OtherPiece->GetColor() == Piece->GetColor() ||
+                        OtherPiece->GetPieceType() == EChessPieceType::King)
+                    {
+                        // Cannot capture own piece or king
+                        FinalGridPos = DragStartGridPosition;
+                        bMoveIsSuccessful = false;
+                    }
+                    else
+                    {
+                        CapturedPiece = OtherPiece;
+                    }
+                    break;
                 }
-                else if (OtherPiece->GetPieceType() == EChessPieceType::King)
-                {
-                    // Cannot capture king
-                    FinalGridPos = DragStartGridPosition;
-                    bMoveIsSuccessful = false;
-                }
-                else
-                {
-                    // Valid capture
-                    CapturedPiece = OtherPiece;
-                }
-                break;
+            }
+
+            // ------ Execute capture -------------
+            if (CapturedPiece)
+            {
+                CapturedPiece->Destroy();
+                LOG("Captured %s at %s!",
+                    GetPieceName(CapturedPiece->GetPieceType()).c_str(),
+                    GridToAlgebraic(To).c_str());
             }
         }
 
-        // ---- EXECUTE MOVE -----------------------------------------------
+        // ----- Move piece and clean up -----------
         Piece->SetGridPosition(FinalGridPos);
-
-        if (CapturedPiece)
-        {
-            CapturedPiece->Destroy();
-            LOG("Captured %s at %s!",
-                GetPieceName(CapturedPiece->GetPieceType()).c_str(),
-                GridToAlgebraic(FinalGridPos).c_str());
-        }
-
         CleanupDragState(Piece);
 
+        // ------ Logging and turn switch -----------
         std::string name = GetPieceName(Piece->GetPieceType());
-        std::string start = GridToAlgebraic(DragStartGridPosition);
+        std::string start = GridToAlgebraic(From);
         std::string end = GridToAlgebraic(FinalGridPos);
 
-        if (bMoveIsSuccessful && FinalGridPos != DragStartGridPosition)
+        if (bMoveIsSuccessful && FinalGridPos != From)
         {
             LOG("%s to %s", name.c_str(), end.c_str());
-
             SwitchTurn();
         }
         else if (!bMoveIsSuccessful)
         {
             LOG("Invalid Move: %s returned to %s.", name.c_str(), start.c_str());
         }
-        else
-        {
-            // No movement
-        }
     }
-
 
     // -------------------------------------------------------------------------
     // Drag Start
