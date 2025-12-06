@@ -1,3 +1,0 @@
-C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/vorbis-populate.dir
-C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/ALL_BUILD.dir
-C:/Dev/Chess/build/_deps/vorbis-subbuild/CMakeFiles/ZERO_CHECK.dir

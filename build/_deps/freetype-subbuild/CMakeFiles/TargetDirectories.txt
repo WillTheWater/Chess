@@ -1,3 +1,0 @@
-C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/freetype-populate.dir
-C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/ALL_BUILD.dir
-C:/Dev/Chess/build/_deps/freetype-subbuild/CMakeFiles/ZERO_CHECK.dir
