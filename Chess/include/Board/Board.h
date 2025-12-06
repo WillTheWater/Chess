@@ -56,6 +56,9 @@ namespace we
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
         bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsRookMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
+        bool IsBishopMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
+        bool IsQueenMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
+        bool IsKingMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
 
         // ----------------------------------------------------
         // Board World Conversion

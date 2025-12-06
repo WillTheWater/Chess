@@ -54,7 +54,7 @@ namespace we
         bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
         // ---------------------------------------------------------------------
-        // 2. Drag State Machine
+        // 2. Drag State
         // ---------------------------------------------------------------------
         if (bLeftMouseDown)
         {
@@ -109,29 +109,26 @@ namespace we
         switch (Piece->GetPieceType())
         {
         case EChessPieceType::Rook:   return IsRookMoveValid(From, To, Piece->GetColor());
-        //case EChessPieceType::Bishop: return IsBishopMoveValid(From, To, Piece->GetColor());
-        //case EChessPieceType::Queen:  return IsQueenMoveValid(From, To, Piece->GetColor());
+        case EChessPieceType::Bishop: return IsBishopMoveValid(From, To, Piece->GetColor());
+        case EChessPieceType::Queen:  return IsQueenMoveValid(From, To, Piece->GetColor());
+        case EChessPieceType::King:   return IsKingMoveValid(From, To, Piece->GetColor());
         //case EChessPieceType::Knight: return IsKnightMoveValid(From, To, Piece->GetColor());
         //case EChessPieceType::Pawn:   return IsPawnMoveValid(From, To, Piece->GetColor());
-        //case EChessPieceType::King:   return IsKingMoveValid(From, To, Piece->GetColor());
         default: return true;
         }
     }
 
     bool Board::IsRookMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
     {
-        // Move must be straight
         bool sameRow = (From.y == To.y);
         bool sameCol = (From.x == To.x);
 
         if (!sameRow && !sameCol)
             return false;
 
-        // Step direction
         int dx = (To.x > From.x) ? 1 : (To.x < From.x ? -1 : 0);
         int dy = (To.y > From.y) ? 1 : (To.y < From.y ? -1 : 0);
 
-        // Check intermediate squares for blockers
         sf::Vector2i pos = From;
         pos.x += dx;
         pos.y += dy;
@@ -145,7 +142,7 @@ namespace we
 
                 if (OtherPiece->GetGridPosition() == pos)
                 {
-                    return false; // path blocked
+                    return false;
                 }
             }
 
@@ -155,6 +152,105 @@ namespace we
         return true;
     }
 
+    bool Board::IsBishopMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    {
+        // 0) Disallow zero-length moves
+        if (From == To)
+            return false;
+
+        // 1) Must move along a diagonal: absolute delta X == absolute delta Y
+        int deltaX = To.x - From.x;
+        int deltaY = To.y - From.y;
+        if (std::abs(deltaX) != std::abs(deltaY))
+            return false;
+
+        // 2) Step direction: normalized to -1 or +1 for both axes
+        int dx = (deltaX > 0) ? 1 : -1;
+        int dy = (deltaY > 0) ? 1 : -1;
+
+        // 3) Walk the path from the square next to From up to (but not including) To
+        sf::Vector2i pos = From;
+        pos.x += dx;
+        pos.y += dy;
+
+        while (pos != To)
+        {
+            // 4) If any piece occupies an intermediate square => blocked
+            for (const auto& OtherPiece : Pieces)
+            {
+                if (!OtherPiece || OtherPiece->IsPendingDestroy())
+                    continue;
+
+                if (OtherPiece->GetGridPosition() == pos)
+                    return false; // path blocked
+            }
+
+            pos.x += dx;
+            pos.y += dy;
+        }
+
+        // 5) Destination square handling (capture / same-color) is done by TryMovePiece.
+        return true;
+    }
+
+
+    bool Board::IsQueenMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    {
+        if (From == To)
+            return false;
+
+        int deltaX = To.x - From.x;
+        int deltaY = To.y - From.y;
+
+        bool isDiagonal = (std::abs(deltaX) == std::abs(deltaY));
+        bool isStraight = (deltaX == 0 || deltaY == 0);
+
+        // Queen must move like rook OR bishop
+        if (!isDiagonal && !isStraight)
+            return false;
+
+        // Determine step direction
+        int dx = (deltaX == 0) ? 0 : (deltaX > 0 ? 1 : -1);
+        int dy = (deltaY == 0) ? 0 : (deltaY > 0 ? 1 : -1);
+
+        sf::Vector2i pos = From;
+        pos.x += dx;
+        pos.y += dy;
+
+        // Walk until To (exclusive)
+        while (pos != To)
+        {
+            for (const auto& OtherPiece : Pieces)
+            {
+                if (!OtherPiece || OtherPiece->IsPendingDestroy())
+                    continue;
+
+                if (OtherPiece->GetGridPosition() == pos)
+                    return false; // path blocked
+            }
+
+            pos.x += dx;
+            pos.y += dy;
+        }
+
+        return true;
+    }
+
+
+    bool Board::IsKingMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    {
+        if (From == To)
+            return false;
+
+        int deltaX = std::abs(To.x - From.x);
+        int deltaY = std::abs(To.y - From.y);
+
+        // King moves EXACTLY one square in any direction
+        if (deltaX <= 1 && deltaY <= 1)
+            return true;
+
+        return false;
+    }
 
     // -------------------------------------------------------------------------
     // Grid World Conversion
