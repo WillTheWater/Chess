@@ -46,6 +46,8 @@ namespace we
         void SetGridPosition(const sf::Vector2i& NewPosition);
         bool GetHasMoved() const { return bHasMoved; }
         void SetHasMoved();
+        bool GetWasPawnMovedTwo() const { return bWasPawnMovedTwo; }
+        void SetWasPawnMovedTwo(bool Move) { bWasPawnMovedTwo = Move; }
 
         // ------------------------------------------------
         // Hover / Selection
@@ -73,6 +75,7 @@ namespace we
         bool bIsHovered = false;
         bool bIsSelected = false;
         bool bHasMoved = false;
+        bool bWasPawnMovedTwo = false;
 
         sf::Vector2i GridPosition{ 0, 0 };
         

@@ -296,12 +296,40 @@ namespace we
             if (targetPiece && targetPiece->GetColor() != Piece->GetColor())
                 return true;
 
-            // TODO: add en-passant here
+            // EN-PASSANT
+            if (!targetPiece)
+            {
+                sf::Vector2i enemyPos = { To.x, From.y }; // the pawn beside ours
+
+                shared<ChessPiece> enemyPawn = nullptr;
+                for (auto& Other : Pieces)
+                {
+                    if (!Other || Other->IsPendingDestroy())
+                        continue;
+
+                    if (Other->GetGridPosition() == enemyPos &&
+                        Other->GetPieceType() == EChessPieceType::Pawn &&
+                        Other->GetColor() != Piece->GetColor())
+                    {
+                        enemyPawn = Other;
+                        break;
+                    }
+                }
+
+                if (enemyPawn)
+                {
+                    // Enemy pawn must have moved two squares on the *previous* turn
+                    // (assuming you track last-move turn index)
+                    if (true)//enemyPawn->WasLastMoveDoubleStep())
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            // Anything else is illegal for pawns
             return false;
         }
-
-        // Anything else is illegal for pawns
-        return false;
     }
 
 
@@ -649,9 +677,7 @@ namespace we
 
     void Board::SwitchTurn()
     {
-        CurrentTurn = (CurrentTurn == EPlayerTurn::White)
-            ? EPlayerTurn::Black
-            : EPlayerTurn::White;
+        CurrentTurn = (CurrentTurn == EPlayerTurn::White)? EPlayerTurn::Black : EPlayerTurn::White;
         const char* TurnName = (CurrentTurn == EPlayerTurn::White) ? "White" : "Black";
         LOG("It's %s's turn.", TurnName);
     }
