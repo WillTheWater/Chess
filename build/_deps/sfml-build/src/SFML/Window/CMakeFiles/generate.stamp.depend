@@ -1,8 +1,0 @@
-# CMake generation dependency list for this directory.
-C:/Dev/Chess/build/_deps/sfml-src/src/SFML/Window/CMakeLists.txt
-C:/Dev/Chess/build/_deps/sfml-src/src/SFML/Window/Dependencies.cmake.in
-C:/Program Files/CMake/share/cmake-3.30/Modules/CMakePackageConfigHelpers.cmake
-C:/Program Files/CMake/share/cmake-3.30/Modules/FindOpenGL.cmake
-C:/Program Files/CMake/share/cmake-3.30/Modules/FindPackageHandleStandardArgs.cmake
-C:/Program Files/CMake/share/cmake-3.30/Modules/FindPackageMessage.cmake
-C:/Program Files/CMake/share/cmake-3.30/Modules/WriteBasicConfigVersionFile.cmake
