@@ -22,10 +22,7 @@ namespace we
         const int x_index = static_cast<int>(PieceType);
         const int y_index = (Color == EChessColor::White) ? 0 : 1;
 
-        sf::IntRect pieceRect{
-            sf::Vector2i{ PIECE_SIZE * x_index, PIECE_SIZE * y_index },
-            sf::Vector2i{ PIECE_SIZE, PIECE_SIZE }
-        };
+        sf::IntRect pieceRect{sf::Vector2i{ PIECE_SIZE * x_index, PIECE_SIZE * y_index }, sf::Vector2i{ PIECE_SIZE, PIECE_SIZE }};
 
         SetTextureRect(pieceRect);
     }

@@ -15,26 +15,23 @@ namespace we
     }
 
     // -------------------------------------------------------------------------
-    // BeginPlay()
+    // BeginPlay
     // -------------------------------------------------------------------------
     void Board::BeginPlay()
     {
         Actor::BeginPlay();
 
-        SetActorLocation(sf::Vector2f{
-            float(GetWindowSize().x) / 2.0f,
-            float(GetWindowSize().y) / 2.0f
-            });
+        SetActorLocation(sf::Vector2f{float(GetWindowSize().x) / 2.0f, float(GetWindowSize().y) / 2.0f});
 
         InitializePieces();
         LOG("White's Turn!")
     }
 
-    static bool bLeftMouseButtonPressedLastFrame = false;
 
     // -------------------------------------------------------------------------
-    // Tick()
+    // Tick
     // -------------------------------------------------------------------------
+    static bool bLeftMouseButtonPressedLastFrame = false;
     void Board::Tick(float DeltaTime)
     {
         sf::RenderWindow* Window = GetWorld()->GetRenderWindow();
@@ -45,17 +42,13 @@ namespace we
             return;
         }
 
-        // ---------------------------------------------------------------------
-        // 1. Mouse Position
-        // ---------------------------------------------------------------------
+        // Mouse Position
         sf::Vector2i PixelPosition = sf::Mouse::getPosition(*Window);
         sf::Vector2f MousePosition = Window->mapPixelToCoords(PixelPosition);
 
         bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
-        // ---------------------------------------------------------------------
-        // 2. Drag State
-        // ---------------------------------------------------------------------
+        // Drag State
         if (bLeftMouseDown)
         {
             if (!bLeftMouseButtonPressedLastFrame)
@@ -74,9 +67,7 @@ namespace we
 
         bLeftMouseButtonPressedLastFrame = bLeftMouseDown;
 
-        // ---------------------------------------------------------------------
-        // 3. Hover Logic (only if not dragging)
-        // ---------------------------------------------------------------------
+        // Hover Logic
         if (!bIsDragging)
         {
             HandleMouseHover(MousePosition);
@@ -86,7 +77,7 @@ namespace we
     }
 
     // -------------------------------------------------------------------------
-    // Render()
+    // Render
     // -------------------------------------------------------------------------
     void Board::Render(sf::RenderWindow& Window)
     {
@@ -99,22 +90,24 @@ namespace we
 
         for (const auto& Piece : Pieces)
         {
-            if (Piece)
-                Piece->Render(Window);
+            if (Piece) { Piece->Render(Window); }
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Valid Move Logic
+    // -------------------------------------------------------------------------
     bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         switch (Piece->GetPieceType())
         {
-        case EChessPieceType::Rook:   return IsRookMoveValid(Piece, From, To);
-        case EChessPieceType::Bishop: return IsBishopMoveValid(Piece, From, To);
-        case EChessPieceType::Queen:  return IsQueenMoveValid(Piece, From, To);
-        case EChessPieceType::King:   return IsKingMoveValid(Piece, From, To);
-        case EChessPieceType::Knight: return IsKnightMoveValid(Piece, From, To);
-        case EChessPieceType::Pawn:   return IsPawnMoveValid(Piece, From, To);
-        default: return true;
+            case EChessPieceType::Rook:   return IsRookMoveValid(Piece, From, To);
+            case EChessPieceType::Bishop: return IsBishopMoveValid(Piece, From, To);
+            case EChessPieceType::Queen:  return IsQueenMoveValid(Piece, From, To);
+            case EChessPieceType::King:   return IsKingMoveValid(Piece, From, To);
+            case EChessPieceType::Knight: return IsKnightMoveValid(Piece, From, To);
+            case EChessPieceType::Pawn:   return IsPawnMoveValid(Piece, From, To);
+            default: return true;
         }
     }
 
@@ -170,11 +163,9 @@ namespace we
 
                 if (OtherPiece->GetGridPosition() == pos) { return false; }
             }
-
             pos.x += dx;
             pos.y += dy;
         }
-
         return true;
     }
 
@@ -205,11 +196,9 @@ namespace we
 
                 if (OtherPiece->GetGridPosition() == pos) { return false; }
             }
-
             pos.x += dx;
             pos.y += dy;
         }
-
         return true;
     }
 
@@ -237,8 +226,7 @@ namespace we
 
     bool Board::IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (!Piece || From == To)
-            return false;
+        if (!Piece || From == To) { return false; }
 
         int direction = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
         int startRow = (Piece->GetColor() == EChessColor::White) ? 6 : 1;
@@ -260,32 +248,26 @@ namespace we
         // Forward move
         if (deltaX == 0)
         {
-            // Cannot move forward into an occupied square
-            if (targetPiece)
-                return false;
+            // Cannot move forward
+            if (targetPiece) { return false; }
 
-            // Move 1 square forward
-            if (deltaY == direction)
-                return true;
+            // Move 1 square
+            if (deltaY == direction) { return true; }
 
-            // Move 2 squares from starting position
+            // Move 2 squares
             if (!Piece->GetHasMoved() && deltaY == 2 * direction)
             {
-                // Must check that both squares are empty
+                // Check squares are empty
                 sf::Vector2i middleSquare = { From.x, From.y + direction };
 
                 for (auto& Other : Pieces)
                 {
-                    if (!Other || Other->IsPendingDestroy())
-                        continue;
+                    if (!Other || Other->IsPendingDestroy()) { continue; }
 
-                    if (Other->GetGridPosition() == middleSquare)
-                        return false;
+                    if (Other->GetGridPosition() == middleSquare) { return false; }
                 }
-
                 return true;
             }
-
             return false;
         }
 
@@ -293,19 +275,17 @@ namespace we
         if (std::abs(deltaX) == 1 && deltaY == direction)
         {
             // capturing an enemy piece
-            if (targetPiece && targetPiece->GetColor() != Piece->GetColor())
-                return true;
+            if (targetPiece && targetPiece->GetColor() != Piece->GetColor()) { return true; }
 
             // EN-PASSANT
             if (!targetPiece)
             {
-                sf::Vector2i enemyPos = { To.x, From.y }; // the pawn beside ours
+                sf::Vector2i enemyPos = { To.x, From.y };
 
                 shared<ChessPiece> enemyPawn = nullptr;
                 for (auto& Other : Pieces)
                 {
-                    if (!Other || Other->IsPendingDestroy())
-                        continue;
+                    if (!Other || Other->IsPendingDestroy()) { continue; }
 
                     if (Other->GetGridPosition() == enemyPos &&
                         Other->GetPieceType() == EChessPieceType::Pawn &&
@@ -318,20 +298,16 @@ namespace we
 
                 if (enemyPawn)
                 {
-                    // Enemy pawn must have moved two squares on the *previous* turn
-                    // (assuming you track last-move turn index)
-                    if (true)//enemyPawn->WasLastMoveDoubleStep())
+                    // Enemy pawn must have moved two squares on the previous turn
+                    if (enemyPawn->GetWasPawnMovedTwo())
                     {
                         return true;
                     }
                 }
             }
-
-            // Anything else is illegal for pawns
             return false;
         }
     }
-
 
     // -------------------------------------------------------------------------
     // Grid World Conversion
@@ -360,8 +336,7 @@ namespace we
 
     std::string Board::GridToAlgebraic(const sf::Vector2i& GridPos)
     {
-        if (GridPos.x < 0 || GridPos.x >= 8 || GridPos.y < 0 || GridPos.y >= 8)
-            return "Invalid";
+        if (GridPos.x < 0 || GridPos.x >= 8 || GridPos.y < 0 || GridPos.y >= 8) { return "Invalid"; }
 
         char File = 'a' + GridPos.x;
         char Rank = '8' - GridPos.y;
@@ -378,36 +353,30 @@ namespace we
     {
         switch (Type)
         {
-        case EChessPieceType::King:   return "King";
-        case EChessPieceType::Queen:  return "Queen";
-        case EChessPieceType::Bishop: return "Bishop";
-        case EChessPieceType::Knight: return "Knight";
-        case EChessPieceType::Rook:   return "Rook";
-        case EChessPieceType::Pawn:   return "Pawn";
-        default:                      return "Unknown";
+            case EChessPieceType::King:   return "King";
+            case EChessPieceType::Queen:  return "Queen";
+            case EChessPieceType::Bishop: return "Bishop";
+            case EChessPieceType::Knight: return "Knight";
+            case EChessPieceType::Rook:   return "Rook";
+            case EChessPieceType::Pawn:   return "Pawn";
+            default:                      return "Unknown";
         }
     }
 
     void Board::InitializePieces()
     {
-        const std::string Texture = "/pieces.png";
-
         for (int y = 0; y < GridSize; ++y)
         {
             for (int x = 0; x < GridSize; ++x)
             {
                 int value = InitialBoard[y][x];
-                if (value == 0) continue;
+                if (value == 0) { continue; }
 
-                EChessColor color = (value > 0)
-                    ? EChessColor::White
-                    : EChessColor::Black;
+                EChessColor color = (value > 0)? EChessColor::White : EChessColor::Black;
 
                 EChessPieceType type = static_cast<EChessPieceType>(std::abs(value) - 1);
 
-                weak<ChessPiece> newPieceWeak = GetWorld()->SpawnActor<ChessPiece>(
-                    type, color, Texture
-                );
+                weak<ChessPiece> newPieceWeak = GetWorld()->SpawnActor<ChessPiece>(type, color);
 
                 if (auto newPiece = newPieceWeak.lock())
                 {
@@ -436,10 +405,7 @@ namespace we
                 sf::RectangleShape Square;
                 Square.setSize(size);
 
-                Square.setPosition({
-                    GRID_ABS_OFFSET_X + x * SquareSize,
-                    GRID_ABS_OFFSET_Y + y * SquareSize
-                    });
+                Square.setPosition({GRID_ABS_OFFSET_X + x * SquareSize, GRID_ABS_OFFSET_Y + y * SquareSize});
 
                 Square.setFillColor(sf::Color(0, 255, 0, 100));
                 Square.setOutlineColor(sf::Color::Blue);
@@ -461,30 +427,32 @@ namespace we
         for (auto it = Pieces.rbegin(); it != Pieces.rend(); ++it)
         {
             shared<ChessPiece> Piece = *it;
-            if (!Piece || Piece->IsPendingDestroy())
-                continue;
+            if (!Piece || Piece->IsPendingDestroy()) { continue; }
 
             // ---- SKIP PIECES NOT BELONGING TO CURRENT PLAYER ----
             if (!IsPlayersPiece(Piece.get())) { continue; }
 
             if (Piece->IsPointInBounds(MousePos))
+            {
                 HoveredPiece = Piece;
+            }
 
             if (Piece->IsHovered())
+            {
                 LastHoveredPiece = Piece;
+            }
         }
 
         if (LastHoveredPiece && LastHoveredPiece != HoveredPiece)
+        {
             LastHoveredPiece->SetHovered(false);
+        }
 
-        if (HoveredPiece &&
-            !HoveredPiece->IsSelected() &&
-            !HoveredPiece->IsHovered())
+        if (HoveredPiece && !HoveredPiece->IsSelected() && !HoveredPiece->IsHovered())
         {
             HoveredPiece->SetHovered(true);
         }
     }
-
 
     bool Board::IsWorldPositionInGridBounds(const sf::Vector2f& WorldPos)
     {
@@ -526,11 +494,7 @@ namespace we
             FinalGridPos = DragStartGridPosition;
             bMoveIsSuccessful = false;
 
-            LOG("Invalid Move: %s cannot move from %s to %s.",
-                GetPieceName(Piece->GetPieceType()).c_str(),
-                GridToAlgebraic(From).c_str(),
-                GridToAlgebraic(To).c_str()
-            );
+            LOG("Invalid Move: %s cannot move from %s to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(From).c_str(), GridToAlgebraic(To).c_str());
         }
         else
         {
@@ -539,13 +503,11 @@ namespace we
 
             for (const auto& OtherPiece : Pieces)
             {
-                if (!OtherPiece || OtherPiece->IsPendingDestroy() || OtherPiece == Piece)
-                    continue;
+                if (!OtherPiece || OtherPiece->IsPendingDestroy() || OtherPiece == Piece) { continue; }
 
                 if (OtherPiece->GetGridPosition() == To)
                 {
-                    if (OtherPiece->GetColor() == Piece->GetColor() ||
-                        OtherPiece->GetPieceType() == EChessPieceType::King)
+                    if (OtherPiece->GetColor() == Piece->GetColor() || OtherPiece->GetPieceType() == EChessPieceType::King)
                     {
                         // Cannot capture own piece or king
                         FinalGridPos = DragStartGridPosition;
@@ -559,13 +521,54 @@ namespace we
                 }
             }
 
+            // ------ EN-PASSANT CAPTURE CHECK -------------
+            if (!CapturedPiece && Piece->GetPieceType() == EChessPieceType::Pawn)
+            {
+                int direction = (Piece->GetColor() == EChessColor::White)? -1 : 1;
+
+                // Pawn moves diagonally but the target square is empty -> possible en-passant
+                if (std::abs(To.x - From.x) == 1 && To.y - From.y == direction)
+                {
+                    sf::Vector2i enemyPos = { To.x, From.y }; // the bypassed pawn
+
+                    for (auto& OtherPiece : Pieces)
+                    {
+                        if (!OtherPiece || OtherPiece->IsPendingDestroy()) { continue; }
+
+                        if (OtherPiece->GetGridPosition() == enemyPos && OtherPiece->GetPieceType() == EChessPieceType::Pawn && OtherPiece->GetColor() != Piece->GetColor() && OtherPiece->GetWasPawnMovedTwo())
+                        {
+                            CapturedPiece = OtherPiece;
+                            break;
+                        }
+                    }
+                }
+            }
+
             // ------ Execute capture -------------
             if (CapturedPiece)
             {
+                sf::Vector2i capturedPos = CapturedPiece->GetGridPosition();
                 CapturedPiece->Destroy();
-                LOG("Captured %s at %s!",
-                    GetPieceName(CapturedPiece->GetPieceType()).c_str(),
-                    GridToAlgebraic(To).c_str());
+
+                LOG("Captured %s at %s!", GetPieceName(CapturedPiece->GetPieceType()).c_str(), GridToAlgebraic(capturedPos).c_str());
+            }
+        }
+
+        // ------ UPDATE PAWN DOUBLE-MOVE FLAG -------------
+        if (Piece->GetPieceType() == EChessPieceType::Pawn)
+        {
+            int moveDist = std::abs(To.y - From.y);
+
+            // This pawn moved two squares -> eligible to be captured en-passant next turn
+            Piece->SetWasPawnMovedTwo(moveDist == 2);
+
+            // All other pawns lose their en-passant flag
+            for (auto& Pawns : Pieces)
+            {
+                if (Pawns && Pawns != Piece && Pawns->GetPieceType() == EChessPieceType::Pawn)
+                {
+                    Pawns->SetWasPawnMovedTwo(false);
+                }
             }
         }
 
@@ -599,15 +602,10 @@ namespace we
         {
             shared<ChessPiece> Piece = *it;
 
-            if (Piece &&
-                !Piece->IsPendingDestroy() &&
-                Piece->IsPointInBounds(MousePos))
+            if (Piece && !Piece->IsPendingDestroy() && Piece->IsPointInBounds(MousePos))
             {
-                // ---- TURN CHECK -------------------------------------------------
-                if (!IsPlayersPiece(Piece.get()))
-                {
-                    return;
-                }
+                // ---- TURN CHECK -----------------------
+                if (!IsPlayersPiece(Piece.get())) { return; }
 
                 bIsDragging = true;
                 DraggingPiece = Piece;
@@ -639,7 +637,6 @@ namespace we
     {
         if (auto Piece = DraggingPiece.lock())
         {
-            // SAFETY: In case something slipped through
             if (!IsPlayersPiece(Piece.get()))
             {
                 Piece->SetGridPosition(DragStartGridPosition);
@@ -652,9 +649,7 @@ namespace we
             if (!IsWorldPositionInGridBounds(MousePos))
             {
                 Piece->SetGridPosition(DragStartGridPosition);
-                LOG("Invalid Move: Dropped out of bounds. %s returned to %s.",
-                    GetPieceName(Piece->GetPieceType()).c_str(),
-                    GridToAlgebraic(DragStartGridPosition).c_str());
+                LOG("Invalid Move: Dropped out of bounds. %s returned to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(DragStartGridPosition).c_str());
 
                 CleanupDragState(Piece);
                 return;
@@ -668,11 +663,9 @@ namespace we
         DraggingPiece.reset();
     }
 
-
     bool Board::IsPlayersPiece(const ChessPiece* Piece) const
     {
-        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) ||
-            (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
+        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) || (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
     }
 
     void Board::SwitchTurn()
