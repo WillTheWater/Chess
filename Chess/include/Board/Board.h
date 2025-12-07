@@ -59,6 +59,7 @@ namespace we
         bool IsBishopMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
         bool IsQueenMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
         bool IsKingMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
+        bool IsKnightMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
 
         // ----------------------------------------------------
         // Board World Conversion
