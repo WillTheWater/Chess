@@ -108,17 +108,17 @@ namespace we
     {
         switch (Piece->GetPieceType())
         {
-        case EChessPieceType::Rook:   return IsRookMoveValid(From, To, Piece->GetColor());
-        case EChessPieceType::Bishop: return IsBishopMoveValid(From, To, Piece->GetColor());
-        case EChessPieceType::Queen:  return IsQueenMoveValid(From, To, Piece->GetColor());
-        case EChessPieceType::King:   return IsKingMoveValid(From, To, Piece->GetColor());
-        case EChessPieceType::Knight: return IsKnightMoveValid(From, To, Piece->GetColor());
-        //case EChessPieceType::Pawn:   return IsPawnMoveValid(From, To, Piece->GetColor());
+        case EChessPieceType::Rook:   return IsRookMoveValid(Piece, From, To);
+        case EChessPieceType::Bishop: return IsBishopMoveValid(Piece, From, To);
+        case EChessPieceType::Queen:  return IsQueenMoveValid(Piece, From, To);
+        case EChessPieceType::King:   return IsKingMoveValid(Piece, From, To);
+        case EChessPieceType::Knight: return IsKnightMoveValid(Piece, From, To);
+        case EChessPieceType::Pawn:   return IsPawnMoveValid(Piece, From, To);
         default: return true;
         }
     }
 
-    bool Board::IsRookMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         bool sameRow = (From.y == To.y);
         bool sameCol = (From.x == To.x);
@@ -147,7 +147,7 @@ namespace we
         return true;
     }
 
-    bool Board::IsBishopMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    bool Board::IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         if (From == To) { return false; }
 
@@ -178,7 +178,7 @@ namespace we
         return true;
     }
 
-    bool Board::IsQueenMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    bool Board::IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         if (From == To) { return false; }
 
@@ -213,7 +213,7 @@ namespace we
         return true;
     }
 
-    bool Board::IsKingMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    bool Board::IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         if (From == To) { return false; }
 
@@ -225,17 +225,85 @@ namespace we
         return false;
     }
 
-    bool Board::IsKnightMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const
+    bool Board::IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         if (From == To) { return false; }
 
         int deltaX = std::abs(To.x - From.x);
         int deltaY = std::abs(To.y - From.y);
 
-        if ((deltaX == 1 && deltaY == 2) || (deltaX == 2 && deltaY == 1)) { return true; }
+        return ((deltaX == 1 && deltaY == 2) || (deltaX == 2 && deltaY == 1));
+    }
 
+    bool Board::IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    {
+        if (!Piece || From == To)
+            return false;
+
+        int direction = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
+        int startRow = (Piece->GetColor() == EChessColor::White) ? 6 : 1;
+
+        int deltaX = To.x - From.x;
+        int deltaY = To.y - From.y;
+
+        // Check if target square contains an enemy piece
+        shared<ChessPiece> targetPiece = nullptr;
+        for (auto& Other : Pieces)
+        {
+            if (Other && !Other->IsPendingDestroy() && Other->GetGridPosition() == To)
+            {
+                targetPiece = Other;
+                break;
+            }
+        }
+
+        // Forward move
+        if (deltaX == 0)
+        {
+            // Cannot move forward into an occupied square
+            if (targetPiece)
+                return false;
+
+            // Move 1 square forward
+            if (deltaY == direction)
+                return true;
+
+            // Move 2 squares from starting position
+            if (!Piece->GetHasMoved() && deltaY == 2 * direction)
+            {
+                // Must check that both squares are empty
+                sf::Vector2i middleSquare = { From.x, From.y + direction };
+
+                for (auto& Other : Pieces)
+                {
+                    if (!Other || Other->IsPendingDestroy())
+                        continue;
+
+                    if (Other->GetGridPosition() == middleSquare)
+                        return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        // Diagonal capture
+        if (std::abs(deltaX) == 1 && deltaY == direction)
+        {
+            // capturing an enemy piece
+            if (targetPiece && targetPiece->GetColor() != Piece->GetColor())
+                return true;
+
+            // TODO: add en-passant here
+            return false;
+        }
+
+        // Anything else is illegal for pawns
         return false;
     }
+
 
     // -------------------------------------------------------------------------
     // Grid World Conversion
@@ -485,6 +553,7 @@ namespace we
         if (bMoveIsSuccessful && FinalGridPos != From)
         {
             LOG("%s to %s", name.c_str(), end.c_str());
+            Piece->SetHasMoved();
             SwitchTurn();
         }
         else if (!bMoveIsSuccessful)

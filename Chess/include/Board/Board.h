@@ -55,11 +55,12 @@ namespace we
         // ----------------------------------------------------
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
         bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool IsRookMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
-        bool IsBishopMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
-        bool IsQueenMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
-        bool IsKingMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
-        bool IsKnightMoveValid(sf::Vector2i From, sf::Vector2i To, EChessColor Color) const;
+        bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
 
         // ----------------------------------------------------
         // Board World Conversion

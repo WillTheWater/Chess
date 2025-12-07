@@ -39,6 +39,11 @@ namespace we
         UpdateSpritePosition();
     }
 
+    void ChessPiece::SetHasMoved()
+    {
+        bHasMoved = true;
+    }
+
     void ChessPiece::UpdateSpritePosition()
     {
         const float centerOffset = PIECE_SIZE / 2.0f;
