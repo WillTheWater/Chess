@@ -27,11 +27,9 @@ namespace we
         //LOG("White's Turn!")
     }
 
-
     // -------------------------------------------------------------------------
     // Tick
     // -------------------------------------------------------------------------
-    static bool bLeftMouseButtonPressedLastFrame = false;
     void Board::Tick(float DeltaTime)
     {
         sf::RenderWindow* Window = GetWorld()->GetRenderWindow();

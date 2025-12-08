@@ -93,6 +93,7 @@ namespace we
         void CleanupDragState(shared<ChessPiece> Piece);
 
         bool bIsDragging = false;
+        bool bLeftMouseButtonPressedLastFrame = false;
         weak<ChessPiece> DraggingPiece;
         sf::Vector2i DragStartGridPosition{ -1, -1 };
 
