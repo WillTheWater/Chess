@@ -74,6 +74,7 @@ namespace we
         // ----------------------------------------------------
         void InitializePieces();
         std::string GetPieceName(EChessPieceType Type);
+        shared<ChessPiece> GetPieceAt(sf::Vector2i Position) const;
 
         List<shared<ChessPiece>> Pieces;
         weak<ChessPiece> SelectedPiece;

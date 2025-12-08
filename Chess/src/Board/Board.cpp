@@ -24,7 +24,7 @@ namespace we
         SetActorLocation(sf::Vector2f{float(GetWindowSize().x) / 2.0f, float(GetWindowSize().y) / 2.0f});
 
         InitializePieces();
-        LOG("White's Turn!")
+        //LOG("White's Turn!")
     }
 
 
@@ -204,15 +204,53 @@ namespace we
 
     bool Board::IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (From == To) { return false; }
+        if (!Piece || (From == To) || (Piece->GetPieceType() != EChessPieceType::King)) return false;
 
-        int deltaX = std::abs(To.x - From.x);
+        int signedDx = To.x - From.x;
+        int deltaX = std::abs(signedDx);
         int deltaY = std::abs(To.y - From.y);
 
+        // ---- Standard king move ----
         if (deltaX <= 1 && deltaY <= 1) { return true; }
+
+        // ---- Castling attempt? ----
+        if (deltaY == 0 && deltaX == 2)
+        {
+            // King has moved
+            if (Piece->GetHasMoved()) { return false; }
+
+            EChessColor Color = Piece->GetColor();
+
+            // Kingside or Queenside — use signed delta to decide direction
+            bool bKingside = (signedDx > 0);
+
+            int rookX = bKingside ? 7 : 0;
+            sf::Vector2i RookPos(rookX, From.y);
+
+            // Rook must exist and not have moved
+            shared<ChessPiece> Rook = GetPieceAt(RookPos);
+            if (!Rook || Rook->GetPieceType() != EChessPieceType::Rook || Rook->GetColor() != Color || Rook->GetHasMoved())
+            {
+                return false;
+            }
+
+            // Path between king and rook must be empty (squares strictly between them)
+            int start = std::min(From.x, rookX) + 1;
+            int end = std::max(From.x, rookX) - 1;
+
+            for (int x = start; x <= end; x++)
+            {
+                if (GetPieceAt({ x, From.y }) != nullptr)
+                    return false;
+            }
+
+            // TODO: Check logic (king not in check / doesn't pass through attacked squares)
+            return true;
+        }
 
         return false;
     }
+
 
     bool Board::IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
@@ -363,6 +401,18 @@ namespace we
         }
     }
 
+    shared<ChessPiece> Board::GetPieceAt(sf::Vector2i Position) const
+    {
+        for (const auto& FoundPiece : Pieces)
+        {
+            if (!FoundPiece || FoundPiece->IsPendingDestroy()) { continue; }
+
+            if (FoundPiece->GetGridPosition() == Position) { return FoundPiece; }
+        }
+
+        return nullptr;
+    }
+
     void Board::InitializePieces()
     {
         for (int y = 0; y < GridSize; ++y)
@@ -386,7 +436,7 @@ namespace we
             }
         }
 
-        LOG("Initialized %zu chess pieces.", Pieces.size());
+        //LOG("Initialized %zu chess pieces.", Pieces.size());
     }
 
     // -------------------------------------------------------------------------
@@ -477,7 +527,7 @@ namespace we
     }
 
     // -------------------------------------------------------------------------
-    // Movement / Drag-End Logic
+    // Movement Logic
     // -------------------------------------------------------------------------
     void Board::TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos)
     {
@@ -494,7 +544,7 @@ namespace we
             FinalGridPos = DragStartGridPosition;
             bMoveIsSuccessful = false;
 
-            LOG("Invalid Move: %s cannot move from %s to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(From).c_str(), GridToAlgebraic(To).c_str());
+           // LOG("Invalid Move: %s cannot move from %s to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(From).c_str(), GridToAlgebraic(To).c_str());
         }
         else
         {
@@ -550,7 +600,7 @@ namespace we
                 sf::Vector2i capturedPos = CapturedPiece->GetGridPosition();
                 CapturedPiece->Destroy();
 
-                LOG("Captured %s at %s!", GetPieceName(CapturedPiece->GetPieceType()).c_str(), GridToAlgebraic(capturedPos).c_str());
+                //LOG("Captured %s at %s!", GetPieceName(CapturedPiece->GetPieceType()).c_str(), GridToAlgebraic(capturedPos).c_str());
             }
         }
 
@@ -572,6 +622,40 @@ namespace we
             }
         }
 
+        // ------ CASTLING ROOK MOVEMENT -------------
+        if (Piece->GetPieceType() == EChessPieceType::King)
+        {
+            int dx = FinalGridPos.x - From.x;
+
+            // King-side castling (move rook from h-file)
+            if (dx == 2)
+            {
+                sf::Vector2i rookFrom = { 7, From.y };
+                sf::Vector2i rookTo = { FinalGridPos.x - 1, From.y };
+
+                shared<ChessPiece> Rook = GetPieceAt(rookFrom);
+                if (Rook && Rook->GetPieceType() == EChessPieceType::Rook && !Rook->GetHasMoved())
+                {
+                    Rook->SetGridPosition(rookTo);
+                    Rook->SetHasMoved();
+                }
+            }
+
+            // Queen-side castling (move rook from a-file)
+            else if (dx == -2)
+            {
+                sf::Vector2i rookFrom = { 0, From.y };
+                sf::Vector2i rookTo = { FinalGridPos.x + 1, From.y };
+
+                shared<ChessPiece> Rook = GetPieceAt(rookFrom);
+                if (Rook && Rook->GetPieceType() == EChessPieceType::Rook && !Rook->GetHasMoved())
+                {
+                    Rook->SetGridPosition(rookTo);
+                    Rook->SetHasMoved();
+                }
+            }
+        }
+
         // ----- Move piece and clean up -----------
         Piece->SetGridPosition(FinalGridPos);
         CleanupDragState(Piece);
@@ -583,13 +667,13 @@ namespace we
 
         if (bMoveIsSuccessful && FinalGridPos != From)
         {
-            LOG("%s to %s", name.c_str(), end.c_str());
+            //LOG("%s to %s", name.c_str(), end.c_str());
             Piece->SetHasMoved();
             SwitchTurn();
         }
         else if (!bMoveIsSuccessful)
         {
-            LOG("Invalid Move: %s returned to %s.", name.c_str(), start.c_str());
+            //LOG("Invalid Move: %s returned to %s.", name.c_str(), start.c_str());
         }
     }
 
@@ -649,7 +733,7 @@ namespace we
             if (!IsWorldPositionInGridBounds(MousePos))
             {
                 Piece->SetGridPosition(DragStartGridPosition);
-                LOG("Invalid Move: Dropped out of bounds. %s returned to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(DragStartGridPosition).c_str());
+                //LOG("Invalid Move: Dropped out of bounds. %s returned to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(DragStartGridPosition).c_str());
 
                 CleanupDragState(Piece);
                 return;
@@ -672,6 +756,6 @@ namespace we
     {
         CurrentTurn = (CurrentTurn == EPlayerTurn::White)? EPlayerTurn::Black : EPlayerTurn::White;
         const char* TurnName = (CurrentTurn == EPlayerTurn::White) ? "White" : "Black";
-        LOG("It's %s's turn.", TurnName);
+        //LOG("It's %s's turn.", TurnName);
     }
 }
