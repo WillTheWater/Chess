@@ -26,8 +26,6 @@ namespace we
         virtual void Tick(float DeltaTime) override;
         virtual void Render(sf::RenderWindow& Window) override;
 
-        EPlayerTurn GetCurrentTurn() const { return CurrentTurn; }
-
     private:
         // ----------------------------------------------------
         // Board Constants

@@ -221,7 +221,7 @@ namespace we
 
             EChessColor Color = Piece->GetColor();
 
-            // Kingside or Queenside — use signed delta to decide direction
+            // Kingside or Queenside
             bool bKingside = (signedDx > 0);
 
             int rookX = bKingside ? 7 : 0;
@@ -234,7 +234,7 @@ namespace we
                 return false;
             }
 
-            // Path between king and rook must be empty (squares strictly between them)
+            // Path between king and rook must be empty
             int start = std::min(From.x, rookX) + 1;
             int end = std::max(From.x, rookX) - 1;
 
@@ -244,7 +244,7 @@ namespace we
                     return false;
             }
 
-            // TODO: Check logic (king not in check / doesn't pass through attacked squares)
+            // TODO: Check logic
             return true;
         }
 
