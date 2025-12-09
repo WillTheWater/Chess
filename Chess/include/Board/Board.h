@@ -72,7 +72,7 @@ namespace we
         // ----------------------------------------------------
         void InitializePieces();
         std::string GetPieceName(EChessPieceType Type);
-        shared<ChessPiece> GetPieceAt(sf::Vector2i Position) const;
+        //shared<ChessPiece> GetPieceAt(sf::Vector2i Position) const;
 
         List<shared<ChessPiece>> Pieces;
         weak<ChessPiece> SelectedPiece;
@@ -102,5 +102,31 @@ namespace we
         // ----------------------------------------------------
         void DrawDebugGrid();
         List<sf::RectangleShape> DebugGridSquares;
+
+
+
+
+
+
+
+        // ----------------------------------------------------
+        // OPTIMIZATION TESTING
+        // ----------------------------------------------------
+        static constexpr int ChessBoardGrid[GridSize][GridSize] = {};
+        shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
+
+        inline shared<ChessPiece> GetPieceAt(const sf::Vector2i& Pos) const
+        {
+            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8)
+                return nullptr;
+            return BoardGrid[Pos.x][Pos.y];
+        }
+
+        inline void SetPieceAt(const sf::Vector2i& Pos, shared<ChessPiece> Piece)
+        {
+            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8)
+                return;
+            BoardGrid[Pos.x][Pos.y] = Piece;
+        }
     };
 }

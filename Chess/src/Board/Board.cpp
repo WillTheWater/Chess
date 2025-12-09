@@ -242,7 +242,6 @@ namespace we
                     return false;
             }
 
-            // TODO: Check logic
             return true;
         }
 
@@ -399,7 +398,7 @@ namespace we
         }
     }
 
-    shared<ChessPiece> Board::GetPieceAt(sf::Vector2i Position) const
+   /* shared<ChessPiece> Board::GetPieceAt(sf::Vector2i Position) const
     {
         for (const auto& FoundPiece : Pieces)
         {
@@ -409,7 +408,7 @@ namespace we
         }
 
         return nullptr;
-    }
+    }*/
 
     void Board::InitializePieces()
     {

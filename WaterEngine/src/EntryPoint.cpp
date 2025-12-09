@@ -1,11 +1,10 @@
 #ifdef _WIN32
 #ifdef NDEBUG
-// In Release: use WinMain and hide console window
+// -----------------------------------------------
+// RELEASE MODE (no console, WinMain entrypoint)
+// -----------------------------------------------
 #pragma comment(linker, "/SUBSYSTEM:WINDOWS")
 #pragma comment(linker, "/ENTRY:WinMainCRTStartup")
-#else
-// In Debug: use console window
-#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
 #endif
 #endif
 
@@ -16,26 +15,28 @@
 #include <Windows.h>
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && defined(NDEBUG)
 
-// Windows entry point (Release build uses this)
+// -------------------------------------------------------
+// RELEASE BUILD ? use WinMain (no console)
+// -------------------------------------------------------
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     we::Application* App = GetApplication();
     App->Run();
-
     delete App;
     return 0;
 }
 
 #else
 
-// Non-Windows entry point
+// -------------------------------------------------------
+// DEBUG BUILD or NON-WINDOWS -> normal main()
+// -------------------------------------------------------
 int main(int argc, char** argv)
 {
     we::Application* App = GetApplication();
     App->Run();
-
     delete App;
     return 0;
 }
