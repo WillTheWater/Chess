@@ -11,9 +11,6 @@ namespace we
         Black
     };
 
-    // ----------------------------------------------------
-    // Board Actor
-    // ----------------------------------------------------
     class Board : public Actor
     {
     public:
@@ -32,14 +29,11 @@ namespace we
         // ----------------------------------------------------
         static constexpr int GridSize = 8;
         static constexpr int SquareSize = 78;
-
         static constexpr float GRID_ABS_OFFSET_X = 328.0f;
         static constexpr float GRID_ABS_OFFSET_Y = 49.0f;
-
-        static constexpr int ChessBoardGrid[GridSize][GridSize] = {};
         shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
 
-        // 1 = King, 2 = Queen, 3 = Bishop, 4 = Knight, 5 = Rook, 6 = Pawn
+        // 1 = King, 2 = Queen, 3 = Bishop, 4 = Knight, 5 = Rook, 6 = Pawn, - = Black
         static constexpr int InitialBoard[GridSize][GridSize] = {
             {-5, -4, -3, -2, -1, -3, -4, -5},
             {-6, -6, -6, -6, -6, -6, -6, -6},
@@ -52,10 +46,22 @@ namespace we
         };
 
         // ----------------------------------------------------
+        // Initialization
+        // ----------------------------------------------------
+        void InitializeBoard();
+        void ClearBoard();
+        EChessColor GetColorFromInitialValue(int value);
+        EChessPieceType GetTypeFromInitialValue(int value);
+        void SpawnInitialPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos);
+
+        // ----------------------------------------------------
         // Move Logic
         // ----------------------------------------------------
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
-        bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
+        bool IsKingInCheck(EChessColor KingColor) const;
+        bool CanPieceAttackSquare(ChessPiece* Piece, const sf::Vector2i& TargetPos) const;
         bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
@@ -70,13 +76,11 @@ namespace we
         sf::Vector2i WorldToGrid(const sf::Vector2f& WorldPos);
         sf::Vector2f GridToWorld(const sf::Vector2i& GridPos);
         std::string GridToAlgebraic(const sf::Vector2i& GridPos);
-
-        // ----------------------------------------------------
-        // Piece Helpers
-        // ----------------------------------------------------
-        void InitializePieces();
         std::string GetPieceName(EChessPieceType Type);
 
+        // ----------------------------------------------------
+        // Pieces
+        // ----------------------------------------------------
         List<shared<ChessPiece>> Pieces;
         weak<ChessPiece> SelectedPiece;
 
