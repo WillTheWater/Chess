@@ -62,7 +62,7 @@ namespace we
 		ATexture = AssetManager::GetAssetManager().LoadTexture(TexturePath);
 		if (!ATexture)
 		{
-			LOG("Actor: Failed to load texture: %s", TexturePath.c_str());
+			//LOG("Actor: Failed to load texture: %s", TexturePath.c_str());
 			return;
 		}
 

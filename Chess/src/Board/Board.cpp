@@ -125,16 +125,12 @@ namespace we
 
         while (pos != To)
         {
-            for (const auto& OtherPiece : Pieces)
-            {
-                if (!OtherPiece || OtherPiece->IsPendingDestroy()) { continue; }
-
-                if (OtherPiece->GetGridPosition() == pos) { return false; }
-            }
+            if (GetPieceAt(pos)) { return false; }
 
             pos.x += dx;
             pos.y += dy;
         }
+
         return true;
     }
 
@@ -144,6 +140,7 @@ namespace we
 
         int deltaX = To.x - From.x;
         int deltaY = To.y - From.y;
+
         if (std::abs(deltaX) != std::abs(deltaY)) { return false; }
 
         int dx = (deltaX > 0) ? 1 : -1;
@@ -155,15 +152,14 @@ namespace we
 
         while (pos != To)
         {
-            for (const auto& OtherPiece : Pieces)
+            if (GetPieceAt(pos))
             {
-                if (!OtherPiece || OtherPiece->IsPendingDestroy()) { continue; }
-
-                if (OtherPiece->GetGridPosition() == pos) { return false; }
+                return false;
             }
             pos.x += dx;
             pos.y += dy;
         }
+
         return true;
     }
 
@@ -188,15 +184,14 @@ namespace we
 
         while (pos != To)
         {
-            for (const auto& OtherPiece : Pieces)
+            if (GetPieceAt(pos))
             {
-                if (!OtherPiece || OtherPiece->IsPendingDestroy()) { continue; }
-
-                if (OtherPiece->GetGridPosition() == pos) { return false; }
+                return false;
             }
             pos.x += dx;
             pos.y += dy;
         }
+
         return true;
     }
 
@@ -269,80 +264,55 @@ namespace we
         int deltaX = To.x - From.x;
         int deltaY = To.y - From.y;
 
-        // Check if target square contains an enemy piece
-        shared<ChessPiece> targetPiece = nullptr;
-        for (auto& Other : Pieces)
-        {
-            if (Other && !Other->IsPendingDestroy() && Other->GetGridPosition() == To)
-            {
-                targetPiece = Other;
-                break;
-            }
-        }
+        shared<ChessPiece> targetPiece = GetPieceAt(To);
 
         // Forward move
         if (deltaX == 0)
         {
-            // Cannot move forward
+            // Cannot move forward if blocked
             if (targetPiece) { return false; }
 
             // Move 1 square
             if (deltaY == direction) { return true; }
 
-            // Move 2 squares
+            // Move 2 squares from start position
             if (!Piece->GetHasMoved() && deltaY == 2 * direction)
             {
-                // Check squares are empty
                 sf::Vector2i middleSquare = { From.x, From.y + direction };
-
-                for (auto& Other : Pieces)
-                {
-                    if (!Other || Other->IsPendingDestroy()) { continue; }
-
-                    if (Other->GetGridPosition() == middleSquare) { return false; }
-                }
+                if (GetPieceAt(middleSquare)) { return false; }
                 return true;
             }
+
             return false;
         }
 
         // Diagonal capture
         if (std::abs(deltaX) == 1 && deltaY == direction)
         {
-            // capturing an enemy piece
+            // Capturing an enemy piece
             if (targetPiece && targetPiece->GetColor() != Piece->GetColor()) { return true; }
 
-            // EN-PASSANT
+            // En-passant
             if (!targetPiece)
             {
                 sf::Vector2i enemyPos = { To.x, From.y };
+                shared<ChessPiece> enemyPawn = GetPieceAt(enemyPos);
 
-                shared<ChessPiece> enemyPawn = nullptr;
-                for (auto& Other : Pieces)
+                if (enemyPawn &&
+                    enemyPawn->GetPieceType() == EChessPieceType::Pawn &&
+                    enemyPawn->GetColor() != Piece->GetColor() &&
+                    enemyPawn->GetWasPawnMovedTwo())
                 {
-                    if (!Other || Other->IsPendingDestroy()) { continue; }
-
-                    if (Other->GetGridPosition() == enemyPos &&
-                        Other->GetPieceType() == EChessPieceType::Pawn &&
-                        Other->GetColor() != Piece->GetColor())
-                    {
-                        enemyPawn = Other;
-                        break;
-                    }
-                }
-
-                if (enemyPawn)
-                {
-                    // Enemy pawn must have moved two squares on the previous turn
-                    if (enemyPawn->GetWasPawnMovedTwo())
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
+
             return false;
         }
+
+        return false;
     }
+
 
     // -------------------------------------------------------------------------
     // Grid World Conversion
@@ -398,43 +368,64 @@ namespace we
         }
     }
 
-   /* shared<ChessPiece> Board::GetPieceAt(sf::Vector2i Position) const
-    {
-        for (const auto& FoundPiece : Pieces)
-        {
-            if (!FoundPiece || FoundPiece->IsPendingDestroy()) { continue; }
-
-            if (FoundPiece->GetGridPosition() == Position) { return FoundPiece; }
-        }
-
-        return nullptr;
-    }*/
-
     void Board::InitializePieces()
     {
+        // Clear arrays
+        for (int y = 0; y < GridSize; ++y)
+            for (int x = 0; x < GridSize; ++x)
+                BoardGrid[x][y] = nullptr;
+
+        Pieces.clear();
+
         for (int y = 0; y < GridSize; ++y)
         {
             for (int x = 0; x < GridSize; ++x)
             {
                 int value = InitialBoard[y][x];
-                if (value == 0) { continue; }
+                if (value == 0)
+                    continue;
 
-                EChessColor color = (value > 0)? EChessColor::White : EChessColor::Black;
+                // ----------------------------
+                // Extract color and type
+                // ----------------------------
+                EChessColor color = (value > 0)
+                    ? EChessColor::White
+                    : EChessColor::Black;
 
-                EChessPieceType type = static_cast<EChessPieceType>(std::abs(value) - 1);
+                // value = 1..6 -> King..Pawn
+                // your enum starts at 0, so subtract 1
+                EChessPieceType type =
+                    static_cast<EChessPieceType>(std::abs(value) - 1);
 
-                weak<ChessPiece> newPieceWeak = GetWorld()->SpawnActor<ChessPiece>(type, color);
+                // ----------------------------
+                // Spawn piece
+                // ----------------------------
+                weak<ChessPiece> newPieceWeak =
+                    GetWorld()->SpawnActor<ChessPiece>(type, color);
 
-                if (auto newPiece = newPieceWeak.lock())
-                {
-                    newPiece->SetGridPosition({ x, y });
-                    Pieces.push_back(newPiece);
-                }
+                shared<ChessPiece> newPiece = newPieceWeak.lock();
+                if (!newPiece)
+                    continue;
+
+                // ----------------------------
+                // Set chessboard info
+                // ----------------------------
+                sf::Vector2i gridPos{ x, y };
+                newPiece->SetGridPosition(gridPos);
+
+                // Store in list
+                Pieces.push_back(newPiece);
+
+                // ----------------------------
+                // NEW: store in fast lookup grid
+                // ----------------------------
+                SetPieceAt(gridPos, newPiece);
             }
         }
 
         //LOG("Initialized %zu chess pieces.", Pieces.size());
     }
+
 
     // -------------------------------------------------------------------------
     // Debug Grid Drawing
@@ -468,38 +459,51 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::HandleMouseHover(const sf::Vector2f& MousePos)
     {
-        shared<ChessPiece> HoveredPiece = nullptr;
-        shared<ChessPiece> LastHoveredPiece = nullptr;
+        // Convert mouse to grid position
+        sf::Vector2i GridPos = WorldToGrid(MousePos);
 
-        for (auto it = Pieces.rbegin(); it != Pieces.rend(); ++it)
+        // Bounds check
+        if (GridPos.x < 0 || GridPos.x >= GridSize || GridPos.y < 0 || GridPos.y >= GridSize)
         {
-            shared<ChessPiece> Piece = *it;
-            if (!Piece || Piece->IsPendingDestroy()) { continue; }
-
-            // ---- SKIP PIECES NOT BELONGING TO CURRENT PLAYER ----
-            if (!IsPlayersPiece(Piece.get())) { continue; }
-
-            if (Piece->IsPointInBounds(MousePos))
+            if (HoveredPiece)
             {
-                HoveredPiece = Piece;
+                HoveredPiece->SetHovered(false);
+                HoveredPiece = nullptr;
             }
+            return;
+        }
 
-            if (Piece->IsHovered())
+        // Get the piece directly from the grid
+        ChessPiece* Piece = GetPieceAt(GridPos).get(); // raw pointer
+
+        // Skip if no piece or not current player's
+        if (!Piece || !IsPlayersPiece(Piece))
+        {
+            if (HoveredPiece)
             {
-                LastHoveredPiece = Piece;
+                HoveredPiece->SetHovered(false);
+                HoveredPiece = nullptr;
             }
+            return;
         }
 
-        if (LastHoveredPiece && LastHoveredPiece != HoveredPiece)
+        // Unhover previous piece if different
+        if (HoveredPiece && HoveredPiece != Piece)
         {
-            LastHoveredPiece->SetHovered(false);
+            HoveredPiece->SetHovered(false);
         }
 
-        if (HoveredPiece && !HoveredPiece->IsSelected() && !HoveredPiece->IsHovered())
+        // Hover new piece
+        if (!Piece->IsSelected() && !Piece->IsHovered())
         {
-            HoveredPiece->SetHovered(true);
+            Piece->SetHovered(true);
         }
+
+        // Cache hovered piece
+        HoveredPiece = Piece;
     }
+
+
 
     bool Board::IsWorldPositionInGridBounds(const sf::Vector2f& WorldPos)
     {
@@ -515,11 +519,11 @@ namespace we
         return (WorldPos.x >= MinX && WorldPos.x < MaxX && WorldPos.y >= MinY && WorldPos.y < MaxY);
     }
 
-    void Board::CleanupDragState(shared<ChessPiece> Piece)
+    void Board::CleanupDragState(ChessPiece* Piece)
     {
         Piece->SetSelected(false);
         SelectedPiece.reset();
-        DraggingPiece.reset();
+        DraggingPiece = nullptr;
         bIsDragging = false;
     }
 
@@ -528,150 +532,158 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos)
     {
-        if (!Piece) return;
+        if (!Piece)
+            return;
 
         sf::Vector2i From = Piece->GetGridPosition();
         sf::Vector2i To = TargetGridPos;
         sf::Vector2i FinalGridPos = To;
         bool bMoveIsSuccessful = true;
 
-        // ------ Check move validity --------------------
+        // Validate move ------------------------------------------------------------
         if (!IsMoveValid(Piece, From, To))
         {
             FinalGridPos = DragStartGridPosition;
             bMoveIsSuccessful = false;
-
-           // LOG("Invalid Move: %s cannot move from %s to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(From).c_str(), GridToAlgebraic(To).c_str());
         }
         else
         {
-            // ---- Check for captures ----------------
-            shared<ChessPiece> CapturedPiece = nullptr;
+            // -------------------- Capture Logic -----------------------------------
+            shared<ChessPiece> CapturedPiece = GetPieceAt(To);
 
-            for (const auto& OtherPiece : Pieces)
+            if (CapturedPiece && CapturedPiece != Piece)
             {
-                if (!OtherPiece || OtherPiece->IsPendingDestroy() || OtherPiece == Piece) { continue; }
-
-                if (OtherPiece->GetGridPosition() == To)
+                // cannot capture own piece or king
+                if (CapturedPiece->GetColor() == Piece->GetColor() ||
+                    CapturedPiece->GetPieceType() == EChessPieceType::King)
                 {
-                    if (OtherPiece->GetColor() == Piece->GetColor() || OtherPiece->GetPieceType() == EChessPieceType::King)
-                    {
-                        // Cannot capture own piece or king
-                        FinalGridPos = DragStartGridPosition;
-                        bMoveIsSuccessful = false;
-                    }
-                    else
-                    {
-                        CapturedPiece = OtherPiece;
-                    }
-                    break;
+                    bMoveIsSuccessful = false;
+                    FinalGridPos = DragStartGridPosition;
                 }
             }
 
-            // ------ EN-PASSANT CAPTURE CHECK -------------
+            // -------------------- En Passant --------------------------------------
             if (!CapturedPiece && Piece->GetPieceType() == EChessPieceType::Pawn)
             {
-                int direction = (Piece->GetColor() == EChessColor::White)? -1 : 1;
+                int direction = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
 
-                // Pawn moves diagonally but the target square is empty -> possible en-passant
-                if (std::abs(To.x - From.x) == 1 && To.y - From.y == direction)
+                // diagonal move but landing square empty
+                if (abs(To.x - From.x) == 1 && To.y - From.y == direction)
                 {
-                    sf::Vector2i enemyPos = { To.x, From.y }; // the bypassed pawn
+                    sf::Vector2i enemyPos = { To.x, From.y };
+                    shared<ChessPiece> EP = GetPieceAt(enemyPos);
 
-                    for (auto& OtherPiece : Pieces)
+                    if (EP &&
+                        EP->GetPieceType() == EChessPieceType::Pawn &&
+                        EP->GetColor() != Piece->GetColor() &&
+                        EP->GetWasPawnMovedTwo())
                     {
-                        if (!OtherPiece || OtherPiece->IsPendingDestroy()) { continue; }
-
-                        if (OtherPiece->GetGridPosition() == enemyPos && OtherPiece->GetPieceType() == EChessPieceType::Pawn && OtherPiece->GetColor() != Piece->GetColor() && OtherPiece->GetWasPawnMovedTwo())
-                        {
-                            CapturedPiece = OtherPiece;
-                            break;
-                        }
+                        CapturedPiece = EP;
                     }
                 }
             }
 
-            // ------ Execute capture -------------
-            if (CapturedPiece)
+            // -------------------- Execute capture ---------------------------------
+            if (CapturedPiece && bMoveIsSuccessful)
             {
-                sf::Vector2i capturedPos = CapturedPiece->GetGridPosition();
-                CapturedPiece->Destroy();
+                sf::Vector2i capPos = CapturedPiece->GetGridPosition();
 
-                //LOG("Captured %s at %s!", GetPieceName(CapturedPiece->GetPieceType()).c_str(), GridToAlgebraic(capturedPos).c_str());
+                // remove from grid
+                SetPieceAt(capPos, nullptr);
+
+                // remove from Pieces list
+                for (auto it = Pieces.begin(); it != Pieces.end(); ++it)
+                {
+                    if (*it == CapturedPiece)
+                    {
+                        Pieces.erase(it);
+                        break;
+                    }
+                }
+
+                CapturedPiece->Destroy();
             }
         }
 
-        // ------ UPDATE PAWN DOUBLE-MOVE FLAG -------------
+        // ---------------- Pawn double move / en-passant flag ----------------------
         if (Piece->GetPieceType() == EChessPieceType::Pawn)
         {
-            int moveDist = std::abs(To.y - From.y);
+            int moveDist = abs(To.y - From.y);
 
-            // This pawn moved two squares -> eligible to be captured en-passant next turn
             Piece->SetWasPawnMovedTwo(moveDist == 2);
 
-            // All other pawns lose their en-passant flag
-            for (auto& Pawns : Pieces)
+            // clear flag for all other pawns
+            for (auto& P : Pieces)
             {
-                if (Pawns && Pawns != Piece && Pawns->GetPieceType() == EChessPieceType::Pawn)
-                {
-                    Pawns->SetWasPawnMovedTwo(false);
-                }
+                if (P && P != Piece && P->GetPieceType() == EChessPieceType::Pawn)
+                    P->SetWasPawnMovedTwo(false);
             }
         }
 
-        // ------ CASTLING ROOK MOVEMENT -------------
+        // ------------------- Castling movement ------------------------------------
         if (Piece->GetPieceType() == EChessPieceType::King)
         {
             int dx = FinalGridPos.x - From.x;
 
-            // King-side castling (move rook from h-file)
+            // King-side
             if (dx == 2)
             {
                 sf::Vector2i rookFrom = { 7, From.y };
                 sf::Vector2i rookTo = { FinalGridPos.x - 1, From.y };
 
                 shared<ChessPiece> Rook = GetPieceAt(rookFrom);
-                if (Rook && Rook->GetPieceType() == EChessPieceType::Rook && !Rook->GetHasMoved())
+                if (Rook && Rook->GetPieceType() == EChessPieceType::Rook &&
+                    !Rook->GetHasMoved())
                 {
+                    // update grid
+                    SetPieceAt(rookFrom, nullptr);
+                    SetPieceAt(rookTo, Rook);
+
                     Rook->SetGridPosition(rookTo);
                     Rook->SetHasMoved();
                 }
             }
 
-            // Queen-side castling (move rook from a-file)
+            // Queen-side
             else if (dx == -2)
             {
                 sf::Vector2i rookFrom = { 0, From.y };
                 sf::Vector2i rookTo = { FinalGridPos.x + 1, From.y };
 
                 shared<ChessPiece> Rook = GetPieceAt(rookFrom);
-                if (Rook && Rook->GetPieceType() == EChessPieceType::Rook && !Rook->GetHasMoved())
+                if (Rook && Rook->GetPieceType() == EChessPieceType::Rook &&
+                    !Rook->GetHasMoved())
                 {
+                    SetPieceAt(rookFrom, nullptr);
+                    SetPieceAt(rookTo, Rook);
+
                     Rook->SetGridPosition(rookTo);
                     Rook->SetHasMoved();
                 }
             }
         }
 
-        // ----- Move piece and clean up -----------
-        Piece->SetGridPosition(FinalGridPos);
-        CleanupDragState(Piece);
+        // ------------------- Apply movement ---------------------------------------
 
-        // ------ Logging and turn switch -----------
-        std::string name = GetPieceName(Piece->GetPieceType());
-        std::string start = GridToAlgebraic(From);
-        std::string end = GridToAlgebraic(FinalGridPos);
-
-        if (bMoveIsSuccessful && FinalGridPos != From)
+        if (bMoveIsSuccessful)
         {
-            //LOG("%s to %s", name.c_str(), end.c_str());
+            // update grid
+            SetPieceAt(From, nullptr);
+            SetPieceAt(FinalGridPos, Piece);
+
+            // update sprite + internal grid pos
+            Piece->SetGridPosition(FinalGridPos);
             Piece->SetHasMoved();
+
             SwitchTurn();
         }
-        else if (!bMoveIsSuccessful)
+        else
         {
-            //LOG("Invalid Move: %s returned to %s.", name.c_str(), start.c_str());
+            // move rejected -> return to original pos
+            Piece->SetGridPosition(DragStartGridPosition);
         }
+
+        CleanupDragState(Piece.get());
     }
 
     // -------------------------------------------------------------------------
@@ -679,25 +691,18 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::HandleDragStart(const sf::Vector2f& MousePos)
     {
-        for (auto it = Pieces.rbegin(); it != Pieces.rend(); ++it)
-        {
-            shared<ChessPiece> Piece = *it;
+        sf::Vector2i gridPos = WorldToGrid(MousePos);
+        shared<ChessPiece> PieceSP = GetPieceAt(gridPos);
+        ChessPiece* Piece = PieceSP.get();
 
-            if (Piece && !Piece->IsPendingDestroy() && Piece->IsPointInBounds(MousePos))
-            {
-                // ---- TURN CHECK -----------------------
-                if (!IsPlayersPiece(Piece.get())) { return; }
+        if (!Piece || !IsPlayersPiece(Piece)) return;
 
-                bIsDragging = true;
-                DraggingPiece = Piece;
-                DragStartGridPosition = Piece->GetGridPosition();
+        bIsDragging = true;
+        DraggingPiece = Piece;
+        DragStartGridPosition = Piece->GetGridPosition();
 
-                Piece->SetSelected(true);
-                Piece->SetHovered(false);
-
-                return;
-            }
-        }
+        Piece->SetSelected(true);
+        Piece->SetHovered(false);
     }
 
     // -------------------------------------------------------------------------
@@ -705,44 +710,46 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::HandleDragTick(const sf::Vector2f& MousePos)
     {
-        if (auto Piece = DraggingPiece.lock())
+        if (!DraggingPiece) return;
+
+        // Optional: only update if mouse moved
+        static sf::Vector2f LastMousePos = MousePos;
+        if (MousePos != LastMousePos)
         {
-            Piece->SetActorLocation(MousePos);
+            DraggingPiece->SetActorLocation(MousePos);
+            LastMousePos = MousePos;
         }
     }
+
 
     // -------------------------------------------------------------------------
     // Drag End
     // -------------------------------------------------------------------------
     void Board::HandleDragEnd(const sf::Vector2f& MousePos)
     {
-        if (auto Piece = DraggingPiece.lock())
+        if (!DraggingPiece)
+            return;
+
+        ChessPiece* piece = DraggingPiece;
+
+        // Validate move
+        if (!IsPlayersPiece(piece) || !IsWorldPositionInGridBounds(MousePos))
         {
-            if (!IsPlayersPiece(Piece.get()))
-            {
-                Piece->SetGridPosition(DragStartGridPosition);
-                CleanupDragState(Piece);
-                bIsDragging = false;
-                DraggingPiece.reset();
-                return;
-            }
-
-            if (!IsWorldPositionInGridBounds(MousePos))
-            {
-                Piece->SetGridPosition(DragStartGridPosition);
-                //LOG("Invalid Move: Dropped out of bounds. %s returned to %s.", GetPieceName(Piece->GetPieceType()).c_str(), GridToAlgebraic(DragStartGridPosition).c_str());
-
-                CleanupDragState(Piece);
-                return;
-            }
-
-            sf::Vector2i DropGrid = WorldToGrid(MousePos);
-            TryMovePiece(Piece, DropGrid);
+            piece->SetGridPosition(DragStartGridPosition);
+            CleanupDragState(piece);
+        }
+        else
+        {
+            sf::Vector2i dropGrid = WorldToGrid(MousePos);
+            shared<ChessPiece> PieceSP = BoardGrid[piece->GetGridPosition().x][piece->GetGridPosition().y];
+            TryMovePiece(PieceSP, dropGrid);
         }
 
         bIsDragging = false;
-        DraggingPiece.reset();
+        DraggingPiece = nullptr;
     }
+
+
 
     bool Board::IsPlayersPiece(const ChessPiece* Piece) const
     {

@@ -36,8 +36,8 @@ namespace we
 			{
 				AccumulatedTime -= TargetDeltaTime;
 				TickGlobal(TargetDeltaTime);
-				Renderer();
 			}
+			Renderer();
         }
 	}
 	void Application::SetWindowIcon(const std::string& IconPath)
@@ -51,7 +51,7 @@ namespace we
 		}
 		else
 		{
-			LOG("Error: Could not load window icon from %s", IconPath)
+			//LOG("Error: Could not load window icon from %s", IconPath)
 		}
 	}
 	void Application::SetCustomCursor()

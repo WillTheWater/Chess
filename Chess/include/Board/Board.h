@@ -36,6 +36,9 @@ namespace we
         static constexpr float GRID_ABS_OFFSET_X = 328.0f;
         static constexpr float GRID_ABS_OFFSET_Y = 49.0f;
 
+        static constexpr int ChessBoardGrid[GridSize][GridSize] = {};
+        shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
+
         // 1 = King, 2 = Queen, 3 = Bishop, 4 = Knight, 5 = Rook, 6 = Pawn
         static constexpr int InitialBoard[GridSize][GridSize] = {
             {-5, -4, -3, -2, -1, -3, -4, -5},
@@ -59,6 +62,7 @@ namespace we
         bool IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        void TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos);
 
         // ----------------------------------------------------
         // Board World Conversion
@@ -72,7 +76,6 @@ namespace we
         // ----------------------------------------------------
         void InitializePieces();
         std::string GetPieceName(EChessPieceType Type);
-        //shared<ChessPiece> GetPieceAt(sf::Vector2i Position) const;
 
         List<shared<ChessPiece>> Pieces;
         weak<ChessPiece> SelectedPiece;
@@ -87,14 +90,14 @@ namespace we
         bool IsPlayersPiece(const ChessPiece* Piece) const;
         void SwitchTurn();
 
-        void TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos);
         void HandleMouseHover(const sf::Vector2f& MousePos);
         bool IsWorldPositionInGridBounds(const sf::Vector2f& WorldPos);
-        void CleanupDragState(shared<ChessPiece> Piece);
+        void CleanupDragState(ChessPiece* Piece);
 
         bool bIsDragging = false;
         bool bLeftMouseButtonPressedLastFrame = false;
-        weak<ChessPiece> DraggingPiece;
+        ChessPiece* DraggingPiece = nullptr;
+        ChessPiece* HoveredPiece = nullptr;
         sf::Vector2i DragStartGridPosition{ -1, -1 };
 
         // ----------------------------------------------------
@@ -103,29 +106,18 @@ namespace we
         void DrawDebugGrid();
         List<sf::RectangleShape> DebugGridSquares;
 
-
-
-
-
-
-
         // ----------------------------------------------------
-        // OPTIMIZATION TESTING
+        // Piece Getter / Setter 
         // ----------------------------------------------------
-        static constexpr int ChessBoardGrid[GridSize][GridSize] = {};
-        shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
-
         inline shared<ChessPiece> GetPieceAt(const sf::Vector2i& Pos) const
         {
-            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8)
-                return nullptr;
+            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return nullptr; }
             return BoardGrid[Pos.x][Pos.y];
         }
 
         inline void SetPieceAt(const sf::Vector2i& Pos, shared<ChessPiece> Piece)
         {
-            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8)
-                return;
+            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return; }
             BoardGrid[Pos.x][Pos.y] = Piece;
         }
     };
