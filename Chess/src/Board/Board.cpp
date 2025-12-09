@@ -21,7 +21,7 @@ namespace we
     {
         Actor::BeginPlay();
 
-        SetActorLocation(sf::Vector2f{float(GetWindowSize().x) / 2.0f, float(GetWindowSize().y) / 2.0f});
+        SetActorLocation(sf::Vector2f{ float(GetWindowSize().x) / 2.0f, float(GetWindowSize().y) / 2.0f });
 
         InitializeBoard();
         //LOG("White's Turn!")
@@ -99,13 +99,13 @@ namespace we
     {
         switch (Piece->GetPieceType())
         {
-            case EChessPieceType::Rook:   return IsRookMoveValid(Piece, From, To);
-            case EChessPieceType::Bishop: return IsBishopMoveValid(Piece, From, To);
-            case EChessPieceType::Queen:  return IsQueenMoveValid(Piece, From, To);
-            case EChessPieceType::King:   return IsKingMoveValid(Piece, From, To);
-            case EChessPieceType::Knight: return IsKnightMoveValid(Piece, From, To);
-            case EChessPieceType::Pawn:   return IsPawnMoveValid(Piece, From, To);
-            default: return true;
+        case EChessPieceType::Rook:   return IsRookMoveValid(Piece, From, To);
+        case EChessPieceType::Bishop: return IsBishopMoveValid(Piece, From, To);
+        case EChessPieceType::Queen:  return IsQueenMoveValid(Piece, From, To);
+        case EChessPieceType::King:   return IsKingMoveValid(Piece, From, To);
+        case EChessPieceType::Knight: return IsKnightMoveValid(Piece, From, To);
+        case EChessPieceType::Pawn:   return IsPawnMoveValid(Piece, From, To);
+        default: return true;
         }
     }
 
@@ -604,13 +604,13 @@ namespace we
     {
         switch (Type)
         {
-            case EChessPieceType::King:   return "King";
-            case EChessPieceType::Queen:  return "Queen";
-            case EChessPieceType::Bishop: return "Bishop";
-            case EChessPieceType::Knight: return "Knight";
-            case EChessPieceType::Rook:   return "Rook";
-            case EChessPieceType::Pawn:   return "Pawn";
-            default:                      return "Unknown";
+        case EChessPieceType::King:   return "King";
+        case EChessPieceType::Queen:  return "Queen";
+        case EChessPieceType::Bishop: return "Bishop";
+        case EChessPieceType::Knight: return "Knight";
+        case EChessPieceType::Rook:   return "Rook";
+        case EChessPieceType::Pawn:   return "Pawn";
+        default:                      return "Unknown";
         }
     }
 
@@ -630,7 +630,7 @@ namespace we
                 sf::RectangleShape Square;
                 Square.setSize(size);
 
-                Square.setPosition({GRID_ABS_OFFSET_X + x * SquareSize, GRID_ABS_OFFSET_Y + y * SquareSize});
+                Square.setPosition({ GRID_ABS_OFFSET_X + x * SquareSize, GRID_ABS_OFFSET_Y + y * SquareSize });
 
                 Square.setFillColor(sf::Color(0, 255, 0, 100));
                 Square.setOutlineColor(sf::Color::Blue);
@@ -922,7 +922,7 @@ namespace we
 
     void Board::SwitchTurn()
     {
-        CurrentTurn = (CurrentTurn == EPlayerTurn::White)? EPlayerTurn::Black : EPlayerTurn::White;
+        CurrentTurn = (CurrentTurn == EPlayerTurn::White) ? EPlayerTurn::Black : EPlayerTurn::White;
         const char* TurnName = (CurrentTurn == EPlayerTurn::White) ? "White" : "Black";
         //LOG("It's %s's turn.", TurnName);
     }
