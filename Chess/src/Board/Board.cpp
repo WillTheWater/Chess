@@ -267,6 +267,14 @@ namespace we
                 piece->SetGridPosition(releasePos);
                 piece->SetActorLocation(GridToCenterSquare(releasePos));
 
+                ClearPawnFlags();
+
+                if (piece->GetPieceType() == EChessPieceType::Pawn)
+                {
+                    bool movedTwo = (std::abs(releasePos.y - fromPos.y) == 2);
+                    piece->SetWasPawnMovedTwo(movedTwo);
+                }
+                piece->SetHasMoved();
                 SwitchTurn();
             }
             else
@@ -520,6 +528,18 @@ namespace we
         return false;
     }
 
+    void Board::ClearPawnFlags()
+    {
+        for (auto& p : Pieces)
+        {
+            if (!p) continue;
+            if (p->GetPieceType() == EChessPieceType::Pawn)
+            {
+                p->SetWasPawnMovedTwo(false);
+            }
+        }
+    }
+
     bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         bool sameRow = (From.y == To.y);
@@ -658,33 +678,40 @@ namespace we
     {
         if (!Piece || From == To) return false;
 
-        int direction = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
-        int startRow = (Piece->GetColor() == EChessColor::White) ? 6 : 1;
-
-        int deltaX = To.x - From.x;
-        int deltaY = To.y - From.y;
+        const int direction = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
+        const int deltaX = To.x - From.x;
+        const int deltaY = To.y - From.y;
 
         if (deltaX == 0 && deltaY == direction)
         {
-            return !GetPieceAt(To);
+            shared<ChessPiece> pieceAtTo = GetPieceAt(To);
+            if (pieceAtTo == nullptr) return true;
+            return false;
         }
 
-        if (deltaX == 0 && deltaY == 2 * direction && From.y == startRow)
+        if (Piece->GetHasMoved() == false && deltaX == 0 && deltaY == 2 * direction)
         {
-            sf::Vector2i intermediate(From.x, From.y + direction);
-            return !GetPieceAt(intermediate) && !GetPieceAt(To);
+            sf::Vector2i intermediate{ From.x, From.y + direction };
+
+            shared<ChessPiece> pieceAtIntermediate = GetPieceAt(intermediate);
+            shared<ChessPiece> pieceAtTo = GetPieceAt(To);
+
+            if (pieceAtIntermediate == nullptr && pieceAtTo == nullptr) return true;
+            return false;
         }
 
         if (std::abs(deltaX) == 1 && deltaY == direction)
         {
-            if (auto target = GetPieceAt(To))
-            {
-                return target->GetColor() != Piece->GetColor();
-            }
-        }
+            shared<ChessPiece> target = GetPieceAt(To);
+            if (target != nullptr && target->GetColor() != Piece->GetColor())
+                return true;
 
+            // En-passant would be handled here
+            return false;
+        }
         return false;
     }
+
 
     bool Board::IsPlayersPiece(const ChessPiece* Piece) const
     {

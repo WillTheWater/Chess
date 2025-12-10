@@ -102,10 +102,11 @@ namespace we
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool CanMoveTo(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         void Board::HandleCapture(const sf::Vector2i& GridPos);
-
-        bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         bool IsKingInCheck() const;
+        bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         bool CanPieceAttackSquare(ChessPiece* Piece, const sf::Vector2i& TargetPos) const;
+        void Board::ClearPawnFlags();
+
         bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
