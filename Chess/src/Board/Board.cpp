@@ -369,61 +369,51 @@ namespace we
 
         for (const auto& Piece : Pieces)
         {
-            if (!Piece || Piece->IsPendingDestroy())
-                continue;
-
-            // Only consider enemy pieces
-            if (Piece->GetColor() != AttackerColor)
+            if (!Piece || Piece->IsPendingDestroy() || Piece->GetColor() != AttackerColor)
                 continue;
 
             sf::Vector2i From = Piece->GetGridPosition();
 
-            // Skip the piece if it can't reach the target square by its normal move rules
             if (!IsMoveValid(Piece, From, Pos))
+            {
                 continue;
+            }
 
-            // Pawns are special: only diagonal captures count as attacks
             if (Piece->GetPieceType() == EChessPieceType::Pawn)
             {
                 int dir = (AttackerColor == EChessColor::White) ? -1 : 1;
-                if (abs(Pos.x - From.x) == 1 && Pos.y - From.y == dir)
+                if ((Pos.x - From.x == 1 || Pos.x - From.x == -1) && (Pos.y - From.y == dir)) 
+                { 
                     return true;
+                }
             }
             else
             {
-                return true; // any other piece can attack
+                return true;
             }
         }
-
         return false;
     }
 
-    bool Board::IsKingInCheck(EChessColor KingColor) const
+    bool Board::IsKingInCheck() const
     {
-        // 1. Find the king
-        ChessPiece* King = nullptr;
-        for (int y = 0; y < 8; ++y)
+        for (const auto& Piece : Pieces)
         {
-            for (int x = 0; x < 8; ++x)
+            if (!Piece || Piece->IsPendingDestroy()) 
             {
-                // TODO
+                continue;
             }
-            if (King) break;
-        }
 
-        if (!King) return false; // should never happen
+            if (Piece->GetPieceType() != EChessPieceType::King) 
+            { 
+                continue;
+            }
 
-        sf::Vector2i KingPos = King->GetGridPosition();
-
-        // 2. Check all squares for opponent attacks
-        for (int y = 0; y < 8; ++y)
-        {
-            for (int x = 0; x < 8; ++x)
-            {
-                // TODO
+            if (IsSquareAttacked(Piece->GetGridPosition(), Piece->GetColor()))
+            { 
+                return true;
             }
         }
-
         return false;
     }
 

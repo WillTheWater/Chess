@@ -104,7 +104,7 @@ namespace we
         void Board::HandleCapture(const sf::Vector2i& GridPos);
 
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
-        bool IsKingInCheck(EChessColor KingColor) const;
+        bool IsKingInCheck() const;
         bool CanPieceAttackSquare(ChessPiece* Piece, const sf::Vector2i& TargetPos) const;
         bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
