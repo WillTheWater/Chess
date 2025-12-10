@@ -174,7 +174,7 @@ namespace we
 
     void Board::HandleMouseHover()
     {
-        if (bIsDragging) return;
+        if (bIsDragging) { return; }
 
         sf::Vector2i gridPos = WorldToGrid(MouseWorldPosition);
 
@@ -186,10 +186,16 @@ namespace we
 
             for (auto& p : Pieces)
             {
-                if (p && p != piece) p->SetHovered(false);
+                if (p && p != piece)
+                {
+                    p->SetHovered(false);
+                }
             }
 
-            if (piece) piece->SetHovered(true);
+            if (piece && IsPlayersPiece(piece.get()))
+            {
+                piece->SetHovered(true);
+            }
         }
     }
 
@@ -225,7 +231,9 @@ namespace we
         sf::Vector2i gridPos = WorldToGrid(MousePos);
         shared<ChessPiece> piece = GetPieceAt(gridPos);
 
-        if (!piece) return;
+        if (!piece) { return; }
+
+        if (!IsPlayersPiece(piece.get())) { return; }
 
         SelectedPiece = piece;
         bIsDragging = true;
@@ -248,7 +256,7 @@ namespace we
         {
             sf::Vector2i releasePos = WorldToGrid(MouseWorldPos);
 
-            if (IsOutOfBounds(MouseWorldPos) || GetPieceAt(releasePos))
+            if (!IsInBounds(MouseWorldPos) || GetPieceAt(releasePos))
             {
                 piece->SetActorLocation(GridToCenterSquare(piece->GetGridPosition()));
             }
@@ -266,7 +274,7 @@ namespace we
         bIsDragging = false;
     }
 
-    bool Board::IsOutOfBounds(const sf::Vector2f& WorldPos)
+    bool Board::IsInBounds(const sf::Vector2f& WorldPos)
     {
         float GridWidth = GridSize * SquareSize;
         float GridHeight = GridSize * SquareSize;
@@ -277,7 +285,12 @@ namespace we
         float MaxX = MinX + GridWidth;
         float MaxY = MinY + GridHeight;
 
-        return !(WorldPos.x >= MinX && WorldPos.x < MaxX && WorldPos.y >= MinY && WorldPos.y < MaxY);
+        return WorldPos.x >= MinX && WorldPos.x < MaxX && WorldPos.y >= MinY && WorldPos.y < MaxY;
+    }
+
+    bool Board::IsInBounds(const sf::Vector2i& GridPos) const
+    {
+        return GridPos.x >= 0 && GridPos.x < GridSize && GridPos.y >= 0 && GridPos.y < GridSize;
     }
 
     // -------------------------------------------------------------------------
@@ -322,6 +335,17 @@ namespace we
         }
     }
 
+    bool Board::CanMoveTo(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    {
+        if (!Piece || !IsPlayersPiece(Piece.get()) || From ==To || !IsInBounds(To)) { return false; }
+
+        if (auto target = GetPieceAt(To))
+        {
+            if (target->GetColor() == Piece->GetColor()) { return false; }
+        }
+        return IsMoveValid(Piece, From, To);
+    }
+   
     bool Board::IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const
     {
         EChessColor AttackerColor = (DefenderColor == EChessColor::White) ? EChessColor::Black : EChessColor::White;
@@ -505,9 +529,11 @@ namespace we
 
         while (pos != To)
         {
-            // TODO
-        }
+            if (GetPieceAt(pos)) { return false; }
 
+            pos.x += dx;
+            pos.y += dy;
+        }
         return true;
     }
 
@@ -529,7 +555,10 @@ namespace we
 
         while (pos != To)
         {
-            // TODO
+            if (GetPieceAt(pos)) { return false; }
+
+            pos.x += dx;
+            pos.y += dy;
         }
 
         return true;
@@ -556,10 +585,23 @@ namespace we
 
         while (pos != To)
         {
-            // TODO
+            if (GetPieceAt(pos)) { return false; }
+
+            pos.x += dx;
+            pos.y += dy;
         }
 
         return true;
+    }
+
+    bool Board::IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    {
+        if (From == To) { return false; }
+
+        int deltaX = std::abs(To.x - From.x);
+        int deltaY = std::abs(To.y - From.y);
+
+        return ((deltaX == 1 && deltaY == 2) || (deltaX == 2 && deltaY == 1));
     }
 
     bool Board::IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
@@ -605,16 +647,6 @@ namespace we
         return false;
     }
 
-    bool Board::IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
-    {
-        if (From == To) { return false; }
-
-        int deltaX = std::abs(To.x - From.x);
-        int deltaY = std::abs(To.y - From.y);
-
-        return ((deltaX == 1 && deltaY == 2) || (deltaX == 2 && deltaY == 1));
-    }
-
     bool Board::IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         if (!Piece || From == To) { return false; }
@@ -643,6 +675,6 @@ namespace we
     void Board::SwitchTurn()
     {
         CurrentTurn = (CurrentTurn == EPlayerTurn::White) ? EPlayerTurn::Black : EPlayerTurn::White;
-        const char* TurnName = (CurrentTurn == EPlayerTurn::White) ? "White" : "Black";
+        //const char* TurnName = (CurrentTurn == EPlayerTurn::White) ? "White" : "Black";
     }
 }

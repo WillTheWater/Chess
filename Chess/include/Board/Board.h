@@ -79,7 +79,8 @@ namespace we
         void HandleDragStart(const sf::Vector2f& MousePos);
         void HandleDragTick(const sf::Vector2f& MousePos);
         void HandleDragEnd(const sf::Vector2f& MousePos);
-        bool IsOutOfBounds(const sf::Vector2f& WorldPos);
+        bool IsInBounds(const sf::Vector2f& WorldPos);
+        bool IsInBounds(const sf::Vector2i& GridPos) const;
 
         bool bIsDragging = false;
         bool bLeftMouseButtonPressedLastFrame = false;
@@ -97,7 +98,11 @@ namespace we
         // Game Logic
         // ----------------------------------------------------
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
+
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool CanMoveTo(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+
+
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         bool IsKingInCheck(EChessColor KingColor) const;
         bool CanPieceAttackSquare(ChessPiece* Piece, const sf::Vector2i& TargetPos) const;
