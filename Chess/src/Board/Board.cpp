@@ -24,7 +24,6 @@ namespace we
         SetActorLocation(sf::Vector2f{ float(GetWindowSize().x) / 2.0f, float(GetWindowSize().y) / 2.0f });
 
         InitializeBoard();
-        //LOG("White's Turn!")
     }
 
     // -------------------------------------------------------------------------
@@ -34,11 +33,7 @@ namespace we
     {
         sf::RenderWindow* Window = GetWorld()->GetRenderWindow();
 
-        if (!Window)
-        {
-            Actor::Tick(DeltaTime);
-            return;
-        }
+        if (!Window) { return; }
 
         // Mouse Position
         sf::Vector2i PixelPosition = sf::Mouse::getPosition(*Window);
@@ -90,6 +85,117 @@ namespace we
         {
             if (Piece) { Piece->Render(Window); }
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Grid World Conversion
+    // -------------------------------------------------------------------------
+    sf::Vector2i Board::WorldToGrid(const sf::Vector2f& WorldPos)
+    {
+        float RelativeX = WorldPos.x - GRID_ABS_OFFSET_X;
+        float RelativeY = WorldPos.y - GRID_ABS_OFFSET_Y;
+
+        int GridX = static_cast<int>(std::floor(RelativeX / SquareSize));
+        int GridY = static_cast<int>(std::floor(RelativeY / SquareSize));
+
+        GridX = std::clamp(GridX, 0, GridSize - 1);
+        GridY = std::clamp(GridY, 0, GridSize - 1);
+
+        return { GridX, GridY };
+    }
+
+    sf::Vector2f Board::GridToWorld(const sf::Vector2i& GridPos)
+    {
+        float PixelX = GRID_ABS_OFFSET_X + GridPos.x * SquareSize;
+        float PixelY = GRID_ABS_OFFSET_Y + GridPos.y * SquareSize;
+
+        return { PixelX, PixelY };
+    }
+
+    sf::Vector2f Board::GridToCenterSquare(const sf::Vector2i& GridPos)
+    {
+        return {
+        GRID_ABS_OFFSET_X + GridPos.x * SquareSize + SquareSize * 0.5f,
+        GRID_ABS_OFFSET_Y + GridPos.y * SquareSize + SquareSize * 0.5f
+        };
+    }
+
+    std::string Board::GridToAlgebraic(const sf::Vector2i& GridPos)
+    {
+        if (GridPos.x < 0 || GridPos.x >= 8 || GridPos.y < 0 || GridPos.y >= 8) { return "Invalid"; }
+
+        char File = 'a' + GridPos.x;
+        char Rank = '8' - GridPos.y;
+
+        std::stringstream ss;
+        ss << File << Rank;
+        return ss.str();
+    }
+
+    // -------------------------------------------------------------------------
+    // Initialization
+    // -------------------------------------------------------------------------
+    void Board::InitializeBoard()
+    {
+        ClearBoard();
+
+        for (int y = 0; y < GridSize; ++y)
+        {
+            for (int x = 0; x < GridSize; ++x)
+            {
+                int value = InitialBoard[y][x];
+                if (value != 0)
+                {
+                    EChessColor color = GetPieceColor(value);
+                    EChessPieceType type = GetPieceType(value);
+                    SpawnPiece(type, color, { x, y });
+                }
+            }
+        }
+    }
+
+    void Board::ClearBoard()
+    {
+        for (auto& Piece : Pieces) 
+        {
+            if (Piece)
+            {
+                Piece->Destroy();
+            }
+        }
+
+        for (int y = 0; y < GridSize; ++y)
+        {
+            for (int x = 0; x < GridSize; ++x)
+            {
+                BoardGrid[x][y] = nullptr;
+            }
+        }
+        Pieces.clear();
+        SelectedPiece.reset();
+    }
+
+    EChessColor Board::GetPieceColor(int value)
+    {
+        return (value > 0) ? EChessColor::White : EChessColor::Black;
+    }
+
+    EChessPieceType Board::GetPieceType(int value)
+    {
+        int id = std::abs(value) - 1;
+        return static_cast<EChessPieceType>(id);
+    }
+
+    void Board::SpawnPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos)
+    {
+        weak<ChessPiece> pieceWeak = GetWorld()->SpawnActor<ChessPiece>(type, color);
+        shared<ChessPiece> piece = pieceWeak.lock();
+
+        if (!piece) { return; }
+
+        piece->SetGridPosition(pos);
+        SetPieceAt(pos, piece);
+        Pieces.push_back(piece);
     }
 
     // -------------------------------------------------------------------------
@@ -500,101 +606,6 @@ namespace we
         }
 
         return false;
-    }
-
-    // -------------------------------------------------------------------------
-    // Grid World Conversion
-    // -------------------------------------------------------------------------
-    sf::Vector2i Board::WorldToGrid(const sf::Vector2f& WorldPos)
-    {
-        float RelativeX = WorldPos.x - GRID_ABS_OFFSET_X;
-        float RelativeY = WorldPos.y - GRID_ABS_OFFSET_Y;
-
-        int GridX = static_cast<int>(std::floor(RelativeX / SquareSize));
-        int GridY = static_cast<int>(std::floor(RelativeY / SquareSize));
-
-        GridX = std::clamp(GridX, 0, GridSize - 1);
-        GridY = std::clamp(GridY, 0, GridSize - 1);
-
-        return { GridX, GridY };
-    }
-
-    sf::Vector2f Board::GridToWorld(const sf::Vector2i& GridPos)
-    {
-        float PixelX = GRID_ABS_OFFSET_X + GridPos.x * SquareSize;
-        float PixelY = GRID_ABS_OFFSET_Y + GridPos.y * SquareSize;
-
-        return { PixelX, PixelY };
-    }
-
-    std::string Board::GridToAlgebraic(const sf::Vector2i& GridPos)
-    {
-        if (GridPos.x < 0 || GridPos.x >= 8 || GridPos.y < 0 || GridPos.y >= 8) { return "Invalid"; }
-
-        char File = 'a' + GridPos.x;
-        char Rank = '8' - GridPos.y;
-
-        std::stringstream ss;
-        ss << File << Rank;
-        return ss.str();
-    }
-
-    // -------------------------------------------------------------------------
-    // Initialization
-    // -------------------------------------------------------------------------
-    void Board::InitializeBoard()
-    {
-        ClearBoard();
-
-        for (int y = 0; y < GridSize; ++y)
-        {
-            for (int x = 0; x < GridSize; ++x)
-            {
-                int value = InitialBoard[y][x];
-                if (value != 0)
-                {
-                    EChessColor color = GetColorFromInitialValue(value);
-                    EChessPieceType type = GetTypeFromInitialValue(value);
-                    SpawnInitialPiece(type, color, { x, y });
-                }
-            }
-        }
-    }
-
-    void Board::ClearBoard()
-    {
-        for (int y = 0; y < GridSize; ++y)
-        {
-            for (int x = 0; x < GridSize; ++x)
-            {
-                BoardGrid[x][y] = nullptr;
-            }
-        }
-        Pieces.clear();
-        SelectedPiece.reset();
-    }
-
-    EChessColor Board::GetColorFromInitialValue(int value)
-    {
-        return (value > 0) ? EChessColor::White : EChessColor::Black;
-    }
-
-    EChessPieceType Board::GetTypeFromInitialValue(int value)
-    {
-        int id = std::abs(value) - 1;
-        return static_cast<EChessPieceType>(id);
-    }
-
-    void Board::SpawnInitialPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos)
-    {
-        weak<ChessPiece> pieceWeak = GetWorld()->SpawnActor<ChessPiece>(type, color);
-        shared<ChessPiece> piece = pieceWeak.lock();
-
-        if (!piece) { return; }
-
-        piece->SetGridPosition(pos);
-        SetPieceAt(pos, piece);
-        Pieces.push_back(piece);
     }
 
     // -------------------------------------------------------------------------

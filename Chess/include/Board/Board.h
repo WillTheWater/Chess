@@ -25,7 +25,7 @@ namespace we
 
     private:
         // ----------------------------------------------------
-        // Board Constants
+        // Board Constraints
         // ----------------------------------------------------
         static constexpr int GridSize = 8;
         static constexpr int SquareSize = 78;
@@ -50,9 +50,39 @@ namespace we
         // ----------------------------------------------------
         void InitializeBoard();
         void ClearBoard();
-        EChessColor GetColorFromInitialValue(int value);
-        EChessPieceType GetTypeFromInitialValue(int value);
-        void SpawnInitialPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos);
+        EChessColor GetPieceColor(int value);
+        EChessPieceType GetPieceType(int value);
+        void SpawnPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos);
+
+        // ----------------------------------------------------
+        // Board World Conversion
+        // ----------------------------------------------------
+        sf::Vector2i WorldToGrid(const sf::Vector2f& WorldPos);
+        sf::Vector2f GridToWorld(const sf::Vector2i& GridPos);
+        sf::Vector2f GridToCenterSquare(const sf::Vector2i& GridPos);
+        std::string GridToAlgebraic(const sf::Vector2i& GridPos);
+
+        // ----------------------------------------------------
+        // Pieces
+        // ----------------------------------------------------
+        List<shared<ChessPiece>> Pieces;
+        weak<ChessPiece> SelectedPiece;
+        std::string GetPieceName(EChessPieceType Type);
+
+        // ----------------------------------------------------
+        // Piece Getter / Setter 
+        // ----------------------------------------------------
+        inline shared<ChessPiece> GetPieceAt(const sf::Vector2i& Pos) const
+        {
+            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return nullptr; }
+            return BoardGrid[Pos.x][Pos.y];
+        }
+
+        inline void SetPieceAt(const sf::Vector2i& Pos, shared<ChessPiece> Piece)
+        {
+            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return; }
+            BoardGrid[Pos.x][Pos.y] = Piece;
+        }
 
         // ----------------------------------------------------
         // Move Logic
@@ -69,20 +99,6 @@ namespace we
         bool IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         void TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos);
-
-        // ----------------------------------------------------
-        // Board World Conversion
-        // ----------------------------------------------------
-        sf::Vector2i WorldToGrid(const sf::Vector2f& WorldPos);
-        sf::Vector2f GridToWorld(const sf::Vector2i& GridPos);
-        std::string GridToAlgebraic(const sf::Vector2i& GridPos);
-        std::string GetPieceName(EChessPieceType Type);
-
-        // ----------------------------------------------------
-        // Pieces
-        // ----------------------------------------------------
-        List<shared<ChessPiece>> Pieces;
-        weak<ChessPiece> SelectedPiece;
 
         // ----------------------------------------------------
         // Drag & Drop Handling
@@ -109,20 +125,5 @@ namespace we
         // ----------------------------------------------------
         void DrawDebugGrid();
         List<sf::RectangleShape> DebugGridSquares;
-
-        // ----------------------------------------------------
-        // Piece Getter / Setter 
-        // ----------------------------------------------------
-        inline shared<ChessPiece> GetPieceAt(const sf::Vector2i& Pos) const
-        {
-            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return nullptr; }
-            return BoardGrid[Pos.x][Pos.y];
-        }
-
-        inline void SetPieceAt(const sf::Vector2i& Pos, shared<ChessPiece> Piece)
-        {
-            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return; }
-            BoardGrid[Pos.x][Pos.y] = Piece;
-        }
     };
 }

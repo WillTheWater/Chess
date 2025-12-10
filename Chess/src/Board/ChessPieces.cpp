@@ -11,13 +11,13 @@ namespace we
         , Color{ Color }
     {
         SetTexture(TexturePath);
-        ApplyPieceSubFrame();
+        SetSpriteSheetFrame();
     }
 
     // ----------------------------------------------------
-    // Sub-frame (sprite sheet lookup)
+    // Sprite Sheet Setting
     // ----------------------------------------------------
-    void ChessPiece::ApplyPieceSubFrame()
+    void ChessPiece::SetSpriteSheetFrame()
     {
         const int x_index = static_cast<int>(PieceType);
         const int y_index = (Color == EChessColor::White) ? 0 : 1;
@@ -28,51 +28,20 @@ namespace we
     }
 
     // ----------------------------------------------------
-    // Grid Position
-    // ----------------------------------------------------
-    void ChessPiece::SetGridPosition(const sf::Vector2i& NewPosition)
-    {
-        GridPosition = NewPosition;
-        UpdateSpritePosition();
-    }
-
-    void ChessPiece::SetHasMoved()
-    {
-        bHasMoved = true;
-    }
-
-    void ChessPiece::UpdateSpritePosition()
-    {
-        const float centerOffset = PIECE_SIZE / 2.0f;
-
-        const float relativeX = GridPosition.x * PIECE_SIZE + centerOffset;
-        const float relativeY = GridPosition.y * PIECE_SIZE + centerOffset;
-
-        const float pixelX = GRID_ABS_OFFSET_X + relativeX;
-        const float pixelY = GRID_ABS_OFFSET_Y + relativeY;
-
-        SetActorLocation(sf::Vector2f{ pixelX, pixelY });
-    }
-
-    // ----------------------------------------------------
     // Hover and Selection
     // ----------------------------------------------------
-    void ChessPiece::SetHovered(bool bNewHovered)
+    void ChessPiece::SetHovered(bool NewHovered)
     {
-        if (bIsHovered != bNewHovered)
-        {
-            bIsHovered = bNewHovered;
-            UpdateVisualState();
-        }
+        if (bIsHovered == NewHovered) return;
+        bIsHovered = NewHovered;
+        UpdateVisualState();
     }
 
     void ChessPiece::SetSelected(bool bNewSelected)
     {
-        if (bIsSelected != bNewSelected)
-        {
-            bIsSelected = bNewSelected;
-            UpdateVisualState();
-        }
+        if (bIsSelected == bNewSelected) { return; }
+        bIsSelected = bNewSelected;
+        UpdateVisualState();
     }
 
     // ----------------------------------------------------
