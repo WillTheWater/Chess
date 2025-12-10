@@ -78,12 +78,6 @@ namespace we
             return BoardGrid[Pos.x][Pos.y];
         }
 
-        inline void SetPieceAt(const sf::Vector2i& Pos, shared<ChessPiece> Piece)
-        {
-            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return; }
-            BoardGrid[Pos.x][Pos.y] = Piece;
-        }
-
         // ----------------------------------------------------
         // Move Logic
         // ----------------------------------------------------

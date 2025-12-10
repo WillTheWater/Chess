@@ -194,7 +194,7 @@ namespace we
         if (!piece) { return; }
 
         piece->SetGridPosition(pos);
-        SetPieceAt(pos, piece);
+        piece->SetActorLocation(GridToCenterSquare(pos));
         Pieces.push_back(piece);
     }
 
@@ -768,12 +768,8 @@ namespace we
             if (CapturedPiece)
             {
                 TempCaptured = CapturedPiece;
-                SetPieceAt(CapturedPiece->GetGridPosition(), nullptr);
             }
 
-            // Temporarily move piece
-            SetPieceAt(From, nullptr);
-            SetPieceAt(To, Piece);
             Piece->SetGridPosition(To);
 
             // Check king safety
@@ -782,9 +778,6 @@ namespace we
                 bMoveIsSuccessful = false;
             }
 
-            // Restore board
-            SetPieceAt(From, Piece);
-            SetPieceAt(To, TempCaptured);
             Piece->SetGridPosition(From);
         }
 
@@ -795,15 +788,11 @@ namespace we
             if (CapturedPiece)
             {
                 sf::Vector2i capPos = CapturedPiece->GetGridPosition();
-                SetPieceAt(capPos, nullptr);
 
                 Pieces.erase(std::remove(Pieces.begin(), Pieces.end(), CapturedPiece), Pieces.end());
                 CapturedPiece->Destroy();
             }
 
-            // Update grid and piece
-            SetPieceAt(From, nullptr);
-            SetPieceAt(To, Piece);
             Piece->SetGridPosition(To);
             Piece->SetHasMoved();
 
@@ -833,8 +822,6 @@ namespace we
                         !IsSquareAttacked({ From.x + 1, From.y }, MovingColor) &&
                         !IsSquareAttacked(To, MovingColor))
                     {
-                        SetPieceAt(rookFrom, nullptr);
-                        SetPieceAt(rookTo, Rook);
                         Rook->SetGridPosition(rookTo);
                         Rook->SetHasMoved();
                     }
@@ -850,8 +837,6 @@ namespace we
                         !IsSquareAttacked({ From.x - 1, From.y }, MovingColor) &&
                         !IsSquareAttacked(To, MovingColor))
                     {
-                        SetPieceAt(rookFrom, nullptr);
-                        SetPieceAt(rookTo, Rook);
                         Rook->SetGridPosition(rookTo);
                         Rook->SetHasMoved();
                     }
