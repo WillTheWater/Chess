@@ -101,7 +101,7 @@ namespace we
 
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool CanMoveTo(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-
+        void Board::HandleCapture(const sf::Vector2i& GridPos);
 
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         bool IsKingInCheck(EChessColor KingColor) const;
@@ -112,7 +112,6 @@ namespace we
         bool IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        void TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos);
 
         bool IsPlayersPiece(const ChessPiece* Piece) const;
         void SwitchTurn();

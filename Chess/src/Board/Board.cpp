@@ -255,21 +255,28 @@ namespace we
         if (auto piece = SelectedPiece.lock())
         {
             sf::Vector2i releasePos = WorldToGrid(MouseWorldPos);
+            sf::Vector2i fromPos = piece->GetGridPosition();
 
-            if (!IsInBounds(MouseWorldPos) || GetPieceAt(releasePos))
+            if (IsInBounds(MouseWorldPos) && CanMoveTo(piece, fromPos, releasePos))
             {
-                piece->SetActorLocation(GridToCenterSquare(piece->GetGridPosition()));
-            }
-            else
-            {
-                BoardGrid[piece->GetGridPosition().x][piece->GetGridPosition().y] = nullptr;
+                HandleCapture(releasePos);
+
+                BoardGrid[fromPos.x][fromPos.y] = nullptr;
                 BoardGrid[releasePos.x][releasePos.y] = piece;
 
                 piece->SetGridPosition(releasePos);
                 piece->SetActorLocation(GridToCenterSquare(releasePos));
+
+                SwitchTurn();
             }
+            else
+            {
+                piece->SetActorLocation(GridToCenterSquare(fromPos));
+            }
+
             piece->SetSelected(false);
         }
+
         SelectedPiece.reset();
         bIsDragging = false;
     }
@@ -346,6 +353,16 @@ namespace we
         return IsMoveValid(Piece, From, To);
     }
    
+    void Board::HandleCapture(const sf::Vector2i& GridPos)
+    {
+        if (auto target = GetPieceAt(GridPos))
+        {
+            BoardGrid[GridPos.x][GridPos.y] = nullptr;
+            Pieces.erase(std::remove(Pieces.begin(), Pieces.end(), target), Pieces.end());
+            target->Destroy(); 
+        }
+    }
+
     bool Board::IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const
     {
         EChessColor AttackerColor = (DefenderColor == EChessColor::White) ? EChessColor::Black : EChessColor::White;
@@ -649,7 +666,7 @@ namespace we
 
     bool Board::IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (!Piece || From == To) { return false; }
+        if (!Piece || From == To) return false;
 
         int direction = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
         int startRow = (Piece->GetColor() == EChessColor::White) ? 6 : 1;
@@ -657,14 +674,26 @@ namespace we
         int deltaX = To.x - From.x;
         int deltaY = To.y - From.y;
 
-        // TODO
+        if (deltaX == 0 && deltaY == direction)
+        {
+            return !GetPieceAt(To);
+        }
+
+        if (deltaX == 0 && deltaY == 2 * direction && From.y == startRow)
+        {
+            sf::Vector2i intermediate(From.x, From.y + direction);
+            return !GetPieceAt(intermediate) && !GetPieceAt(To);
+        }
+
+        if (std::abs(deltaX) == 1 && deltaY == direction)
+        {
+            if (auto target = GetPieceAt(To))
+            {
+                return target->GetColor() != Piece->GetColor();
+            }
+        }
 
         return false;
-    }
-        
-    void Board::TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos)
-    {
-        // TODO
     }
 
     bool Board::IsPlayersPiece(const ChessPiece* Piece) const
