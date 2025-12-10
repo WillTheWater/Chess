@@ -63,23 +63,38 @@ namespace we
         std::string GridToAlgebraic(const sf::Vector2i& GridPos);
 
         // ----------------------------------------------------
-        // Pieces
+        // Input Handling
+        // ----------------------------------------------------
+        sf::Vector2i MousePixelPosition;
+        sf::Vector2f MouseWorldPosition;
+        void UpdateMousePosition();
+        sf::Vector2i HoveredGridPos{ -1, -1 };
+        weak<ChessPiece> HoveredPiece;
+        void HandleMouseHover();
+        void HandleInput();
+
+        // ----------------------------------------------------
+        // Drag & Drop Handling
+        // ----------------------------------------------------
+        void HandleDragStart(const sf::Vector2f& MousePos);
+        void HandleDragTick(const sf::Vector2f& MousePos);
+        void HandleDragEnd(const sf::Vector2f& MousePos);
+        bool IsOutOfBounds(const sf::Vector2f& WorldPos);
+
+        bool bIsDragging = false;
+        bool bLeftMouseButtonPressedLastFrame = false;
+        weak<ChessPiece> SelectedPiece;
+        sf::Vector2i DragStartGridPosition{ -1, -1 };
+
+        // ----------------------------------------------------
+        // Pieces Helpers
         // ----------------------------------------------------
         List<shared<ChessPiece>> Pieces;
-        weak<ChessPiece> SelectedPiece;
         std::string GetPieceName(EChessPieceType Type);
+        shared<ChessPiece> GetPieceAt(const sf::Vector2i& GridPos) const;
 
         // ----------------------------------------------------
-        // Piece Getter / Setter 
-        // ----------------------------------------------------
-        inline shared<ChessPiece> GetPieceAt(const sf::Vector2i& Pos) const
-        {
-            if (Pos.x < 0 || Pos.x >= 8 || Pos.y < 0 || Pos.y >= 8) { return nullptr; }
-            return BoardGrid[Pos.x][Pos.y];
-        }
-
-        // ----------------------------------------------------
-        // Move Logic
+        // Game Logic
         // ----------------------------------------------------
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
@@ -94,30 +109,8 @@ namespace we
         bool IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         void TryMovePiece(shared<ChessPiece> Piece, const sf::Vector2i& TargetGridPos);
 
-        // ----------------------------------------------------
-        // Drag & Drop Handling
-        // ----------------------------------------------------
-        void HandleDragStart(const sf::Vector2f& MousePos);
-        void HandleDragTick(const sf::Vector2f& MousePos);
-        void HandleDragEnd(const sf::Vector2f& MousePos);
-
         bool IsPlayersPiece(const ChessPiece* Piece) const;
         void SwitchTurn();
 
-        void HandleMouseHover(const sf::Vector2f& MousePos);
-        bool IsWorldPositionInGridBounds(const sf::Vector2f& WorldPos);
-        void CleanupDragState(ChessPiece* Piece);
-
-        bool bIsDragging = false;
-        bool bLeftMouseButtonPressedLastFrame = false;
-        ChessPiece* DraggingPiece = nullptr;
-        ChessPiece* HoveredPiece = nullptr;
-        sf::Vector2i DragStartGridPosition{ -1, -1 };
-
-        // ----------------------------------------------------
-        // Debug Visualization
-        // ----------------------------------------------------
-        void DrawDebugGrid();
-        List<sf::RectangleShape> DebugGridSquares;
     };
 }
