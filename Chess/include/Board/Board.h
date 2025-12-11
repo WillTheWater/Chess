@@ -109,6 +109,7 @@ namespace we
         void HandleCastle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To);
         void HandleCapture(const sf::Vector2i& GridPos);
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
+        void SetCheckFlag();
                
         bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;

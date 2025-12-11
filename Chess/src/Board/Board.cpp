@@ -355,6 +355,7 @@ namespace we
             SetEnPassantFlag(piece, to, from);
             PromotePawn(piece, to);
             HandleCastle(piece, from, to);
+            SetCheckFlag();
 
             SwitchTurn();
             return true;
@@ -535,6 +536,31 @@ namespace we
         }
 
         return false;
+    }
+
+    void Board::SetCheckFlag()
+    {
+        for (const auto& Piece : Pieces)
+        {
+            if (Piece->GetPieceType() != EChessPieceType::King) { continue; }
+
+            bool bInCheck = IsSquareAttacked(Piece->GetGridPosition(), Piece->GetColor());
+            Piece->SetIsInCheck(bInCheck);
+
+            if (bInCheck)
+            {
+                if (Piece->GetColor() == EChessColor::White)
+                {
+                    LOG("White King is in Check!")
+                }
+                else
+                {
+                    LOG("Black King is in Check!")
+                }
+            }
+
+            // TODO: Checkmate
+        }
     }
 
     bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
