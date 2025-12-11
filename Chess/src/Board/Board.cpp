@@ -354,6 +354,7 @@ namespace we
 
             SetEnPassantFlag(piece, to, from);
             PromotePawn(piece, to);
+            HandleCastle(piece, from, to);
 
             SwitchTurn();
             return true;
@@ -420,6 +421,35 @@ namespace we
         }
     }
 
+    void Board::HandleCastle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To)
+    {
+        if (!King || King->GetPieceType() != EChessPieceType::King)
+            return;
+
+        int deltaX = To.x - From.x;
+
+        if (std::abs(deltaX) != 2)
+            return;
+
+        bool bKingside = (deltaX > 0);
+
+        int rookX = bKingside ? 7 : 0;
+        sf::Vector2i RookPos(rookX, From.y);
+
+        auto Rook = GetPieceAt(RookPos);
+        if (!Rook || Rook->GetPieceType() != EChessPieceType::Rook)
+            return;
+
+        sf::Vector2i NewRookPos = bKingside ? sf::Vector2i(To.x - 1, From.y) : sf::Vector2i(To.x + 1, From.y);
+
+        BoardGrid[RookPos.x][RookPos.y] = nullptr;
+        BoardGrid[NewRookPos.x][NewRookPos.y] = Rook;
+
+        Rook->SetGridPosition(NewRookPos);
+        Rook->SetActorLocation(GridToCenterSquare(NewRookPos));
+        Rook->SetHasMoved();
+    }
+
     void Board::HandleCapture(const sf::Vector2i& GridPos)
     {
         if (auto target = GetPieceAt(GridPos))
@@ -436,29 +466,36 @@ namespace we
 
         for (const auto& Piece : Pieces)
         {
-            if (!Piece || Piece->IsPendingDestroy() || Piece->GetColor() != AttackerColor)
+            if (!Piece || Piece->GetColor() != AttackerColor)
                 continue;
 
             sf::Vector2i From = Piece->GetGridPosition();
 
-            if (!IsMoveValid(Piece, From, Pos))
+            switch (Piece->GetPieceType())
             {
-                continue;
-            }
-
-            if (Piece->GetPieceType() == EChessPieceType::Pawn)
+            case EChessPieceType::Pawn:
             {
                 int dir = (AttackerColor == EChessColor::White) ? -1 : 1;
-                if ((Pos.x - From.x == 1 || Pos.x - From.x == -1) && (Pos.y - From.y == dir)) 
-                { 
+                if (std::abs(Pos.x - From.x) == 1 && Pos.y - From.y == dir)
                     return true;
-                }
+                break;
             }
-            else
+
+            case EChessPieceType::King:
             {
-                return true;
+                int dx = std::abs(Pos.x - From.x);
+                int dy = std::abs(Pos.y - From.y);
+                if (dx <= 1 && dy <= 1)
+                    return true;
+                break;
+            }
+
+            default:
+                if (IsMoveValid(Piece, From, Pos))
+                    return true;
             }
         }
+
         return false;
     }
 
@@ -466,137 +503,13 @@ namespace we
     {
         for (const auto& Piece : Pieces)
         {
-            if (!Piece || Piece->IsPendingDestroy()) 
-            {
+            if (!Piece || Piece->GetPieceType() != EChessPieceType::King)
                 continue;
-            }
 
-            if (Piece->GetPieceType() != EChessPieceType::King) 
-            { 
-                continue;
-            }
-
-            if (IsSquareAttacked(Piece->GetGridPosition(), Piece->GetColor()))
-            { 
+            if (Piece->GetIsInCheck())
                 return true;
-            }
         }
         return false;
-    }
-
-    bool Board::CanPieceAttackSquare(ChessPiece* Piece, const sf::Vector2i& TargetPos) const
-    {
-        if (!Piece) return false;
-
-        sf::Vector2i From = Piece->GetGridPosition();
-        sf::Vector2i To = TargetPos;
-
-        switch (Piece->GetPieceType())
-        {
-        case EChessPieceType::Pawn:
-        {
-            int dir = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
-            // Pawns attack diagonally only
-            if (abs(To.x - From.x) == 1 && (To.y - From.y) == dir)
-                return true;
-            return false;
-        }
-
-        case EChessPieceType::Knight:
-        {
-            int dx = abs(To.x - From.x);
-            int dy = abs(To.y - From.y);
-            return (dx == 2 && dy == 1) || (dx == 1 && dy == 2);
-        }
-
-        case EChessPieceType::Bishop:
-        {
-            int dx = To.x - From.x;
-            int dy = To.y - From.y;
-            if (abs(dx) != abs(dy)) return false;
-
-            int stepX = (dx > 0) ? 1 : -1;
-            int stepY = (dy > 0) ? 1 : -1;
-            int x = From.x + stepX;
-            int y = From.y + stepY;
-            while (x != To.x && y != To.y)
-            {
-                // TODO
-            }
-            return true;
-        }
-
-        case EChessPieceType::Rook:
-        {
-            if (From.x != To.x && From.y != To.y) return false;
-            int stepX = (To.x - From.x) != 0 ? ((To.x - From.x) > 0 ? 1 : -1) : 0;
-            int stepY = (To.y - From.y) != 0 ? ((To.y - From.y) > 0 ? 1 : -1) : 0;
-
-            int x = From.x + stepX;
-            int y = From.y + stepY;
-            while (x != To.x || y != To.y)
-            {
-               // TODO
-            }
-            return true;
-        }
-
-        case EChessPieceType::Queen:
-        {
-            // Combine rook + bishop logic
-            int dx = To.x - From.x;
-            int dy = To.y - From.y;
-
-            if (dx == 0 || dy == 0)
-            {
-                // Rook-like move
-                int stepX = (dx != 0) ? (dx > 0 ? 1 : -1) : 0;
-                int stepY = (dy != 0) ? (dy > 0 ? 1 : -1) : 0;
-                int x = From.x + stepX;
-                int y = From.y + stepY;
-                while (x != To.x || y != To.y)
-                {
-                    // TODO
-                }
-                return true;
-            }
-            else if (abs(dx) == abs(dy))
-            {
-                // Bishop-like move
-                int stepX = (dx > 0) ? 1 : -1;
-                int stepY = (dy > 0) ? 1 : -1;
-                int x = From.x + stepX;
-                int y = From.y + stepY;
-                while (x != To.x && y != To.y)
-                {
-                    // TODO
-                }
-                return true;
-            }
-            return false;
-        }
-
-        case EChessPieceType::King:
-        {
-            int dx = abs(To.x - From.x);
-            int dy = abs(To.y - From.y);
-            return (dx <= 1 && dy <= 1);
-        }
-        }
-
-        return false;
-    }
-
-    void Board::ClearPawnFlags()
-    {
-        for (auto& p : Pieces)
-        {
-            if (!p) continue;
-            if (p->GetPieceType() == EChessPieceType::Pawn)
-            {
-                p->SetWasPawnMovedTwo(false);
-            }
-        }
     }
 
     bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
@@ -692,44 +605,53 @@ namespace we
 
     bool Board::IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (!Piece || (From == To) || (Piece->GetPieceType() != EChessPieceType::King)) return false;
+        if (!Piece || From == To || Piece->GetPieceType() != EChessPieceType::King)
+            return false;
 
         int signedDx = To.x - From.x;
         int deltaX = std::abs(signedDx);
         int deltaY = std::abs(To.y - From.y);
 
-        // ---- Standard king move ----
-        if (deltaX <= 1 && deltaY <= 1) { return true; }
+        // ---- Standard king move: 1 square any direction ----
+        if (deltaX <= 1 && deltaY <= 1)
+        {
+            // Can't move into check
+            if (IsSquareAttacked(To, Piece->GetColor()))
+                return false;
+            return true;
+        }
 
-        // ---- Castling attempt? ----
+        // ---- Castling attempt ----
         if (deltaY == 0 && deltaX == 2)
         {
-            // King has moved
-            if (Piece->GetHasMoved()) { return false; }
+            if (Piece->GetHasMoved()) return false;
 
-            EChessColor Color = Piece->GetColor();
-
-            // Kingside or Queenside
             bool bKingside = (signedDx > 0);
-
             int rookX = bKingside ? 7 : 0;
             sf::Vector2i RookPos(rookX, From.y);
 
-            // Rook must exist and not have moved
-            // TODO
+            auto Rook = GetPieceAt(RookPos);
+            if (!Rook || Rook->GetPieceType() != EChessPieceType::Rook || Rook->GetHasMoved())
+                return false;
 
             // Path between king and rook must be empty
             int start = std::min(From.x, rookX) + 1;
             int end = std::max(From.x, rookX) - 1;
-
             for (int x = start; x <= end; x++)
             {
-                // TODO
+                if (GetPieceAt({ x, From.y }))
+                    return false;
             }
 
+            // King cannot castle out of, through, or into check
+            if (IsSquareAttacked(From, Piece->GetColor()) ||
+                IsSquareAttacked({ From.x + (bKingside ? 1 : -1), From.y }, Piece->GetColor()) ||
+                IsSquareAttacked(To, Piece->GetColor()))
+            {
+                return false;
+            }
             return true;
         }
-
         return false;
     }
 
@@ -742,7 +664,7 @@ namespace we
         const int deltaX = To.x - From.x;
         const int deltaY = To.y - From.y;
 
-        // ---------- Single forward ----------
+        // ---------- Single move ----------
         if (deltaX == 0 && deltaY == direction)
         {
             return GetPieceAt(To) == nullptr;

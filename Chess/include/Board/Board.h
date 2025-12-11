@@ -103,18 +103,14 @@ namespace we
         bool HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
 
         void PromotePawn(we::shared<we::ChessPiece>& piece, sf::Vector2i& to);
-
         void HandlePromotePawn(shared<ChessPiece>& pawn, const sf::Vector2i& pos);
         void SetEnPassantFlag(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
-
         void EnPassant(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
-
+        void HandleCastle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To);
         void HandleCapture(const sf::Vector2i& GridPos);
-        bool IsKingInCheck() const;
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
-        bool CanPieceAttackSquare(ChessPiece* Piece, const sf::Vector2i& TargetPos) const;
-        void ClearPawnFlags();
-
+        bool IsKingInCheck() const;
+               
         bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
@@ -124,6 +120,5 @@ namespace we
 
         bool IsPlayersPiece(const ChessPiece* Piece) const;
         void SwitchTurn();
-
     };
 }

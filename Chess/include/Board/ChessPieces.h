@@ -46,6 +46,10 @@ namespace we
         void SetHasMoved() { bHasMoved = true; }
         bool GetWasPawnMovedTwo() const { return bWasPawnMovedTwo; }
         void SetWasPawnMovedTwo(bool Move) { bWasPawnMovedTwo = Move; }
+        bool GetIsInCheck() const { return bIsInCheck; }
+        void SetIsInCheck(bool Check) { bIsInCheck = Check; }
+        bool GetIsInCheckmate() const { return bIsInCheckmate; }
+        void SetIsInCheckmate(bool Checkmate) { bIsInCheckmate = Checkmate; }
         sf::Vector2i GetGridPosition() const { return GridPosition; }
         void SetGridPosition(const sf::Vector2i& NewPosition) { GridPosition = NewPosition; }
 
@@ -72,6 +76,8 @@ namespace we
         bool bIsSelected = false;
         bool bHasMoved = false;
         bool bWasPawnMovedTwo = false;
+        bool bIsInCheck = false;
+        bool bIsInCheckmate = false;
         sf::Vector2i GridPosition = { 0,0 };
     };
 }
