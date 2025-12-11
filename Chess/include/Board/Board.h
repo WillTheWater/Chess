@@ -100,17 +100,20 @@ namespace we
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
 
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool Board::HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
+        bool HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
 
+        void PromotePawn(we::shared<we::ChessPiece>& piece, sf::Vector2i& to);
+
+        void HandlePromotePawn(shared<ChessPiece>& pawn, const sf::Vector2i& pos);
         void SetEnPassantFlag(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
 
         void EnPassant(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
 
-        void Board::HandleCapture(const sf::Vector2i& GridPos);
+        void HandleCapture(const sf::Vector2i& GridPos);
         bool IsKingInCheck() const;
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         bool CanPieceAttackSquare(ChessPiece* Piece, const sf::Vector2i& TargetPos) const;
-        void Board::ClearPawnFlags();
+        void ClearPawnFlags();
 
         bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;

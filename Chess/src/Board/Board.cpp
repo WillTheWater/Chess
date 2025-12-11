@@ -353,11 +353,36 @@ namespace we
             piece->SetHasMoved();
 
             SetEnPassantFlag(piece, to, from);
+            PromotePawn(piece, to);
 
             SwitchTurn();
             return true;
         }
         return false;
+    }
+
+    void Board::PromotePawn(we::shared<we::ChessPiece>& piece, sf::Vector2i& to)
+    {
+        if (piece->GetPieceType() == EChessPieceType::Pawn)
+        {
+            bool reachedBackRank = (piece->GetColor() == EChessColor::White && to.y == 0) ||
+                (piece->GetColor() == EChessColor::Black && to.y == 7);
+
+            if (reachedBackRank)
+            {
+                HandlePromotePawn(piece, to);
+            }
+        }
+    }
+
+    void Board::HandlePromotePawn(shared<ChessPiece>& pawn, const sf::Vector2i& pos)
+    {
+        BoardGrid[pos.x][pos.y] = nullptr;
+        Pieces.erase(std::remove(Pieces.begin(), Pieces.end(), pawn), Pieces.end());
+        pawn->Destroy();
+
+        // TODO: Piece Selection
+        SpawnPiece(EChessPieceType::Queen, pawn->GetColor(), pos);
     }
 
     void Board::SetEnPassantFlag(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from)
