@@ -338,10 +338,48 @@ namespace we
         default: return false;
         }
     }
+
+    bool Board::IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To)
+    {
+        if (IsMoveValid(Piece, From, To))
+        {
+            shared<ChessPiece> TargetPiece = BoardGrid[To.x][To.y];
+
+            BoardGrid[From.x][From.y] = nullptr;
+            BoardGrid[To.x][To.y] = Piece;
+            Piece->SetGridPosition(To);
+
+            shared<ChessPiece> King = nullptr;
+            for (const auto& P : Pieces)
+            {
+                if (P && P->GetPieceType() == EChessPieceType::King && P->GetColor() == Piece->GetColor())
+                {
+                    King = P;
+                    break;
+                }
+            }
+
+            bool bIsLegal = true;
+            if (King)
+            {
+                if (IsSquareAttacked(King->GetGridPosition(), King->GetColor()))
+                {
+                    bIsLegal = false;
+                }
+            }
+
+            BoardGrid[From.x][From.y] = Piece;
+            BoardGrid[To.x][To.y] = TargetPiece;
+            Piece->SetGridPosition(From);
+
+            return bIsLegal;
+        }
+        return false;
+    }
    
     bool Board::HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to)
     {
-        if (IsMoveValid(piece, from, to))
+        if (IsMoveValid(piece, from, to) && IsMoveLegal(piece, from, to))
         {
             EnPassant(piece, to, from);
             HandleCapture(to);
@@ -678,34 +716,26 @@ namespace we
         }
 
         // ---- Castling ----
-        if (deltaY == 0 && deltaX == 2)
+        if (deltaY == 0 && deltaX == 2 && !Piece->GetHasMoved())
         {
-            if (Piece->GetHasMoved())
-                return false;
-
             bool bKingside = (signedDx > 0);
             int rookX = bKingside ? 7 : 0;
             sf::Vector2i RookPos(rookX, From.y);
 
             auto Rook = GetPieceAt(RookPos);
-            if (!Rook || Rook->GetPieceType() != EChessPieceType::Rook || Rook->GetHasMoved())
-                return false;
+            if (!Rook || Rook->GetPieceType() != EChessPieceType::Rook || Rook->GetHasMoved()) { return false; }
 
             int start = std::min(From.x, rookX) + 1;
             int end = std::max(From.x, rookX) - 1;
             for (int x = start; x <= end; x++)
             {
-                if (GetPieceAt({ x, From.y }))
-                    return false;
+                if (GetPieceAt({ x, From.y })) { return false; }
             }
 
-            if (IsSquareAttacked(From, Piece->GetColor()) ||
-                IsSquareAttacked({ From.x + (bKingside ? 1 : -1), From.y }, Piece->GetColor()) ||
-                IsSquareAttacked(To, Piece->GetColor()))
+            if (Piece->GetIsInCheck() || IsSquareAttacked({ From.x + (bKingside ? 1 : -1), From.y }, Piece->GetColor()) || IsSquareAttacked(To, Piece->GetColor()))
             {
                 return false;
             }
-
             return true;
         }
 

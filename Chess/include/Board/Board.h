@@ -100,6 +100,7 @@ namespace we
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
 
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To);
         bool HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
 
         void PromotePawn(we::shared<we::ChessPiece>& piece, sf::Vector2i& to);
