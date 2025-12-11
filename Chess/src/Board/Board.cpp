@@ -404,6 +404,7 @@ namespace we
             PromotePawn(piece, to);
             HandleCastle(piece, from, to);
             SetCheckFlag();
+            Checkmate();
 
             SwitchTurn();
             return true;
@@ -610,6 +611,85 @@ namespace we
             // TODO: Checkmate
         }
     }
+
+    void Board::Checkmate()
+    {
+        EChessColor opponentColor = (CurrentTurn == EPlayerTurn::White) ? EChessColor::Black : EChessColor::White;
+
+        shared<ChessPiece> King = nullptr;
+        for (const auto& P : Pieces)
+        {
+            if (P && P->GetPieceType() == EChessPieceType::King && P->GetColor() == opponentColor)
+            {
+                King = P;
+                break;
+            }
+        }
+
+        if (!King->GetIsInCheck())
+        {
+            King->SetIsInCheckmate(false);
+            return;
+        }
+
+        bool bHasLegalMove = false;
+
+        for (const auto& Piece : Pieces)
+        {
+            if (!Piece || Piece->GetColor() != opponentColor) continue;
+
+            sf::Vector2i From = Piece->GetGridPosition();
+
+            for (int x = 0; x < GridSize; x++)
+            {
+                for (int y = 0; y < GridSize; y++)
+                {
+                    sf::Vector2i To(x, y);
+
+                    if (!IsMoveValid(Piece, From, To))
+                        continue;
+
+                    shared<ChessPiece> TargetPiece = BoardGrid[To.x][To.y];
+                    BoardGrid[From.x][From.y] = nullptr;
+                    BoardGrid[To.x][To.y] = Piece;
+                    Piece->SetGridPosition(To);
+
+                    if (TargetPiece)
+                    {
+                        auto it = std::find(Pieces.begin(), Pieces.end(), TargetPiece);
+                        if (it != Pieces.end())
+                            Pieces.erase(it);
+                    }
+
+                    if (!IsSquareAttacked(King->GetGridPosition(), King->GetColor()))
+                    {
+                        bHasLegalMove = true;
+                    }
+
+                    Piece->SetGridPosition(From);
+                    BoardGrid[From.x][From.y] = Piece;
+                    BoardGrid[To.x][To.y] = TargetPiece;
+
+                    if (TargetPiece)
+                        Pieces.push_back(TargetPiece);
+
+                    if (bHasLegalMove)
+                        goto EndCheckmateLoop;
+                }
+            }
+        }
+
+    EndCheckmateLoop:
+
+        King->SetIsInCheckmate(!bHasLegalMove);
+
+        if (!bHasLegalMove)
+        {
+            LOG(opponentColor == EChessColor::White ? "White King is checkmated!" : "Black King is checkmated!");
+        }
+    }
+
+
 
     bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
