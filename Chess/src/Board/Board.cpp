@@ -341,40 +341,50 @@ namespace we
 
     bool Board::IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To)
     {
-        if (IsMoveValid(Piece, From, To))
+        shared<ChessPiece> TargetPiece = BoardGrid[To.x][To.y];
+
+        BoardGrid[From.x][From.y] = nullptr;
+        BoardGrid[To.x][To.y] = Piece;
+        Piece->SetGridPosition(To);
+
+        if (TargetPiece)
         {
-            shared<ChessPiece> TargetPiece = BoardGrid[To.x][To.y];
-
-            BoardGrid[From.x][From.y] = nullptr;
-            BoardGrid[To.x][To.y] = Piece;
-            Piece->SetGridPosition(To);
-
-            shared<ChessPiece> King = nullptr;
-            for (const auto& P : Pieces)
+            auto it = std::find(Pieces.begin(), Pieces.end(), TargetPiece);
+            if (it != Pieces.end())
             {
-                if (P && P->GetPieceType() == EChessPieceType::King && P->GetColor() == Piece->GetColor())
-                {
-                    King = P;
-                    break;
-                }
+                Pieces.erase(it);
             }
-
-            bool bIsLegal = true;
-            if (King)
-            {
-                if (IsSquareAttacked(King->GetGridPosition(), King->GetColor()))
-                {
-                    bIsLegal = false;
-                }
-            }
-
-            BoardGrid[From.x][From.y] = Piece;
-            BoardGrid[To.x][To.y] = TargetPiece;
-            Piece->SetGridPosition(From);
-
-            return bIsLegal;
         }
-        return false;
+
+        shared<ChessPiece> King = nullptr;
+        for (const auto& P : Pieces)
+        {
+            if (P && P->GetPieceType() == EChessPieceType::King && P->GetColor() == Piece->GetColor())
+            {
+                King = P;
+                break;
+            }
+        }
+
+        bool bIsLegal = true;
+        if (King)
+        {
+            if (IsSquareAttacked(King->GetGridPosition(), King->GetColor()))
+            {
+                bIsLegal = false;
+            }
+        }
+
+        Piece->SetGridPosition(From);
+        BoardGrid[From.x][From.y] = Piece;
+        BoardGrid[To.x][To.y] = TargetPiece;
+
+        if (TargetPiece)
+        {
+            Pieces.push_back(TargetPiece);
+        }
+
+        return bIsLegal;
     }
    
     bool Board::HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to)
@@ -627,8 +637,6 @@ namespace we
 
     bool Board::IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (From == To) { return false; }
-
         int deltaX = To.x - From.x;
         int deltaY = To.y - From.y;
 
@@ -654,8 +662,6 @@ namespace we
 
     bool Board::IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (From == To) { return false; }
-
         int deltaX = To.x - From.x;
         int deltaY = To.y - From.y;
 
@@ -684,8 +690,6 @@ namespace we
 
     bool Board::IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (From == To) { return false; }
-
         int deltaX = std::abs(To.x - From.x);
         int deltaY = std::abs(To.y - From.y);
 
@@ -694,9 +698,6 @@ namespace we
 
     bool Board::IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (!Piece || From == To || Piece->GetPieceType() != EChessPieceType::King)
-            return false;
-
         int signedDx = To.x - From.x;
         int deltaX = std::abs(signedDx);
         int deltaY = std::abs(To.y - From.y);
@@ -706,11 +707,9 @@ namespace we
         {
             auto target = GetPieceAt(To);
 
-            if (target && target->GetColor() == Piece->GetColor())
-                return false;
+            if (target && target->GetColor() == Piece->GetColor()) { return false; }
 
-            if (!target && IsSquareAttacked(To, Piece->GetColor()))
-                return false;
+            if (!target && IsSquareAttacked(To, Piece->GetColor())) { return false; }
 
             return true;
         }
@@ -738,7 +737,6 @@ namespace we
             }
             return true;
         }
-
         return false;
     }
 

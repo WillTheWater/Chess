@@ -40,6 +40,7 @@ namespace we
         // Accessors
         // ------------------------------------------------
         EChessPieceType GetPieceType() const { return PieceType; }
+        void SetPieceType(EChessPieceType NewType) { PieceType = NewType; }
         EChessColor GetColor() const { return Color; }
 
         bool GetHasMoved() const { return bHasMoved; }
