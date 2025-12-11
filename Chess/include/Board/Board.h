@@ -100,7 +100,12 @@ namespace we
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
 
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool CanMoveTo(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool Board::HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
+
+        void SetEnPassantFlag(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
+
+        void EnPassant(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
+
         void Board::HandleCapture(const sf::Vector2i& GridPos);
         bool IsKingInCheck() const;
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
