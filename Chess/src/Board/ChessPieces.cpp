@@ -37,23 +37,12 @@ namespace we
         UpdateVisualState();
     }
 
-    void ChessPiece::SetSelected(bool bNewSelected)
-    {
-        if (bIsSelected == bNewSelected) { return; }
-        bIsSelected = bNewSelected;
-        UpdateVisualState();
-    }
-
     // ----------------------------------------------------
     // Visual State
     // ----------------------------------------------------
     void ChessPiece::UpdateVisualState()
     {
-        if (bIsSelected)
-        {
-            GetSprite().setColor(sf::Color(255, 255, 255, 80));
-        }
-        else if (bIsHovered)
+        if (bIsHovered)
         {
             GetSprite().setColor(sf::Color(255, 255, 255, 150));
         }

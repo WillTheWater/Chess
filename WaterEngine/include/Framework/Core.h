@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <stdio.h>
 #include <memory>
+#include <optional>
 #include <map>
 #include <vector>
 #include <unordered_map>
@@ -15,6 +16,9 @@ namespace we
 	
 	template<typename T>
 	using weak = std::weak_ptr<T>;
+
+	template<typename T>
+	using optional = std::optional<T>;
 
 	template<typename T>
 	using List = std::vector<T>;

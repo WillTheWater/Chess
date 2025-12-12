@@ -134,6 +134,7 @@ namespace we
         }
         Pieces.clear();
         SelectedPiece.reset();
+        CurrentTurn = EPlayerTurn::White;
     }
 
     EChessColor Board::GetPieceColor(int value)
@@ -237,8 +238,6 @@ namespace we
 
         SelectedPiece = piece;
         bIsDragging = true;
-
-        piece->SetSelected(true);
         piece->SetHovered(false);
     }
 
@@ -257,19 +256,35 @@ namespace we
             sf::Vector2i to = WorldToGrid(MouseWorldPos);
             sf::Vector2i from = piece->GetGridPosition();
 
-            if (HandleMove(piece, from, to))
+            auto MoveSim = HandleMove(piece, from, to);
+
+            if (MoveSim.has_value())
             {
-                piece->SetActorLocation(GridToCenterSquare(to));
+                const MoveResult& Result = MoveSim.value();
+
+                // --- Update Real Board ---
+                if (Result.CapturedPiece) BoardGrid[Result.To.x][Result.To.y] = nullptr;
+                BoardGrid[Result.From.x][Result.From.y] = nullptr;
+                BoardGrid[Result.To.x][Result.To.y] = piece;
+
+                piece->SetGridPosition(Result.To);
+                piece->SetHasMoved();
+                piece->SetActorLocation(GridToCenterSquare(Result.To));
+
+                // TODO: Other Logic
+
+                SwitchTurn();
             }
             else
             {
                 piece->SetActorLocation(GridToCenterSquare(from));
             }
-            piece->SetSelected(false);
+
+            SelectedPiece.reset();
+            bIsDragging = false;
         }
-        SelectedPiece.reset();
-        bIsDragging = false;
     }
+
 
     bool Board::IsInBounds(const sf::Vector2f& WorldPos)
     {
@@ -314,7 +329,12 @@ namespace we
 
         return BoardGrid[GridPos.x][GridPos.y];
     }
-        
+    
+    bool Board::IsPlayersPiece(const ChessPiece* Piece) const
+    {
+        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) || (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
+    }
+
     // -------------------------------------------------------------------------
     // Game Logic
     // -------------------------------------------------------------------------
@@ -341,76 +361,49 @@ namespace we
 
     bool Board::IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To)
     {
-        shared<ChessPiece> TargetPiece = BoardGrid[To.x][To.y];
+        // ---------- Create Board Copy ----------
+        shared<ChessPiece> BoardSimulation[GridSize][GridSize] = {};
 
-        BoardGrid[From.x][From.y] = nullptr;
-        BoardGrid[To.x][To.y] = Piece;
-        Piece->SetGridPosition(To);
-
-        if (TargetPiece)
+        for (int x = 0; x < GridSize; ++x)
         {
-            auto it = std::find(Pieces.begin(), Pieces.end(), TargetPiece);
-            if (it != Pieces.end())
+            for (int y = 0; y < GridSize; ++y)
             {
-                Pieces.erase(it);
+                BoardSimulation[x][y] = BoardGrid[x][y];
             }
         }
 
-        shared<ChessPiece> King = nullptr;
-        for (const auto& P : Pieces)
-        {
-            if (P && P->GetPieceType() == EChessPieceType::King && P->GetColor() == Piece->GetColor())
-            {
-                King = P;
-                break;
-            }
-        }
+        // ---------- Simulate Move ----------
+        shared<ChessPiece> SimPiece = BoardSimulation[From.x][From.y];
+        BoardSimulation[From.x][From.y] = nullptr;
+        BoardSimulation[To.x][To.y] = SimPiece;
+        SimPiece->SetGridPosition(To);
 
-        bool bIsLegal = true;
-        if (King)
-        {
-            if (IsSquareAttacked(King->GetGridPosition(), King->GetColor()))
-            {
-                bIsLegal = false;
-            }
-        }
-
-        Piece->SetGridPosition(From);
-        BoardGrid[From.x][From.y] = Piece;
-        BoardGrid[To.x][To.y] = TargetPiece;
-
-        if (TargetPiece)
-        {
-            Pieces.push_back(TargetPiece);
-        }
-
-        return bIsLegal;
+        return true;
     }
-   
-    bool Board::HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to)
+
+    optional<MoveResult> Board::HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to)
     {
+        MoveResult Result;
+        Result.From = from;
+        Result.To = to;
+
+        // Validate and simulate
         if (IsMoveValid(piece, from, to) && IsMoveLegal(piece, from, to))
         {
-            EnPassant(piece, to, from);
-            HandleCapture(to);
+            // --- fill the MoveResult struct --- 
+            Result.bValid = true;
+            Result.CapturedPiece = GetPieceAt(to);
+            // Result.bPawnPromoted = true/false
+            // Result.bCastling = true/false
+            // Result.RookFrom/RookTo = positions if castling
+            // Result.bIsCheck/bIsCheckmate/etc
 
-            BoardGrid[from.x][from.y] = nullptr;
-            BoardGrid[to.x][to.y] = piece;
-
-            piece->SetGridPosition(to);
-            piece->SetHasMoved();
-
-            SetEnPassantFlag(piece, to, from);
-            PromotePawn(piece, to);
-            HandleCastle(piece, from, to);
-            SetCheckFlag();
-            Checkmate();
-
-            SwitchTurn();
-            return true;
+            return Result; // Return simulation
         }
-        return false;
+
+        return std::nullopt; // move invalid
     }
+
 
     void Board::PromotePawn(we::shared<we::ChessPiece>& piece, sf::Vector2i& to)
     {
@@ -463,7 +456,7 @@ namespace we
                         if (sidePawn->GetPieceType() == EChessPieceType::Pawn &&
                             sidePawn->GetWasPawnMovedTwo())
                         {
-                            HandleCapture(sidePawnPos);
+                            Capture(sidePawnPos);
                         }
                     }
                 }
@@ -471,7 +464,7 @@ namespace we
         }
     }
 
-    void Board::HandleCastle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To)
+    void Board::Castle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To)
     {
         if (!King || King->GetPieceType() != EChessPieceType::King)
             return;
@@ -500,7 +493,7 @@ namespace we
         Rook->SetHasMoved();
     }
 
-    void Board::HandleCapture(const sf::Vector2i& GridPos)
+    void Board::Capture(const sf::Vector2i& GridPos)
     {
         if (auto target = GetPieceAt(GridPos))
         {
@@ -589,107 +582,18 @@ namespace we
 
     void Board::SetCheckFlag()
     {
-        for (const auto& Piece : Pieces)
-        {
-            if (Piece->GetPieceType() != EChessPieceType::King) { continue; }
-
-            bool bInCheck = IsSquareAttacked(Piece->GetGridPosition(), Piece->GetColor());
-            Piece->SetIsInCheck(bInCheck);
-
-            if (bInCheck)
-            {
-                if (Piece->GetColor() == EChessColor::White)
-                {
-                    LOG("White King is in Check!")
-                }
-                else
-                {
-                    LOG("Black King is in Check!")
-                }
-            }
-
-            // TODO: Checkmate
-        }
+        
     }
 
     void Board::Checkmate()
     {
-        EChessColor opponentColor = (CurrentTurn == EPlayerTurn::White) ? EChessColor::Black : EChessColor::White;
 
-        shared<ChessPiece> King = nullptr;
-        for (const auto& P : Pieces)
-        {
-            if (P && P->GetPieceType() == EChessPieceType::King && P->GetColor() == opponentColor)
-            {
-                King = P;
-                break;
-            }
-        }
-
-        if (!King->GetIsInCheck())
-        {
-            King->SetIsInCheckmate(false);
-            return;
-        }
-
-        bool bHasLegalMove = false;
-
-        for (const auto& Piece : Pieces)
-        {
-            if (!Piece || Piece->GetColor() != opponentColor) continue;
-
-            sf::Vector2i From = Piece->GetGridPosition();
-
-            for (int x = 0; x < GridSize; x++)
-            {
-                for (int y = 0; y < GridSize; y++)
-                {
-                    sf::Vector2i To(x, y);
-
-                    if (!IsMoveValid(Piece, From, To))
-                        continue;
-
-                    shared<ChessPiece> TargetPiece = BoardGrid[To.x][To.y];
-                    BoardGrid[From.x][From.y] = nullptr;
-                    BoardGrid[To.x][To.y] = Piece;
-                    Piece->SetGridPosition(To);
-
-                    if (TargetPiece)
-                    {
-                        auto it = std::find(Pieces.begin(), Pieces.end(), TargetPiece);
-                        if (it != Pieces.end())
-                            Pieces.erase(it);
-                    }
-
-                    if (!IsSquareAttacked(King->GetGridPosition(), King->GetColor()))
-                    {
-                        bHasLegalMove = true;
-                    }
-
-                    Piece->SetGridPosition(From);
-                    BoardGrid[From.x][From.y] = Piece;
-                    BoardGrid[To.x][To.y] = TargetPiece;
-
-                    if (TargetPiece)
-                        Pieces.push_back(TargetPiece);
-
-                    if (bHasLegalMove)
-                        goto EndCheckmateLoop;
-                }
-            }
-        }
-
-    EndCheckmateLoop:
-
-        King->SetIsInCheckmate(!bHasLegalMove);
-
-        if (!bHasLegalMove)
-        {
-            LOG(opponentColor == EChessColor::White ? "White King is checkmated!" : "Black King is checkmated!");
-        }
     }
 
-
+    void Board::Stalemate()
+    {
+       
+    }
 
     bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
@@ -864,13 +768,7 @@ namespace we
             }
             return false;
         }
-
         return false;
-    }
-
-    bool Board::IsPlayersPiece(const ChessPiece* Piece) const
-    {
-        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) || (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
     }
 
     void Board::SwitchTurn()

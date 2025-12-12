@@ -5,6 +5,26 @@
 
 namespace we
 {
+    // ----------------------------------------------------
+    // Move Simulation Struct
+    // ----------------------------------------------------
+    struct MoveResult
+    {
+        bool bValid = false; 
+        sf::Vector2i From;
+        sf::Vector2i To;
+        shared<ChessPiece> CapturedPiece; 
+        bool bPawnPromoted = false;  
+        EChessPieceType PromotionType; 
+        bool bCastling = false;  
+        sf::Vector2i RookFrom, RookTo;
+
+        bool bIsCheck = false;
+        bool bIsCheckmate = false;
+        bool bIsStalemate = false;
+        bool bIsDraw = false;
+    };
+
     enum class EPlayerTurn
     {
         White,
@@ -33,7 +53,6 @@ namespace we
         static constexpr float GRID_ABS_OFFSET_Y = 49.0f;
         shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
 
-        // 1 = King, 2 = Queen, 3 = Bishop, 4 = Knight, 5 = Rook, 6 = Pawn, - = Black
         static constexpr int InitialBoard[GridSize][GridSize] = {
             {-5, -4, -3, -2, -1, -3, -4, -5},
             {-6, -6, -6, -6, -6, -6, -6, -6},
@@ -93,6 +112,7 @@ namespace we
         List<shared<ChessPiece>> Pieces;
         std::string GetPieceName(EChessPieceType Type);
         shared<ChessPiece> GetPieceAt(const sf::Vector2i& GridPos) const;
+        bool IsPlayersPiece(const ChessPiece* Piece) const;
 
         // ----------------------------------------------------
         // Game Logic
@@ -101,17 +121,18 @@ namespace we
 
         bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To);
-        bool HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
+        optional<MoveResult> HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
 
         void PromotePawn(we::shared<we::ChessPiece>& piece, sf::Vector2i& to);
         void HandlePromotePawn(shared<ChessPiece>& pawn, const sf::Vector2i& pos);
         void SetEnPassantFlag(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
         void EnPassant(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from);
-        void HandleCastle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To);
-        void HandleCapture(const sf::Vector2i& GridPos);
+        void Castle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To);
+        void Capture(const sf::Vector2i& GridPos);
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         void SetCheckFlag();
         void Checkmate();
+        void Stalemate();
                
         bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
@@ -120,7 +141,6 @@ namespace we
         bool IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
 
-        bool IsPlayersPiece(const ChessPiece* Piece) const;
         void SwitchTurn();
     };
 }
