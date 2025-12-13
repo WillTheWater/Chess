@@ -44,7 +44,15 @@ namespace we
 
         for (const auto& Piece : Pieces)
         {
-            if (Piece) { Piece->Render(Window); }
+            if (Piece && Piece != SelectedPiece.lock())
+            {
+                Piece->Render(Window);
+            }
+        }
+
+        if (auto Dragged = SelectedPiece.lock())
+        {
+            Dragged->Render(Window);
         }
     }
 
@@ -275,8 +283,7 @@ namespace we
 
     void Board::UpdateBoard(const MoveResult& Result)
     {
-        if (!Result.bValid)
-            return;
+        if (!Result.bValid) { return; }
 
         // ----------------------------------------------------
         // Handle Capture
@@ -287,30 +294,17 @@ namespace we
         }
 
         // ----------------------------------------------------
-        // Move Main Piece
+        // Move Piece
         // ----------------------------------------------------
-        shared<ChessPiece> MovingPiece = BoardGrid[Result.From.x][Result.From.y];
 
-        BoardGrid[Result.From.x][Result.From.y] = nullptr;
-        BoardGrid[Result.To.x][Result.To.y] = MovingPiece;
-
-        MovingPiece->SetGridPosition(Result.To);
-        MovingPiece->SetActorLocation(GridToCenterSquare(Result.To));
-        MovingPiece->SetHasMoved();
+            Move(BoardGrid[Result.From.x][Result.From.y], Result.From, Result.To);
 
         // ----------------------------------------------------
-        // Handle Castling (rook move only)
+        // Handle Castling
         // ----------------------------------------------------
         if (Result.bCastling)
         {
-            shared<ChessPiece> Rook = BoardGrid[Result.RookFrom.x][Result.RookFrom.y];
-
-            BoardGrid[Result.RookFrom.x][Result.RookFrom.y] = nullptr;
-            BoardGrid[Result.RookTo.x][Result.RookTo.y] = Rook;
-
-            Rook->SetGridPosition(Result.RookTo);
-            Rook->SetActorLocation(GridToCenterSquare(Result.RookTo));
-            Rook->SetHasMoved();
+            Castle(BoardGrid[Result.RookFrom.x][Result.RookFrom.y], Result.RookFrom, Result.RookTo);
         }
 
         // ----------------------------------------------------
@@ -318,13 +312,7 @@ namespace we
         // ----------------------------------------------------
         if (Result.bPawnPromoted)
         {
-            // At this point HandleMove should already have:
-            // - removed the pawn
-            // - spawned the promoted piece
-            // - placed it on Result.To
-            //
-            // So UpdateBoard does nothing structural here
-            // (This is intentionally empty)
+            PromotePawn(Result.To, Result.PromotionType);
         }
     }
 
@@ -451,17 +439,16 @@ namespace we
         Result.To = to;
 
         // ----------------------------------------------------
-        // Capture detection (normal)
+        // Capture Detection
         // ----------------------------------------------------
         Result.CapturedPiece = GetPieceAt(to);
 
         // ----------------------------------------------------
-        // Castling detection
+        // Castling Detection
         // ----------------------------------------------------
         Result.bCastling = false;
 
-        if (piece->GetPieceType() == EChessPieceType::King &&
-            std::abs(to.x - from.x) == 2)
+        if (piece->GetPieceType() == EChessPieceType::King && std::abs(to.x - from.x) == 2)
         {
             Result.bCastling = true;
 
@@ -473,7 +460,7 @@ namespace we
         }
 
         // ----------------------------------------------------
-        // Pawn promotion detection
+        // Pawn Promotion Detection
         // ----------------------------------------------------
         Result.bPawnPromoted = false;
 
@@ -484,12 +471,13 @@ namespace we
             if (to.y == lastRank)
             {
                 Result.bPawnPromoted = true;
-                Result.PromotionType = EChessPieceType::Queen; // default
+                // ------ Default to Queen ------
+                Result.PromotionType = EChessPieceType::Queen;
             }
         }
 
         // ----------------------------------------------------
-        // Check detection
+        // Check Detection
         // ----------------------------------------------------
         {
             shared<ChessPiece> SimBoard[GridSize][GridSize] = {};
@@ -539,38 +527,37 @@ namespace we
         return Result;
     }
 
-    void Board::PromotePawn(we::shared<we::ChessPiece>& piece, sf::Vector2i& to)
+    void Board::Move(shared<ChessPiece> PieceToMove, sf::Vector2i From, sf::Vector2i To)
     {
-        if (piece->GetPieceType() == EChessPieceType::Pawn)
-        {
-            bool reachedBackRank = (piece->GetColor() == EChessColor::White && to.y == 0) ||
-                (piece->GetColor() == EChessColor::Black && to.y == 7);
+        BoardGrid[From.x][From.y] = nullptr;
+        BoardGrid[To.x][To.y] = PieceToMove;
 
-            if (reachedBackRank)
-            {
-                HandlePromotePawn(piece, to);
-            }
-        }
+        PieceToMove->SetGridPosition(To);
+        PieceToMove->SetActorLocation(GridToCenterSquare(To));
+        PieceToMove->SetHasMoved();
     }
 
-    void Board::HandlePromotePawn(shared<ChessPiece>& pawn, const sf::Vector2i& pos)
+    void Board::Castle(shared<ChessPiece> Rook, sf::Vector2i From, sf::Vector2i To)
     {
+        BoardGrid[From.x][From.y] = nullptr;
+        BoardGrid[To.x][To.y] = Rook;
+
+        Rook->SetGridPosition(To);
+        Rook->SetActorLocation(GridToCenterSquare(To));
+        Rook->SetHasMoved();
+    }
+
+    void Board::PromotePawn(const sf::Vector2i& pos, EChessPieceType PromotionType)
+    {
+        shared<ChessPiece> pawn = BoardGrid[pos.x][pos.y];
+        EChessColor PieceColor = pawn->GetColor();
+        if (!pawn || pawn->GetPieceType() != EChessPieceType::Pawn) { return; }
+
         BoardGrid[pos.x][pos.y] = nullptr;
         Pieces.erase(std::remove(Pieces.begin(), Pieces.end(), pawn), Pieces.end());
         pawn->Destroy();
 
-        // TODO: Piece Selection
-        SpawnPiece(EChessPieceType::Queen, pawn->GetColor(), pos);
-    }
-
-    void Board::SetEnPassantFlag(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from)
-    {
-        // ---------- Set the "moved two" flag for pawns ----------
-        if (piece->GetPieceType() == EChessPieceType::Pawn)
-        {
-            bool movedTwo = std::abs(to.y - from.y) == 2;
-            piece->SetWasPawnMovedTwo(movedTwo);
-        }
+        SpawnPiece(PromotionType, PieceColor, pos);
     }
 
     void Board::EnPassant(we::shared<we::ChessPiece>& piece, sf::Vector2i& to, sf::Vector2i& from)
@@ -596,35 +583,6 @@ namespace we
                 }
             }
         }
-    }
-
-    void Board::Castle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To)
-    {
-        if (!King || King->GetPieceType() != EChessPieceType::King)
-            return;
-
-        int deltaX = To.x - From.x;
-
-        if (std::abs(deltaX) != 2)
-            return;
-
-        bool bKingside = (deltaX > 0);
-
-        int rookX = bKingside ? 7 : 0;
-        sf::Vector2i RookPos(rookX, From.y);
-
-        auto Rook = GetPieceAt(RookPos);
-        if (!Rook || Rook->GetPieceType() != EChessPieceType::Rook)
-            return;
-
-        sf::Vector2i NewRookPos = bKingside ? sf::Vector2i(To.x - 1, From.y) : sf::Vector2i(To.x + 1, From.y);
-
-        BoardGrid[RookPos.x][RookPos.y] = nullptr;
-        BoardGrid[NewRookPos.x][NewRookPos.y] = Rook;
-
-        Rook->SetGridPosition(NewRookPos);
-        Rook->SetActorLocation(GridToCenterSquare(NewRookPos));
-        Rook->SetHasMoved();
     }
 
     void Board::Capture(const sf::Vector2i& GridPos)
@@ -824,6 +782,11 @@ namespace we
        
     }
 
+    void Board::SwitchTurn()
+    {
+        CurrentTurn = (CurrentTurn == EPlayerTurn::White) ? EPlayerTurn::Black : EPlayerTurn::White;
+    }
+
     bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
         bool sameRow = (From.y == To.y);
@@ -998,10 +961,5 @@ namespace we
             return false;
         }
         return false;
-    }
-
-    void Board::SwitchTurn()
-    {
-        CurrentTurn = (CurrentTurn == EPlayerTurn::White) ? EPlayerTurn::Black : EPlayerTurn::White;
     }
 }
