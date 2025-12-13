@@ -314,6 +314,22 @@ namespace we
         {
             PromotePawn(Result.To, Result.PromotionType);
         }
+
+        // ----------------------------------------------------
+        // Checkmate 
+        // ----------------------------------------------------
+        if (Result.bIsCheckmate)
+        {
+            LOG("Checkmate!")
+        }
+
+        // ----------------------------------------------------
+        // Draw 
+        // ----------------------------------------------------
+        if (Result.bIsStalemate)
+        {
+            LOG("Draw!")
+        }
     }
 
     bool Board::IsInBounds(const sf::Vector2i& GridPos) const
@@ -354,175 +370,179 @@ namespace we
     // -------------------------------------------------------------------------
     // Game Logic
     // -------------------------------------------------------------------------
-    bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To, shared<ChessPiece> Board[GridSize][GridSize]) const
     {
-        if (!Piece || !IsPlayersPiece(Piece.get()) || From == To || !IsInBounds(To)) { return false; }
+        if (!Piece || From == To || !IsInBounds(To)) { return false; }
 
-        if (auto target = GetPieceAt(To))
+        if (auto target = Board[To.x][To.y])
         {
-            if (target->GetColor() == Piece->GetColor()) { return false; }
+            if (target->GetColor() == Piece->GetColor())
+                return false;
         }
 
         switch (Piece->GetPieceType())
         {
-        case EChessPieceType::Rook:   return IsRookMoveValid(Piece, From, To);
-        case EChessPieceType::Bishop: return IsBishopMoveValid(Piece, From, To);
-        case EChessPieceType::Queen:  return IsQueenMoveValid(Piece, From, To);
-        case EChessPieceType::King:   return IsKingMoveValid(Piece, From, To);
-        case EChessPieceType::Knight: return IsKnightMoveValid(Piece, From, To);
-        case EChessPieceType::Pawn:   return IsPawnMoveValid(Piece, From, To);
-        default: return false;
+        case EChessPieceType::Rook:
+            return IsRookMoveValid(Board, From, To);
+
+        case EChessPieceType::Bishop:
+            return IsBishopMoveValid(Board, From, To);
+
+        case EChessPieceType::Queen:
+            return IsQueenMoveValid(Board, From, To);
+
+        case EChessPieceType::Knight:
+            return IsKnightMoveValid(From, To);
+
+        case EChessPieceType::King:
+            return IsKingMoveValid(Board, Piece, From, To);
+
+        case EChessPieceType::Pawn:
+            return IsPawnMoveValid(Board, Piece, From, To);
+
+        default:
+            return false;
         }
     }
 
-    bool Board::IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To)
+    bool Board::IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To, shared<ChessPiece> Board[GridSize][GridSize])
+    {
+        auto Captured = Board[To.x][To.y];
+        Board[To.x][To.y] = Board[From.x][From.y];
+        Board[From.x][From.y] = nullptr;
+
+        sf::Vector2i KingPos =
+            (Piece->GetPieceType() == EChessPieceType::King)
+            ? To
+            : FindKing(Board, Piece->GetColor());
+
+        bool bLegal =
+            (KingPos.x != -1) &&
+            !IsSquareAttacked(KingPos, Piece->GetColor(), Board);
+
+        Board[From.x][From.y] = Board[To.x][To.y];
+        Board[To.x][To.y] = Captured;
+
+        return bLegal;
+    }
+
+    optional<MoveResult> Board::HandleMove(
+        shared<ChessPiece> Piece,
+        sf::Vector2i From,
+        sf::Vector2i To)
     {
         // ----------------------------------------------------
-        // Create simulated board
+        // Create simulation board
         // ----------------------------------------------------
         shared<ChessPiece> SimBoard[GridSize][GridSize] = {};
-
         for (int x = 0; x < GridSize; ++x)
-        {
             for (int y = 0; y < GridSize; ++y)
-            {
                 SimBoard[x][y] = BoardGrid[x][y];
-            }
-        }
 
-        // ----------------------------------------------------
-        // Apply move to simulation
-        // ----------------------------------------------------
-        shared<ChessPiece> MovingPiece = SimBoard[From.x][From.y];
-        SimBoard[From.x][From.y] = nullptr;
-        SimBoard[To.x][To.y] = MovingPiece;
-
-        // ----------------------------------------------------
-        // Find king position in simulation
-        // ----------------------------------------------------
-        sf::Vector2i KingPos{ -1, -1 };
-
-        for (int x = 0; x < GridSize; ++x)
-        {
-            for (int y = 0; y < GridSize; ++y)
-            {
-                auto p = SimBoard[x][y];
-                if (p &&
-                    p->GetPieceType() == EChessPieceType::King &&
-                    p->GetColor() == Piece->GetColor())
-                {
-                    KingPos = { x, y };
-                    break;
-                }
-            }
-        }
-
-        if (KingPos.x == -1)
-            return false;
-
-        // ----------------------------------------------------
-        // Check if king is attacked (using simulated board)
-        // ----------------------------------------------------
-        return !IsSquareAttacked(KingPos, Piece->GetColor(), SimBoard);
-    }
-
-    optional<MoveResult> Board::HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to)
-    {
         // ----------------------------------------------------
         // Validate move
         // ----------------------------------------------------
-        if (!IsMoveValid(piece, from, to) || !IsMoveLegal(piece, from, to)) { return std::nullopt; }
+        if (!IsMoveValid(Piece, From, To, SimBoard))
+            return std::nullopt;
 
-        MoveResult Result;
+        if (!IsMoveLegal(Piece, From, To, SimBoard))
+            return std::nullopt;
+
+        // ----------------------------------------------------
+        // Apply player's move to simulation
+        // ----------------------------------------------------
+        auto Captured = SimBoard[To.x][To.y];
+        SimBoard[From.x][From.y] = nullptr;
+        SimBoard[To.x][To.y] = Piece;
+
+        MoveResult Result{};
         Result.bValid = true;
-        Result.From = from;
-        Result.To = to;
+        Result.From = From;
+        Result.To = To;
+        Result.CapturedPiece = Captured;
 
         // ----------------------------------------------------
-        // Capture Detection
+        // Castling detection
         // ----------------------------------------------------
-        Result.CapturedPiece = GetPieceAt(to);
-
-        // ----------------------------------------------------
-        // Castling Detection
-        // ----------------------------------------------------
-        Result.bCastling = false;
-
-        if (piece->GetPieceType() == EChessPieceType::King && std::abs(to.x - from.x) == 2)
+        if (Piece->GetPieceType() == EChessPieceType::King &&
+            std::abs(To.x - From.x) == 2)
         {
             Result.bCastling = true;
 
-            int rookX = (to.x > from.x) ? 7 : 0;
-            int rookToX = (to.x > from.x) ? to.x - 1 : to.x + 1;
+            int RookFromX = (To.x > From.x) ? 7 : 0;
+            int RookToX = (To.x > From.x) ? To.x - 1 : To.x + 1;
 
-            Result.RookFrom = { rookX, from.y };
-            Result.RookTo = { rookToX, from.y };
+            Result.RookFrom = { RookFromX, From.y };
+            Result.RookTo = { RookToX, From.y };
         }
 
         // ----------------------------------------------------
-        // Pawn Promotion Detection
+        // Pawn promotion
         // ----------------------------------------------------
-        Result.bPawnPromoted = false;
-
-        if (piece->GetPieceType() == EChessPieceType::Pawn)
+        if (Piece->GetPieceType() == EChessPieceType::Pawn)
         {
-            int lastRank = (piece->GetColor() == EChessColor::White) ? 0 : 7;
-
-            if (to.y == lastRank)
+            int LastRank = (Piece->GetColor() == EChessColor::White) ? 0 : 7;
+            if (To.y == LastRank)
             {
                 Result.bPawnPromoted = true;
-                // ------ Default to Queen ------
                 Result.PromotionType = EChessPieceType::Queen;
             }
         }
 
         // ----------------------------------------------------
-        // Check Detection
+        // Check detection
         // ----------------------------------------------------
+        EChessColor OpponentColor =
+            (Piece->GetColor() == EChessColor::White)
+            ? EChessColor::Black
+            : EChessColor::White;
+
+        sf::Vector2i OpponentKing = FindKing(SimBoard, OpponentColor);
+
+        Result.bIsCheck =
+            (OpponentKing.x != -1) &&
+            IsSquareAttacked(OpponentKing, OpponentColor, SimBoard);
+
+        // ----------------------------------------------------
+        // Checkmate / Stalemate
+        // ----------------------------------------------------
+        bool bOpponentHasMove = false;
+
+        for (int fx = 0; fx < GridSize && !bOpponentHasMove; ++fx)
         {
-            shared<ChessPiece> SimBoard[GridSize][GridSize] = {};
-
-            for (int x = 0; x < GridSize; ++x)
-                for (int y = 0; y < GridSize; ++y)
-                    SimBoard[x][y] = BoardGrid[x][y];
-
-            // Apply simulated move
-            SimBoard[from.x][from.y] = nullptr;
-            SimBoard[to.x][to.y] = piece;
-
-            // Find opponent king
-            EChessColor OpponentColor =
-                (piece->GetColor() == EChessColor::White)
-                ? EChessColor::Black
-                : EChessColor::White;
-
-            sf::Vector2i OpponentKing{ -1, -1 };
-
-            for (int x = 0; x < GridSize; ++x)
+            for (int fy = 0; fy < GridSize && !bOpponentHasMove; ++fy)
             {
-                for (int y = 0; y < GridSize; ++y)
+                auto OppPiece = SimBoard[fx][fy];
+                if (!OppPiece || OppPiece->GetColor() != OpponentColor)
+                    continue;
+
+                sf::Vector2i OppFrom{ fx, fy };
+
+                for (int tx = 0; tx < GridSize && !bOpponentHasMove; ++tx)
                 {
-                    auto p = SimBoard[x][y];
-                    if (p &&
-                        p->GetPieceType() == EChessPieceType::King &&
-                        p->GetColor() == OpponentColor)
+                    for (int ty = 0; ty < GridSize; ++ty)
                     {
-                        OpponentKing = { x, y };
+                        sf::Vector2i OppTo{ tx, ty };
+
+                        if (!IsMoveValid(OppPiece, OppFrom, OppTo, SimBoard))
+                            continue;
+
+                        if (IsMoveLegal(OppPiece, OppFrom, OppTo, SimBoard))
+                        {
+                            bOpponentHasMove = true;
+                            break;
+                        }
                     }
                 }
             }
-
-            Result.bIsCheck =
-                (OpponentKing.x != -1) &&
-                IsSquareAttacked(OpponentKing, OpponentColor, SimBoard);
         }
 
-        // ----------------------------------------------------
-        // (Checkmate / Stalemate 
-        // ----------------------------------------------------
-        Result.bIsCheckmate = false;
-        Result.bIsStalemate = false;
-        Result.bIsDraw = false;
+        if (Result.bIsCheck)
+            Result.bIsCheckmate = !bOpponentHasMove;
+        else
+            Result.bIsStalemate = !bOpponentHasMove;
+
+        Result.bIsDraw = Result.bIsStalemate;
 
         return Result;
     }
@@ -787,12 +807,10 @@ namespace we
         CurrentTurn = (CurrentTurn == EPlayerTurn::White) ? EPlayerTurn::Black : EPlayerTurn::White;
     }
 
-    bool Board::IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    bool Board::IsRookMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const
     {
-        bool sameRow = (From.y == To.y);
-        bool sameCol = (From.x == To.x);
-
-        if (!sameRow && !sameCol) { return false; }
+        if (From.x != To.x && From.y != To.y)
+            return false;
 
         int dx = (To.x > From.x) ? 1 : (To.x < From.x ? -1 : 0);
         int dy = (To.y > From.y) ? 1 : (To.y < From.y ? -1 : 0);
@@ -803,7 +821,8 @@ namespace we
 
         while (pos != To)
         {
-            if (GetPieceAt(pos)) { return false; }
+            if (Board[pos.x][pos.y])
+                return false;
 
             pos.x += dx;
             pos.y += dy;
@@ -811,15 +830,17 @@ namespace we
         return true;
     }
 
-    bool Board::IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+
+    bool Board::IsBishopMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const
     {
-        int deltaX = To.x - From.x;
-        int deltaY = To.y - From.y;
+        int dx = To.x - From.x;
+        int dy = To.y - From.y;
 
-        if (std::abs(deltaX) != std::abs(deltaY)) { return false; }
+        if (std::abs(dx) != std::abs(dy))
+            return false;
 
-        int dx = (deltaX > 0) ? 1 : -1;
-        int dy = (deltaY > 0) ? 1 : -1;
+        dx = (dx > 0) ? 1 : -1;
+        dy = (dy > 0) ? 1 : -1;
 
         sf::Vector2i pos = From;
         pos.x += dx;
@@ -827,139 +848,104 @@ namespace we
 
         while (pos != To)
         {
-            if (GetPieceAt(pos)) { return false; }
+            if (Board[pos.x][pos.y])
+                return false;
 
             pos.x += dx;
             pos.y += dy;
         }
-
         return true;
     }
 
-    bool Board::IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    bool Board::IsQueenMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const
     {
-        int deltaX = To.x - From.x;
-        int deltaY = To.y - From.y;
-
-        bool isDiagonal = (std::abs(deltaX) == std::abs(deltaY));
-        bool isStraight = (deltaX == 0 || deltaY == 0);
-
-        if (!isDiagonal && !isStraight) { return false; }
-
-        int dx = (deltaX == 0) ? 0 : (deltaX > 0 ? 1 : -1);
-        int dy = (deltaY == 0) ? 0 : (deltaY > 0 ? 1 : -1);
-
-        sf::Vector2i pos = From;
-        pos.x += dx;
-        pos.y += dy;
-
-        while (pos != To)
-        {
-            if (GetPieceAt(pos)) { return false; }
-
-            pos.x += dx;
-            pos.y += dy;
-        }
-
-        return true;
+        return IsRookMoveValid(Board, From, To) || IsBishopMoveValid(Board, From, To);
     }
 
-    bool Board::IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    bool Board::IsKnightMoveValid(sf::Vector2i From, sf::Vector2i To) const
     {
-        int deltaX = std::abs(To.x - From.x);
-        int deltaY = std::abs(To.y - From.y);
+        int dx = std::abs(To.x - From.x);
+        int dy = std::abs(To.y - From.y);
 
-        return ((deltaX == 1 && deltaY == 2) || (deltaX == 2 && deltaY == 1));
+        return (dx == 2 && dy == 1) || (dx == 1 && dy == 2);
     }
 
-    bool Board::IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    bool Board::IsKingMoveValid(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        int signedDx = To.x - From.x;
-        int deltaX = std::abs(signedDx);
-        int deltaY = std::abs(To.y - From.y);
+        int dx = std::abs(To.x - From.x);
+        int dy = std::abs(To.y - From.y);
 
-        // ---- Standard Movement ----
-        if (deltaX <= 1 && deltaY <= 1)
+        // ---- Normal move ----
+        if (dx <= 1 && dy <= 1)
         {
-            auto target = GetPieceAt(To);
+            auto target = Board[To.x][To.y];
 
-            if (target && target->GetColor() == Piece->GetColor()) { return false; }
+            if (target && target->GetColor() == Piece->GetColor())
+                return false;
 
-            if (!target && IsSquareAttacked(To, Piece->GetColor())) { return false; }
+            // King may not move into check
+            if (IsSquareAttacked(To, Piece->GetColor(), Board))
+                return false;
 
             return true;
         }
 
         // ---- Castling ----
-        if (deltaY == 0 && deltaX == 2 && !Piece->GetHasMoved())
+        if (dy == 0 && dx == 2 && !Piece->GetHasMoved())
         {
-            bool bKingside = (signedDx > 0);
-            int rookX = bKingside ? 7 : 0;
-            sf::Vector2i RookPos(rookX, From.y);
+            int dir = (To.x > From.x) ? 1 : -1;
+            int rookX = (dir == 1) ? 7 : 0;
 
-            auto Rook = GetPieceAt(RookPos);
-            if (!Rook || Rook->GetPieceType() != EChessPieceType::Rook || Rook->GetHasMoved()) { return false; }
-
-            int start = std::min(From.x, rookX) + 1;
-            int end = std::max(From.x, rookX) - 1;
-            for (int x = start; x <= end; x++)
-            {
-                if (GetPieceAt({ x, From.y })) { return false; }
-            }
-
-            if (Piece->GetIsInCheck() || IsSquareAttacked({ From.x + (bKingside ? 1 : -1), From.y }, Piece->GetColor()) || IsSquareAttacked(To, Piece->GetColor()))
-            {
+            auto rook = Board[rookX][From.y];
+            if (!rook ||
+                rook->GetPieceType() != EChessPieceType::Rook ||
+                rook->GetHasMoved())
                 return false;
+
+            // Path clear
+            for (int x = From.x + dir; x != rookX; x += dir)
+            {
+                if (Board[x][From.y])
+                    return false;
             }
+
+            // King not in / through / into check
+            if (IsSquareAttacked(From, Piece->GetColor(), Board) ||
+                IsSquareAttacked({ From.x + dir, From.y }, Piece->GetColor(), Board) ||
+                IsSquareAttacked(To, Piece->GetColor(), Board))
+                return false;
+
             return true;
         }
+
         return false;
     }
 
-    bool Board::IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
+    bool Board::IsPawnMoveValid(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const
     {
-        if (!Piece || From == To)
-            return false;
+        int dir = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
+        int dx = To.x - From.x;
+        int dy = To.y - From.y;
 
-        const int direction = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
-        const int deltaX = To.x - From.x;
-        const int deltaY = To.y - From.y;
+        // Forward
+        if (dx == 0 && dy == dir && !Board[To.x][To.y])
+            return true;
 
-        // ---------- Single move ----------
-        if (deltaX == 0 && deltaY == direction)
+        // Double
+        if (dx == 0 && dy == 2 * dir && !Piece->GetHasMoved())
         {
-            return GetPieceAt(To) == nullptr;
+            sf::Vector2i mid{ From.x, From.y + dir };
+            return !Board[mid.x][mid.y] && !Board[To.x][To.y];
         }
 
-        // ---------- Double move ----------
-        if (!Piece->GetHasMoved() && deltaX == 0 && deltaY == 2 * direction)
+        // Capture
+        if (std::abs(dx) == 1 && dy == dir)
         {
-            sf::Vector2i intermediate{ From.x, From.y + direction };
-            return GetPieceAt(intermediate) == nullptr && GetPieceAt(To) == nullptr;
+            auto target = Board[To.x][To.y];
+            if (target && target->GetColor() != Piece->GetColor())
+                return true;
         }
 
-        // ---------- Normal capture ----------
-        if (std::abs(deltaX) == 1 && deltaY == direction)
-        {
-            if (auto target = GetPieceAt(To))
-            {
-                return target->GetColor() != Piece->GetColor();
-            }
-
-            // ---------- En-Passant ----------
-            sf::Vector2i sidePawnPos{ To.x, From.y };
-
-            if (auto sidePawn = GetPieceAt(sidePawnPos))
-            {
-                if (sidePawn->GetPieceType() == EChessPieceType::Pawn &&
-                    sidePawn->GetColor() != Piece->GetColor() &&
-                    sidePawn->GetWasPawnMovedTwo())
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
         return false;
     }
 }

@@ -119,8 +119,8 @@ namespace we
         // ----------------------------------------------------
         EPlayerTurn CurrentTurn = EPlayerTurn::White;
 
-        bool IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To);
+        bool Board::IsMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To, shared<ChessPiece> Board[GridSize][GridSize]) const;
+        bool Board::IsMoveLegal(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To, shared<ChessPiece> Board[GridSize][GridSize]);
         optional<MoveResult> HandleMove(shared<ChessPiece> piece, sf::Vector2i from, sf::Vector2i to);
 
         void Move(shared<ChessPiece> PieceToMove, sf::Vector2i From, sf::Vector2i To);
@@ -135,11 +135,25 @@ namespace we
         void Stalemate();
         void SwitchTurn();
                
-        bool IsRookMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool IsBishopMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool IsQueenMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool IsKingMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool IsKnightMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
-        bool IsPawnMoveValid(shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsRookMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
+        bool IsBishopMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
+        bool IsQueenMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
+        bool IsKnightMoveValid(sf::Vector2i From, sf::Vector2i To) const;
+        bool IsKingMoveValid(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+        bool IsPawnMoveValid(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+
+        static sf::Vector2i FindKing(
+            shared<ChessPiece> Board[GridSize][GridSize],
+            EChessColor Color)
+        {
+            for (int x = 0; x < GridSize; ++x)
+                for (int y = 0; y < GridSize; ++y)
+                    if (Board[x][y] &&
+                        Board[x][y]->GetPieceType() == EChessPieceType::King &&
+                        Board[x][y]->GetColor() == Color)
+                        return { x, y };
+
+            return { -1, -1 };
+        }
     };
 }
