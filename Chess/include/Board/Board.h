@@ -98,9 +98,9 @@ namespace we
         void HandleDragStart(const sf::Vector2f& MousePos);
         void HandleDragTick(const sf::Vector2f& MousePos);
         void HandleDragEnd(const sf::Vector2f& MousePos);
-        bool IsInBounds(const sf::Vector2f& WorldPos);
-        bool IsInBounds(const sf::Vector2i& GridPos) const;
+        void Board::UpdateBoard(const MoveResult& Result);
 
+        bool IsInBounds(const sf::Vector2i& GridPos) const;
         bool bIsDragging = false;
         bool bLeftMouseButtonPressedLastFrame = false;
         weak<ChessPiece> SelectedPiece;
@@ -130,7 +130,8 @@ namespace we
         void Castle(shared<ChessPiece> King, sf::Vector2i From, sf::Vector2i To);
         void Capture(const sf::Vector2i& GridPos);
         bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor) const;
-        void SetCheckFlag();
+        bool IsSquareAttacked(const sf::Vector2i& Pos, EChessColor DefenderColor, shared<ChessPiece> Board[GridSize][GridSize]) const;
+        void Check();
         void Checkmate();
         void Stalemate();
                
