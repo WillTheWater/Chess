@@ -51,7 +51,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(Box2D)
 
-target_link_libraries(${WATER_ENGINE} PUBLIC sfml-graphics)
+target_link_libraries(${WATER_ENGINE} PUBLIC 
+	sfml-graphics
+	sfml-main
+)
 target_link_libraries(${WATER_ENGINE} PUBLIC box2d)
 
 function(LibToCopy LIB_NAME TARGET_NAME)

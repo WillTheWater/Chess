@@ -17,7 +17,8 @@ namespace we
 		template<typename WorldType>
 		weak<WorldType> LoadWorld();
 		
-		sf::RenderWindow* GetRenderWindowPointer() const { return (sf::RenderWindow*)&Window; }
+		sf::RenderWindow& GetRenderWindow() { return Window; }
+		const sf::RenderWindow& GetRenderWindow() const { return Window; }
 		sf::Vector2u GetWindowSize() const { return Window.getSize(); }
 		void SetWindowIcon(const std::string& IconPath);
 		void SetCustomCursor();
@@ -29,6 +30,8 @@ namespace we
 
 		virtual void Render();
 		virtual void Tick(float DeltaTime);
+
+		bool BroadcastEvent(const optional<sf::Event> Event);
 
 		sf::RenderWindow Window;
 		float TargetFramerate;

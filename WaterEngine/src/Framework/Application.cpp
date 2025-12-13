@@ -25,10 +25,16 @@ namespace we
 
         while (Window.isOpen())
         {
-            while (const std::optional event = Window.pollEvent())
+            while (const std::optional Event = Window.pollEvent())
             {
-                if (event->is<sf::Event::Closed>())
+				if (Event->is<sf::Event::Closed>())
+				{
                     Window.close();
+				}
+				else
+				{
+					BroadcastEvent(Event);
+				}
             }
 			float FrameTick = TickClock.restart().asSeconds();
 			AccumulatedTime += FrameTick;
@@ -54,10 +60,12 @@ namespace we
 			//LOG("Error: Could not load window icon from %s", IconPath)
 		}
 	}
+
 	void Application::SetCustomCursor()
 	{
 		Window.setMouseCursor(WindowCursor);
 	}
+
 	void Application::TickGlobal(float DeltaTime)
 	{
 		Tick(DeltaTime);
@@ -79,12 +87,14 @@ namespace we
 			}
 		}
 	}
+
 	void Application::Renderer()
 	{
 		Window.clear();
 		Render();
 		Window.display();
 	}
+
 	void Application::Render()
 	{
 		if (CurrentWorld)
@@ -92,7 +102,17 @@ namespace we
 			CurrentWorld->Render(Window);
 		}
 	}
+
 	void Application::Tick(float DeltaTime)
 	{
+	}
+
+	bool Application::BroadcastEvent(const optional<sf::Event> Event)
+	{
+		if (CurrentWorld)
+		{
+			return CurrentWorld->BroadcastEvent(Event);
+		}
+		return false;
 	}
 }

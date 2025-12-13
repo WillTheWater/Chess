@@ -174,11 +174,10 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::UpdateMousePosition()
     {
-        sf::RenderWindow* Window = GetWorld()->GetRenderWindow();
-        if (!Window) { return; }
+        sf::RenderWindow& Window = GetWorld()->GetRenderWindow();
 
-        MousePixelPosition = sf::Mouse::getPosition(*Window);
-        MouseWorldPosition = Window->mapPixelToCoords(MousePixelPosition);
+        MousePixelPosition = sf::Mouse::getPosition(Window);
+        MouseWorldPosition = Window.mapPixelToCoords(MousePixelPosition);
     }
 
     void Board::HandleMouseHover()

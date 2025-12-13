@@ -2,6 +2,7 @@
 #include "Framework/Core.h"
 #include "Framework/Actor.h"
 #include "Framework/Application.h"
+#include "Widgets/HUD.h"
 
 namespace we
 {
@@ -43,6 +44,11 @@ namespace we
 		}
 
 		Tick(DeltaTime);
+
+		if (GameHUD && !GameHUD->IsInitialized())
+		{
+			GameHUD->NativeInitialize(GetRenderWindow());
+		}
 	}
 
 	void World::BeginPlay()
@@ -54,12 +60,22 @@ namespace we
 	
 	}
 
+	void World::RenderHUD(sf::RenderWindow& Window)
+	{
+		if (GameHUD)
+		{
+			GameHUD->Draw(Window);
+		}
+	}
+
 	void World::Render(sf::RenderWindow& Window)
 	{
 		for (auto& Actor : Actors)
 		{
 			Actor->Render(Window);
 		}
+
+		RenderHUD(Window);
 	}
 
 	void World::GarbageCollectionCycle()
@@ -77,9 +93,18 @@ namespace we
 		}
 	}
 
-	sf::RenderWindow* World::GetRenderWindow() const
+	bool World::BroadcastEvent(const optional<sf::Event> Event)
 	{
-		return OwningApp->GetRenderWindowPointer();
+		if (GameHUD)
+		{
+			return GameHUD->HandleEvent(Event);
+		}
+		return false;
+	}
+
+	sf::RenderWindow& World::GetRenderWindow() const
+	{
+		return OwningApp->GetRenderWindow();
 	}
 
 	sf::Vector2u World::GetWindowSize() const

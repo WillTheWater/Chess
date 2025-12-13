@@ -6,10 +6,10 @@ namespace we
 		: bIsInitialized{ false }
 	{
 	}
-	void HUD::Initialize(sf::RenderWindow& Window)
+	void HUD::Initialize(const sf::RenderWindow& Window)
 	{
 	}
-	void HUD::NativeInitialize(sf::RenderWindow& Window)
+	void HUD::NativeInitialize(const sf::RenderWindow& Window)
 	{
 		if (!bIsInitialized)
 		{
@@ -17,7 +17,7 @@ namespace we
 			Initialize(Window);
 		}
 	}
-	bool HUD::HandleEvent(const sf::Event& Event)
+	bool HUD::HandleEvent(const optional<sf::Event> Event)
 	{
 		return false;
 	}
