@@ -5,6 +5,7 @@
 namespace we
 {
 	class Board;
+	class GameHUD;
 
 	class Game : public Application
 	{
@@ -15,5 +16,6 @@ namespace we
 
 	private:
 		weak<Board> ChessBoard;
+		weak<GameHUD> ChessGameHUD;
 	};
 }

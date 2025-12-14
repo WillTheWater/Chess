@@ -45,9 +45,13 @@ namespace we
 
 		Tick(DeltaTime);
 
-		if (GameHUD && !GameHUD->IsInitialized())
+		if (GameHUD)
 		{
-			GameHUD->NativeInitialize(GetRenderWindow());
+			if (!GameHUD->IsInitialized())
+			{
+				GameHUD->NativeInitialize(GetRenderWindow());
+			}
+			GameHUD->Tick(DeltaTime);
 		}
 	}
 

@@ -14,6 +14,7 @@ namespace we
 
 		bool IsInitialized() const { return bIsInitialized; }
 		virtual bool HandleEvent(const optional<sf::Event> Event);
+		virtual void Tick(float DeltaTime);
 
 	protected:
 		HUD();

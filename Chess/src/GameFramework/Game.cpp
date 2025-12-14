@@ -3,6 +3,7 @@
 #include "Framework/Actor.h"
 #include "Framework/Assetmanager.h"
 #include "Board/Board.h"
+#include "Widgets/GameHUD.h"
 #include "config.h"
 
 we::Application* GetApplication()
@@ -20,6 +21,7 @@ namespace we
 		SetCustomCursor();
 		weak<World> ChessWorld = LoadWorld<World>();
 		ChessBoard = ChessWorld.lock()->SpawnActor<Board>();
+		ChessGameHUD = ChessWorld.lock()->SpawnHUD<GameHUD>();
 	}
 	void Game::Tick(float DeltaTime)
 	{

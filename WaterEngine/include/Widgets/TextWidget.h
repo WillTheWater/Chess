@@ -7,7 +7,7 @@ namespace we
 	class TextWidget : public Widget
 	{
 	public:
-		TextWidget(const string& Text, const string& FontPath = "font/diablo.ttf", unsigned int FontSize = 16);
+		TextWidget(const string& Text, const string& FontPath = "font/diablo.ttf", unsigned int FontSize = 24);
 
 		void SetText(const string& InText);
 		void SetFontSize(unsigned int InSize);

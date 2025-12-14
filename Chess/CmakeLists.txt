@@ -5,8 +5,11 @@ add_executable(${WATER_GAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Board/Board.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Board/Board.cpp
 
-      ${CMAKE_CURRENT_SOURCE_DIR}/include/Board/ChessPieces.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Board/ChessPieces.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Board/ChessPieces.cpp
+    
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Widgets/GameHUD.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/Widgets/GameHUD.cpp
 )
 
 target_include_directories(${WATER_GAME} PUBLIC
