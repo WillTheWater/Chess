@@ -8,16 +8,18 @@ namespace we
 	{
 	public:
 		static AssetManager& GetAssetManager();
-		shared<sf::Texture> LoadTexture(const std::string& TexturePath);
+		shared<sf::Texture> LoadTexture(const string& TexturePath);
+		shared<sf::Font> LoadFont(const string& FontPath);
 		void GarbageCollectionCycle();
-		void SetAssetRootDirctory(const std::string& Directory);
+		void SetAssetRootDirctory(const string& Directory);
 
 	protected:
 		AssetManager();
 
 	private:
 		static unique<AssetManager> UAssetManager;
-		Dictionary<std::string, shared<sf::Texture>> LoadedTextures;
-		std::string RootDirectory;
+		Dictionary<string, shared<sf::Texture>> LoadedTextures;
+		Dictionary<string, shared<sf::Font>> LoadedFonts;
+		string RootDirectory;
 	};
 }

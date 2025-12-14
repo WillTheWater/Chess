@@ -5,9 +5,12 @@
 #include <map>
 #include <vector>
 #include <unordered_map>
+#include <string>
 
 namespace we
 {
+	using string = std::string;
+
 	template<typename T>
 	using unique = std::unique_ptr<T>;
 

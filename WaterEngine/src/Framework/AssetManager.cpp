@@ -29,14 +29,41 @@ namespace we
 		return shared<sf::Texture> {nullptr};
 	}
 
+	shared<sf::Font> AssetManager::LoadFont(const string& FontPath)
+	{
+		auto FoundFont = LoadedFonts.find(FontPath);
+		if (FoundFont != LoadedFonts.end())
+		{
+			return FoundFont->second;
+		}
+		shared<sf::Font> NewFont{ new sf::Font };
+		if (NewFont->openFromFile(RootDirectory + FontPath))
+		{
+			LoadedFonts.insert({ FontPath, NewFont });
+			return NewFont;
+		}
+		return shared<sf::Font> {nullptr};
+	}
+
 	void AssetManager::GarbageCollectionCycle()
 	{
 		for (auto i = LoadedTextures.begin(); i != LoadedTextures.end();)
 		{
 			if (i->second.unique())
 			{
-				//LOG("Texture Collected: %s", i->first.c_str())
 				i = LoadedTextures.erase(i);
+			}
+			else
+			{
+				i++;
+			}
+		}
+
+		for (auto i = LoadedFonts.begin(); i != LoadedFonts.end();)
+		{
+			if (i->second.unique())
+			{
+				i = LoadedFonts.erase(i);
 			}
 			else
 			{
