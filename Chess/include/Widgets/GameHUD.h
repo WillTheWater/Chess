@@ -10,7 +10,6 @@ namespace we
 		GameHUD();
 
 		virtual void Draw(sf::RenderWindow& Window) override;
-		virtual void Tick(float DeltaTime) override;
 
 	private:
 		TextWidget PlayerTurn;
