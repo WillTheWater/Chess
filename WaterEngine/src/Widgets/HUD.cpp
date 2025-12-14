@@ -17,6 +17,7 @@ namespace we
 			Initialize(Window);
 		}
 	}
+
 	bool HUD::HandleEvent(const optional<sf::Event> Event)
 	{
 		return false;
