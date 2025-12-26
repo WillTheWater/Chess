@@ -1,28 +1,30 @@
-#include "Widgets/HUD.h"
+#include "UI/HUD.h"
 
 namespace we
 {
 	HUD::HUD()
-		: bIsInitialized{ false }
+		: bIsInitialized{false}
 	{
 	}
-	void HUD::Initialize(const sf::RenderWindow& Window)
-	{
-	}
-	void HUD::NativeInitialize(const sf::RenderWindow& Window)
+
+	void HUD::NativeInitialize(Renderer& GameRenderer)
 	{
 		if (!bIsInitialized)
 		{
 			bIsInitialized = true;
-			Initialize(Window);
+			Initialize(GameRenderer);
 		}
 	}
-
+	
+	void HUD::Initialize(Renderer& GameRenderer)
+	{
+	}
+	
 	void HUD::Tick(float DeltaTime)
 	{
 
 	}
-
+	
 	bool HUD::HandleEvent(const optional<sf::Event> Event)
 	{
 		return false;

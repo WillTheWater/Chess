@@ -42,7 +42,7 @@ namespace we
 
         virtual void BeginPlay() override;
         virtual void Tick(float DeltaTime) override;
-        virtual void Render(sf::RenderWindow& Window) override;
+        virtual void Render(Renderer& GameRenderer) override;
 
     private:
         // ----------------------------------------------------
@@ -87,7 +87,7 @@ namespace we
         // ----------------------------------------------------
         sf::Vector2i MousePixelPosition;
         sf::Vector2f MouseWorldPosition;
-        void UpdateMousePosition();
+        void UpdateMousePosition(Renderer& GameRenderer);
         sf::Vector2i HoveredGridPos{ -1, -1 };
         weak<ChessPiece> HoveredPiece;
         void HandleMouseHover();

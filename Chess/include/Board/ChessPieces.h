@@ -34,8 +34,6 @@ namespace we
         // ------------------------------------------------
         ChessPiece(World* OwningWorld, EChessPieceType Type, EChessColor Color, const std::string& TexturePath = "/pieces.png");
 
-        virtual bool ShouldTextureBeSmooth() const override { return true; }
-
         // ------------------------------------------------
         // Accessors
         // ------------------------------------------------

@@ -1,5 +1,6 @@
 #include "Board/Board.h"
 #include "Framework/World.h"
+#include "Framework/Renderer.h"
 #include <sstream>
 
 namespace we
@@ -38,21 +39,21 @@ namespace we
     // -------------------------------------------------------------------------
     // Render
     // -------------------------------------------------------------------------
-    void Board::Render(sf::RenderWindow& Window)
+    void Board::Render(Renderer& GameRenderer)
     {
-        Actor::Render(Window);
+        Actor::Render(GameRenderer);
 
         for (const auto& Piece : Pieces)
         {
             if (Piece && Piece != SelectedPiece.lock())
             {
-                Piece->Render(Window);
+                Piece->Render(GameRenderer);
             }
         }
 
         if (auto Dragged = SelectedPiece.lock())
         {
-            Dragged->Render(Window);
+            Dragged->Render(GameRenderer);
         }
     }
 
@@ -172,9 +173,9 @@ namespace we
     // -------------------------------------------------------------------------
     // Input Handling
     // -------------------------------------------------------------------------
-    void Board::UpdateMousePosition()
+    void Board::UpdateMousePosition(Renderer& GameRenderer)
     {
-        sf::RenderWindow& Window = GetWorld()->GetRenderWindow();
+        sf::RenderWindow& Window = GameRenderer.GetRenderWindow();
 
         MousePixelPosition = sf::Mouse::getPosition(Window);
         MouseWorldPosition = Window.mapPixelToCoords(MousePixelPosition);

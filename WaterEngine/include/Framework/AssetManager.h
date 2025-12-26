@@ -7,11 +7,11 @@ namespace we
 	class AssetManager
 	{
 	public:
-		static AssetManager& GetAssetManager();
+		static AssetManager& Get();
 		shared<sf::Texture> LoadTexture(const string& TexturePath);
 		shared<sf::Font> LoadFont(const string& FontPath);
 		void GarbageCollectionCycle();
-		void SetAssetRootDirctory(const string& Directory);
+		void SetAssetRootDirctory(const std::string& Directory);
 
 	protected:
 		AssetManager();
@@ -20,14 +20,13 @@ namespace we
 		template<typename Asset, typename MapType, typename LoadFunc>
 		shared<Asset> LoadAsset(const string& Path, MapType& Cache, LoadFunc&& Loader);
 
-
 		template<typename MapType>
 		void GarbageCollect(MapType& Cache);
 
-		static unique<AssetManager> UAssetManager;
-		Dictionary<string, shared<sf::Texture>> LoadedTextures;
+		static unique<AssetManager> AssetMgr;
+		Dictionary<std::string, shared<sf::Texture>> LoadedTextures;
 		Dictionary<string, shared<sf::Font>> LoadedFonts;
-		string RootDirectory;
+		std::string RootDirectory;
 	};
 
 	template<typename Asset, typename MapType, typename LoadFunc>

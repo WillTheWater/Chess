@@ -3,17 +3,23 @@
 #include "Framework/World.h"
 #include "Framework/AssetManager.h"
 #include "Framework/PhysicsSystem.h"
+#include "Framework/Renderer.h"
+#include "Framework/TimerManager.h"
 
 namespace we
 {
 	Application::Application(unsigned int WindowWidth, unsigned int WindowHeight, const std::string& WindowTitle, std::uint32_t WindowStyle)
-		: Window{ sf::VideoMode({ WindowWidth, WindowHeight }), WindowTitle, WindowStyle },
-		TargetFramerate{ 60.f },
-		TickClock{},
-		GarbageCollectionClock{},
-		CollectionInterval{2.f},
-		CurrentWorld{ nullptr },
-		WindowCursor{ sf::Cursor::Type::Hand }
+		: Window{ sf::VideoMode({ WindowWidth, WindowHeight }), WindowTitle, WindowStyle }
+		, TargetFramerate{ 60.f } 
+		, TickClock{}
+		, GarbageCollectionClock{} 
+		, CollectionInterval{ 2.f }
+		, CurrentWorld{ nullptr }
+		, GameRenderer{ std::make_unique<Renderer>(Window) }
+	{
+	}
+
+	Application::~Application()
 	{
 	}
 
@@ -23,19 +29,19 @@ namespace we
 		float AccumulatedTime = 0.f;
 		float TargetDeltaTime = 1.f / TargetFramerate;
 
-        while (Window.isOpen())
-        {
-            while (const std::optional Event = Window.pollEvent())
-            {
+		while (Window.isOpen())
+		{
+			while (const std::optional Event = Window.pollEvent())
+			{
 				if (Event->is<sf::Event::Closed>())
 				{
-                    Window.close();
+					QuitApplication();
 				}
 				else
 				{
-					BroadcastEvent(Event);
+					DispatchEvent(Event);
 				}
-            }
+			}
 			float FrameTick = TickClock.restart().asSeconds();
 			AccumulatedTime += FrameTick;
 			while (AccumulatedTime > TargetDeltaTime)
@@ -43,27 +49,13 @@ namespace we
 				AccumulatedTime -= TargetDeltaTime;
 				TickGlobal(TargetDeltaTime);
 			}
-			Renderer();
-        }
-	}
-	void Application::SetWindowIcon(const std::string& IconPath)
-	{
-		shared<sf::Texture> IconTexture = AssetManager::GetAssetManager().LoadTexture(IconPath);
-
-		if (IconTexture)
-		{
-			sf::Image IconImage = IconTexture->copyToImage();
-			Window.setIcon(IconImage);
-		}
-		else
-		{
-			//LOG("Error: Could not load window icon from %s", IconPath)
+			RendererCycle();
 		}
 	}
 
-	void Application::SetCustomCursor()
+	void Application::QuitApplication()
 	{
-		Window.setMouseCursor(WindowCursor);
+		Window.close();
 	}
 
 	void Application::TickGlobal(float DeltaTime)
@@ -75,31 +67,50 @@ namespace we
 			CurrentWorld->TickGlobal(DeltaTime);
 		}
 
-		PhysicsSystem::GetPhysiscSystem().Step(DeltaTime);
+		TimerManager::Get().UpdateTimer(DeltaTime);
+		PhysicsSystem::Get().Step(DeltaTime);
 
 		if (GarbageCollectionClock.getElapsedTime().asSeconds() >= CollectionInterval)
 		{
 			GarbageCollectionClock.restart();
-			AssetManager::GetAssetManager().GarbageCollectionCycle();
+			AssetManager::Get().GarbageCollectionCycle();
 			if (CurrentWorld)
 			{
 				CurrentWorld->GarbageCollectionCycle();
 			}
 		}
+
+		if (PendingWorld && PendingWorld != CurrentWorld)
+		{
+			CurrentWorld = PendingWorld;
+			PhysicsSystem::Get().Cleanup();
+			CurrentWorld->BeginPlayGlobal();
+		}
 	}
 
-	void Application::Renderer()
+	void Application::RendererCycle()
 	{
-		Window.clear();
-		Render();
-		Window.display();
+		if (!GameRenderer) return;
+
+		GameRenderer->Clear();
+		Render(*GameRenderer);
+		GameRenderer->Display();
 	}
 
-	void Application::Render()
+	bool Application::DispatchEvent(const optional<sf::Event> Event)
 	{
 		if (CurrentWorld)
 		{
-			CurrentWorld->Render(Window);
+			return CurrentWorld->DispatchEvent(Event);
+		}
+		return false;
+	}
+
+	void Application::Render(Renderer& GameRenderer)
+	{
+		if (CurrentWorld)
+		{
+			CurrentWorld->Render(GameRenderer);
 		}
 	}
 
@@ -107,12 +118,8 @@ namespace we
 	{
 	}
 
-	bool Application::BroadcastEvent(const optional<sf::Event> Event)
+	sf::Vector2u Application::GetWindowSize() const
 	{
-		if (CurrentWorld)
-		{
-			return CurrentWorld->BroadcastEvent(Event);
-		}
-		return false;
+		return GameRenderer->GetViewportSize();
 	}
 }

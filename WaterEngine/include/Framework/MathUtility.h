@@ -1,10 +1,19 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <random>
 
 namespace we
 {
 	sf::Vector2f RotationToVector(const sf::Angle Rotation);
+	sf::Angle VectorToRotation(const sf::Vector2f Vector);
+
+	float Lerp(float Start, float Target, float Alpha);
+	sf::Color LerpColor(const sf::Color& Start, const sf::Color& Target, float Alpha);
+	sf::Vector2f LerpVector(const sf::Vector2f& Start, const sf::Vector2f& Target, float Alpha);
+
+	float RandomRange(float Min, float Max);
+	sf::Vector2f RandomUnitVector();
 
 	template<typename T>
 	float GetVectorLength(const sf::Vector2<T>& Vector)
@@ -21,11 +30,14 @@ namespace we
 	}
 
 	template<typename T>
-	sf::Vector2<T>& Normalize(sf::Vector2<T>& Vector)
+	sf::Vector2<T>& Normalize(sf::Vector2<T>& vector)
 	{
-		float VectorLength = GetVectorLength(Vector);
-		if (VectorLength == 0) { return sf::Vector2<T>{}; }
-		ScaleVector(Vector, 1.0/VectorLength);
-		return Vector;
+		float vectorLength = GetVectorLength<T>(vector);
+		if (vectorLength == 0.f) return vector;
+
+		ScaleVector(vector, 1.0 / vectorLength);
+
+		return vector;
 	}
+
 }

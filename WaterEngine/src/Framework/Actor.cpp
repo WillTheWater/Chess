@@ -4,17 +4,29 @@
 #include "Framework/MathUtility.h"
 #include "Framework/World.h"
 #include "Framework/PhysicsSystem.h"
+#include "Framework/Renderer.h"
+#include "box2d/b2_body.h"
+#include "Framework/EActorTypes.h"
 
 namespace we
 {
-	Actor::Actor(World* OwningWorld, const std::string& TexturePath)
-		: OwningWorld{OwningWorld},
-		bHasBegunPlay{false},
-		ATexture{nullptr},
-		ASprite{nullptr},
-		bPhysicsEnabled{false},
-		APhysicsBody{ b2_nullBodyId }
+	Actor::Actor(World* OwningWorld, const string& TexturePath)
+		: OwningWorld{ OwningWorld }
+		, bHasBegunPlay{ false }
+		, Texture{}
+		, Sprite{ nullptr }
+		, ActorLocation{}
+		, ActorRotation{}
+		, ActorScale{ 1.f, 1.f }
+		, SpriteLocationOffset{ 0.f, 0.f }
+		, SpriteRotationOffset{ sf::degrees(0.f) }
+		, SpriteScale{ 1.f, 1.f }
+		, PhysicsBody{nullptr}
+		, bPhysicsEnabled{ false }
+		, ActorID{GetNeutralActorID()}
+		, bRenderDebugShapes{false}
 	{
+		SetTexture(TexturePath);
 	}
 
 	Actor::~Actor()
@@ -46,10 +58,25 @@ namespace we
 	{
 	}
 
-	void Actor::Render(sf::RenderWindow& Window)
+	void Actor::Destroy()
 	{
-		if (IsPendingDestroy() || !ASprite) { return; }
-		Window.draw(*ASprite);
+		UninitializePhysics();
+		OnActorDestroyed.Broadcast(this);
+		Object::Destroy();
+	}
+
+	void Actor::Render(Renderer& GameRenderer)
+	{
+		if (IsPendingDestroy() || !Sprite) { return; }
+
+		UpdateSpriteTransform();
+		GameRenderer.Draw(*Sprite);
+
+		if (bRenderDebugShapes)
+		{
+			GameRenderer.Draw(ForwardVectorDebugShape());
+			GameRenderer.Draw(CollisionShapeDebug());
+		}
 	}
 
 	sf::Vector2u Actor::GetWindowSize() const
@@ -57,79 +84,205 @@ namespace we
 		return OwningWorld->GetWindowSize();
 	}
 
-	void Actor::SetTexture(const std::string& TexturePath, float SpriteScale)
+	void Actor::SetTexture(const string& TexturePath)
 	{
-		ATexture = AssetManager::GetAssetManager().LoadTexture(TexturePath);
-		if (!ATexture)
-		{
-			//LOG("Actor: Failed to load texture: %s", TexturePath.c_str());
-			return;
-		}
+		Texture = AssetManager::Get().LoadTexture(TexturePath);
+		if (!Texture) { return; }
 
-		ASprite = shared<sf::Sprite>(new sf::Sprite(*ATexture));
-		ATexture->setSmooth(ShouldTextureBeSmooth());
-
-		int TextureWidth = static_cast<int>(ATexture->getSize().x);
-		int TextureHeight = static_cast<int>(ATexture->getSize().y);
-
-		ASprite->setTextureRect(sf::IntRect({ 0, 0 }, { TextureWidth, TextureHeight }));
-		ASprite->setScale({ SpriteScale, SpriteScale });
+		Sprite = std::make_shared<sf::Sprite>(*Texture);
 
 		CenterPivot();
+	}
+
+	void Actor::SetTextureTiled(bool Tile)
+	{
+		Texture->setRepeated(Tile);
+	}
+
+	sf::Vector2u Actor::GetTextureSize() const
+	{
+		if (Texture)
+		{
+			return Texture->getSize();
+		}
+
+		return { 0, 0 };
 	}
 
 	void Actor::SetTextureRect(const sf::IntRect& Rect)
 	{
-		if (!ASprite) { return; }
-		ASprite->setTextureRect(Rect);
+		Sprite->setTextureRect(Rect);
+	}
+
+	void Actor::SetSpriteLocationOffset(const sf::Vector2f& Position)
+	{
+		SpriteLocationOffset = Position;
+	}
+
+	void Actor::SetSpriteRotationOffset(const sf::Angle& Rotation)
+	{
+		SpriteRotationOffset = Rotation;
+	}
+
+	void Actor::SetSpriteScale(const sf::Vector2f& Scale)
+	{
+		SpriteScale = Scale;
+
+		UpdateSpriteTransform();
+
+		if (bPhysicsEnabled)
+		{
+			PhysicsSystem::Get().UpdateBodyCollision(this);
+		}
+	}
+
+	void Actor::SetSpriteFrame(int FrameWidth, int FrameHeight)
+	{
+		if (!Sprite || !Texture) { return; }
+
+		if (FrameWidth > 0 && FrameHeight > 0)
+		{
+			Sprite->setTextureRect(sf::IntRect({ 0, 0 }, { FrameWidth, FrameHeight }));
+		}
+		else
+		{
+			int TextureWidth = static_cast<int>(Texture->getSize().x);
+			int TextureHeight = static_cast<int>(Texture->getSize().y);
+			Sprite->setTextureRect(sf::IntRect({ 0, 0 }, { TextureWidth, TextureHeight }));
+		}
+
 		CenterPivot();
 	}
 
-	void Actor::SetActorScale(float NewScale)
+	bool Actor::IsActorOutOfBounds(float Allowance) const
 	{
-		if (!ASprite) { return; }
+		const sf::Vector2u window = GetWindowSize();
+		const sf::Vector2f pos = GetActorLocation();
+		const sf::Vector2f ext = GetActorExtents();
 
-		ASprite->setScale({ NewScale, NewScale });
+		return
+			pos.x < -ext.x - Allowance ||
+			pos.x > window.x + ext.x + Allowance ||
+			pos.y < -ext.y - Allowance ||
+			pos.y > window.y + ext.y + Allowance;
+	}
+
+	void Actor::SetPhysicsEnabled(bool Enabled)
+	{
+		bPhysicsEnabled = Enabled;
+		if (bPhysicsEnabled)
+		{
+			InitializePhysics();
+		}
+		else
+		{
+			UninitializePhysics();
+		}
+	}
+
+	void Actor::InitializePhysics()
+	{
+		if (!PhysicsBody)
+		{
+			PhysicsBody = PhysicsSystem::Get().AddListener(this);
+		}
+	}
+
+	void Actor::UninitializePhysics()
+	{
+		if (PhysicsBody)
+		{
+			PhysicsSystem::Get().RemoveListener(PhysicsBody);
+			PhysicsBody->GetUserData().pointer = reinterpret_cast<uintptr_t>(nullptr);
+			PhysicsBody = nullptr;
+		}
+	}
+
+	void Actor::UpdatePhysicsBodyTransform()
+	{
+		if (PhysicsBody)
+		{
+			float PhysicsScale = PhysicsSystem::Get().GetPhysicsScale();
+			b2Vec2 Pos{ GetActorLocation().x * PhysicsScale, GetActorLocation().y * PhysicsScale };
+			float Rot = GetActorRotation().asRadians();
+			PhysicsBody->SetTransform(Pos, Rot);
+		}
 	}
 	
-	bool Actor::IsOutOfBounds() const
+	void Actor::OnActorBeginOverlap(Actor* OtherActor)
 	{
-		float WindowWidth = GetWindowSize().x;
-		float WindowHeight = GetWindowSize().y;
-		float SpriteWidth = GetSpriteBounds().size.x;
-		float SpriteHeight = GetSpriteBounds().size.y;
-		sf::Vector2f SpriteLocation = GetActorLocation();
-		if (SpriteLocation.x < -SpriteWidth || SpriteLocation.x > WindowWidth + SpriteWidth || SpriteLocation.y < -SpriteHeight || SpriteLocation.y > WindowHeight + SpriteHeight)
-		{
-			return true;
-		}
-		return false;
+	}
+
+	void Actor::OnActorEndOverlap(Actor* OtherActor)
+	{
+	}
+
+	bool Actor::IsHostile(Actor* OtherActor)
+	{
+		if (!OtherActor) { return false; }
+
+		const EActorID MyID = GetActorID();
+		const EActorID OtherID = OtherActor->GetActorID();
+
+		if (MyID == EActorID::Neutral || OtherID == EActorID::Neutral || MyID == OtherID) { return false; }
+
+		return true;
+	}
+
+	void Actor::Damage(float Amount)
+	{
 	}
 
 	void Actor::SetActorLocation(const sf::Vector2f& NewLocation)
 	{
-		if (!ASprite) { return; }
-		ASprite->setPosition(NewLocation);
-		UpdatePhysicsTransforms();
+		ActorLocation = NewLocation;
+		UpdatePhysicsBodyTransform();
 	}
 
 	void Actor::SetActorRotation(const sf::Angle& NewRotation)
 	{
-		if (!ASprite) { return; }
-		ASprite->setRotation(NewRotation);
-		UpdatePhysicsTransforms();
+		ActorRotation = NewRotation;
+		UpdatePhysicsBodyTransform();
 	}
 
-	sf::Vector2f Actor::GetActorLocation() const
+	void Actor::SetActorScale(const sf::Vector2f NewScale)
 	{
-		if (!ASprite) { return sf::Vector2f{}; }
-		return ASprite->getPosition();
+		ActorScale = NewScale;
+
+		UpdateSpriteTransform();
+
+		if (bPhysicsEnabled)
+		{
+			PhysicsSystem::Get().UpdateBodyCollision(this);
+		}
 	}
 
-	sf::Angle Actor::GetActorRotation() const
+	void Actor::SetActorExtents(const sf::Vector2f& HalfSize)
 	{
-		if (!ASprite) { return sf::Angle{}; }
-		return ASprite->getRotation();
+		ActorExtents = HalfSize;
+		SizeSource = EActorSize::Manual;
+	}
+
+	void Actor::SetActorSizeSource(EActorSize Source)
+	{
+		SizeSource = Source;
+	}
+
+	sf::Vector2f Actor::GetActorExtents() const
+	{
+		switch (SizeSource)
+		{
+		case EActorSize::SpriteBounds:
+		{
+			if (!Sprite) { return ActorExtents; }
+			const auto bounds = GetSprite().getGlobalBounds();
+			return { bounds.size.x * 0.5f, bounds.size.y * 0.5f };
+		}
+
+		case EActorSize::Manual:
+		default:
+			return ActorExtents;
+		}
 	}
 
 	void Actor::AddActorLocationOffset(const sf::Vector2f& Offset)
@@ -142,68 +295,80 @@ namespace we
 		SetActorRotation(GetActorRotation() + RotOffset);
 	}
 
-	sf::Vector2f Actor::GetActorFowardVector() const
+	sf::Vector2f Actor::GetActorForwardVector() const
 	{
-		return RotationToVector(GetActorRotation());
+		return RotationToVector(ActorRotation);
 	}
 
 	sf::Vector2f Actor::GetActorRightVector() const
 	{
-		return RotationToVector(GetActorRotation() + sf::degrees(90.f));
+		sf::Angle rightRot = ActorRotation + sf::degrees(90.f);
+		return RotationToVector(rightRot);
 	}
 
 	sf::FloatRect Actor::GetSpriteBounds() const
 	{
-		return ASprite->getGlobalBounds();
+		return Sprite->getGlobalBounds();
 	}
 
-	bool Actor::IsPointInBounds(const sf::Vector2f& Point) const
+	void Actor::UpdateSpriteTransform()
 	{
-		if (!ASprite) { return false; }
-		return GetSpriteBounds().contains(Point);
+		if (!Sprite) return;
+
+		Sprite->setPosition(ActorLocation + SpriteLocationOffset);
+		Sprite->setRotation(ActorRotation + SpriteRotationOffset);
+		Sprite->setScale({ ActorScale.x * SpriteScale.x, ActorScale.y * SpriteScale.y });
 	}
 
-	void Actor::SetEnablePhysics(bool Enabled)
-	{
-		bPhysicsEnabled = Enabled;
-		if (bPhysicsEnabled)
-		{
-			InitializePhysics();
-		}
-		else
-		{
-			UninitializePhysics();
-		}
-	}
 	void Actor::CenterPivot()
 	{
-		if (!ASprite) { return; }
-		sf::FloatRect localBounds = ASprite->getLocalBounds();
-		ASprite->setOrigin({ localBounds.size.x / 2.f, localBounds.size.y / 2.f });
+		if (!Sprite) { return; }
+		sf::FloatRect localBounds = Sprite->getLocalBounds();
+		Sprite->setOrigin({ localBounds.size.x / 2.f, localBounds.size.y / 2.f });
 	}
-	void Actor::InitializePhysics()
-	{
-		if (APhysicsBody.index1 == 0)
-		{
-			APhysicsBody = PhysicsSystem::GetPhysiscSystem().AddListener(this);
-		}
-	}
-	void Actor::UninitializePhysics()
-	{
-		if (APhysicsBody.index1 != 0)
-		{
-			PhysicsSystem::GetPhysiscSystem().RemoveListener(APhysicsBody);
-		}
-	}
-	void Actor::UpdatePhysicsTransforms()
-	{
-		if (APhysicsBody.index1 != 0)
-		{
-			float PhysicsScale = PhysicsSystem::GetPhysiscSystem().GetPhysicsScale();
-			b2Vec2 Position{ GetActorLocation().x * PhysicsScale, GetActorLocation().y * PhysicsScale };
-			b2Rot Rotation = b2MakeRot(GetActorRotation().asRadians());
 
-			b2Body_SetTransform(APhysicsBody, Position, Rotation);
-		}
+	sf::VertexArray Actor::ForwardVectorDebugShape(float Length, sf::Color Color) const
+	{
+		const sf::Vector2f start = GetActorLocation();
+		const sf::Vector2f forward = GetActorForwardVector();
+		const sf::Vector2f end = start + forward * Length;
+
+		sf::VertexArray arrow(sf::PrimitiveType::Lines);
+
+		arrow.append({ start, Color });
+		arrow.append({ end,   Color });
+
+		constexpr float HeadSize = 10.f;
+		constexpr float HeadAngleDeg = 25.f;
+		const sf::Angle forwardRot = VectorToRotation(forward);
+
+		const sf::Vector2f left = end - RotationToVector(forwardRot - sf::degrees(HeadAngleDeg)) * HeadSize;
+		const sf::Vector2f right = end - RotationToVector(forwardRot + sf::degrees(HeadAngleDeg)) * HeadSize;
+
+		arrow.append({ end, Color });
+		arrow.append({ left, Color });
+
+		arrow.append({ end, Color });
+		arrow.append({ right, Color });
+
+		return arrow;
+	}
+
+	sf::VertexArray Actor::CollisionShapeDebug(sf::Color Color) const
+	{
+		sf::Vector2f ext = GetActorExtents();
+		sf::Vector2f center = GetActorLocation();
+
+		sf::VertexArray rect(sf::PrimitiveType::LineStrip, 5);
+		rect[0].position = { center.x - ext.x, center.y - ext.y };
+		rect[1].position = { center.x + ext.x, center.y - ext.y };
+		rect[2].position = { center.x + ext.x, center.y + ext.y };
+		rect[3].position = { center.x - ext.x, center.y + ext.y };
+		rect[4].position = rect[0].position;
+
+		for (int i = 0; i < 5; ++i)
+			rect[i].color = Color;
+
+		return rect;
 	}
 }

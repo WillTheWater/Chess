@@ -2,15 +2,19 @@
 #include "Framework/Core.h"
 #include "Framework/Actor.h"
 #include "Framework/Application.h"
-#include "Widgets/HUD.h"
+#include "Framework/Renderer.h"
+#include "GameMode/Level.h"
+#include "UI/HUD.h"
 
 namespace we
 {
 	World::World(Application* OwningApp)
-		: OwningApp{OwningApp},
-		Actors{},
-		PendingActors{},
-		bHasBegunPlay{false}
+		: OwningApp{ OwningApp }
+		, Actors{}
+		, PendingActors{}
+		, bHasBegunPlay{ false }
+		, Levels{}
+		, CurrentLevel{Levels.end()}
 	{
 	}
 
@@ -24,6 +28,8 @@ namespace we
 		{
 			bHasBegunPlay = true;
 			BeginPlay();
+			InitLevels();
+			StartLevels();
 		}
 	}
 
@@ -40,19 +46,20 @@ namespace we
 		for (auto i = Actors.begin(); i != Actors.end(); )
 		{
 			i->get()->Tick(DeltaTime);
-			i++;	
+			i++;
+		}
+
+		if (CurrentLevel != Levels.end())
+		{
+			CurrentLevel->get()->TickLevel(DeltaTime);
+		}
+
+		if (GameHUD->IsInitialized())
+		{
+			GameHUD->Tick(DeltaTime);
 		}
 
 		Tick(DeltaTime);
-
-		if (GameHUD)
-		{
-			if (!GameHUD->IsInitialized())
-			{
-				GameHUD->NativeInitialize(GetRenderWindow());
-			}
-			GameHUD->Tick(DeltaTime);
-		}
 	}
 
 	void World::BeginPlay()
@@ -61,26 +68,64 @@ namespace we
 
 	void World::Tick(float DeltaTime)
 	{
-	
+
 	}
 
-	void World::RenderHUD(sf::RenderWindow& Window)
+	void World::Render(Renderer& GameRenderer)
+	{
+		if (GameHUD && !GameHUD->IsInitialized())
+		{
+			GameHUD->NativeInitialize(GameRenderer);
+		}
+
+		for (auto& Actor : Actors)
+		{
+			Actor->Render(GameRenderer);
+		}
+
+		RenderHUD(GameRenderer);
+	}
+
+	void World::RenderHUD(Renderer& GameRenderer)
 	{
 		if (GameHUD)
 		{
-			GameHUD->Draw(Window);
+			GameHUD->Render(GameRenderer);
 		}
 	}
 
-	void World::Render(sf::RenderWindow& Window)
+	void World::InitLevels()
 	{
-		for (auto& Actor : Actors)
-		{
-			Actor->Render(Window);
-		}
-
-		RenderHUD(Window);
 	}
+
+	void World::EndLevels()
+	{
+	}
+
+	void World::LoadNextLevel()
+	{
+		CurrentLevel = Levels.erase(CurrentLevel);
+		if (CurrentLevel != Levels.end())
+		{
+			CurrentLevel->get()->BeginLevel();
+			CurrentLevel->get()->OnLevelEnd.Bind(GetObject(), &World::LoadNextLevel);
+		}
+		else
+		{
+			EndLevels();
+		}
+	}
+
+	void World::StartLevels()
+	{
+		CurrentLevel = Levels.begin();
+		if (CurrentLevel != Levels.end())
+		{
+			CurrentLevel->get()->BeginLevel();
+			CurrentLevel->get()->OnLevelEnd.Bind(GetObject(), &World::LoadNextLevel);
+		}
+	}
+
 
 	void World::GarbageCollectionCycle()
 	{
@@ -97,18 +142,18 @@ namespace we
 		}
 	}
 
-	bool World::BroadcastEvent(const optional<sf::Event> Event)
+	void World::AddLevel(const shared<Level>& NewLevel)
+	{
+		Levels.push_back(NewLevel);
+	}
+
+	bool World::DispatchEvent(const optional<sf::Event> Event)
 	{
 		if (GameHUD)
 		{
 			return GameHUD->HandleEvent(Event);
 		}
 		return false;
-	}
-
-	sf::RenderWindow& World::GetRenderWindow() const
-	{
-		return OwningApp->GetRenderWindow();
 	}
 
 	sf::Vector2u World::GetWindowSize() const

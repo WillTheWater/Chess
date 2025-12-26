@@ -7,48 +7,47 @@
 namespace we
 {
 	class World;
+	class Renderer;
 
 	class Application
 	{
 	public:
 		Application(unsigned int WindowWidth, unsigned int WindowHeight, const std::string& WindowTitle, std::uint32_t WindowStyle);
+		~Application();
+
 		void Run();
+		void QuitApplication();
 
 		template<typename WorldType>
 		weak<WorldType> LoadWorld();
-		
-		sf::RenderWindow& GetRenderWindow() { return Window; }
-		const sf::RenderWindow& GetRenderWindow() const { return Window; }
-		sf::Vector2u GetWindowSize() const { return Window.getSize(); }
-		void SetWindowIcon(const std::string& IconPath);
-		void SetCustomCursor();
 
+		sf::Vector2u GetWindowSize() const;
 
 	private:
 		void TickGlobal(float DeltaTime);
-		void Renderer();
+		void RendererCycle();
+		bool DispatchEvent(const optional<sf::Event> Event);
 
-		virtual void Render();
+		virtual void Render(Renderer& GameRenderer);
 		virtual void Tick(float DeltaTime);
 
-		bool BroadcastEvent(const optional<sf::Event> Event);
-
 		sf::RenderWindow Window;
+		unique<Renderer> GameRenderer;
+
 		float TargetFramerate;
 		sf::Clock TickClock;
 		sf::Clock GarbageCollectionClock;
 		float CollectionInterval;
 
 		shared<World> CurrentWorld;
-		sf::Cursor WindowCursor;
+		shared<World> PendingWorld;
 	};
 
 	template<typename WorldType>
 	weak<WorldType> Application::LoadWorld()
 	{
 		shared< WorldType> NewWorld{ new WorldType{this} };
-		CurrentWorld = NewWorld;
-		CurrentWorld->BeginPlayGlobal();
+		PendingWorld = NewWorld;
 		return NewWorld;
 	}
 }

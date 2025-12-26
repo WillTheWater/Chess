@@ -1,11 +1,14 @@
-#include <SFML/Main.hpp>
+#include <Windows.h>
 #include "EntryPoint.h"
 #include "Framework/Application.h"
 
 int main()
 {
-    we::Application* App = GetApplication();
-    App->Run();
-    delete App;
-    return 0;
+#ifdef NDEBUG
+	FreeConsole();
+#endif
+	we::Application* App = GetApplication();
+	App->Run();
+
+	delete App;
 }

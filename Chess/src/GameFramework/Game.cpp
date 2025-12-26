@@ -16,14 +16,7 @@ namespace we
 	Game::Game()
 		: Application{1280, 720, "Chess", sf::Style::Default}
 	{
-		AssetManager::GetAssetManager().SetAssetRootDirctory(GetAssetDirectory());
-		SetWindowIcon("/icon.png");
-		SetCustomCursor();
-		weak<World> ChessWorld = LoadWorld<World>();
-		ChessBoard = ChessWorld.lock()->SpawnActor<Board>();
-		ChessGameHUD = ChessWorld.lock()->SpawnHUD<GameHUD>();
-	}
-	void Game::Tick(float DeltaTime)
-	{
+		AssetManager::Get().SetAssetRootDirctory(GetAssetDirectory());
+		weak<MainMenu> NewWorld = LoadWorld<MainMenu>();
 	}
 }
