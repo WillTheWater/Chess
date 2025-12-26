@@ -10,7 +10,6 @@ namespace we
 
 	void Play::BeginPlay()
 	{
-		LOG("GameLoaded")
 	}
 
 	void Play::Tick(float DeltaTime)

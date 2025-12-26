@@ -36,7 +36,45 @@ namespace we
         virtual void BeginPlay() override;
         virtual void Render(class Renderer& GameRenderer) override;
 
-    private:
+    private: 
+        // ----------------------------------------------------
+        // Board Constraints
+        // ----------------------------------------------------
+        static constexpr int GridSize = 8;
+        static constexpr int SquareSize = 120;
+        static constexpr float GRID_ABS_OFFSET_X = 480.f;
+        static constexpr float GRID_ABS_OFFSET_Y = 60.f;
+        shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
+
+        static constexpr int InitialBoard[GridSize][GridSize] = {
+            {-5, -4, -3, -2, -1, -3, -4, -5},
+            {-6, -6, -6, -6, -6, -6, -6, -6},
+            { 0,  0,  0,  0,  0,  0,  0,  0},
+            { 0,  0,  0,  0,  0,  0,  0,  0},
+            { 0,  0,  0,  0,  0,  0,  0,  0},
+            { 0,  0,  0,  0,  0,  0,  0,  0},
+            { 6,  6,  6,  6,  6,  6,  6,  6},
+            { 5,  4,  3,  2,  1,  3,  4,  5}
+        };
+
+       // ----------------------------------------------------
+       // Initialization
+       // ----------------------------------------------------
+        void InitializeBoard();
+        void ClearBoard();
+        EChessColor GetPieceColor(int value);
+        EChessPieceType GetPieceType(int value);
+        EPlayerTurn CurrentTurn = EPlayerTurn::White;
+        void SpawnPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos);
+        weak<ChessPiece> SelectedPiece;
         List<shared<ChessPiece>> Pieces;
+
+        // ----------------------------------------------------
+        // Board World Conversion
+        // ----------------------------------------------------
+        sf::Vector2i WorldToGrid(const sf::Vector2f& WorldPos);
+        sf::Vector2f GridToWorld(const sf::Vector2i& GridPos);
+        sf::Vector2f GridToCenterSquare(const sf::Vector2i& GridPos);
+        std::string GridToAlgebraic(const sf::Vector2i& GridPos);
 	};
 }

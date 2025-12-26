@@ -12,7 +12,6 @@ namespace we
         : Actor{ OwningWorld, TexturePath }
         , Pieces{}
     {
-        SetTexture(TexturePath);
     }
 
     // -------------------------------------------------------------------------

@@ -10,8 +10,9 @@ namespace we
         , PieceType{ Type }
         , Color{ Color }
     {
-        SetTexture(TexturePath);
         SetSpriteSheetFrame();
+        CenterPivot();
+        SetSpriteScale({ 1.54f,1.54f });
     }
 
     // ----------------------------------------------------

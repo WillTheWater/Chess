@@ -11,7 +11,7 @@ we::Application* GetApplication()
 namespace we
 {
 	Game::Game()
-		: Application{1280, 720, "Chess", sf::Style::Default}
+		: Application{1920, 1080, "Chess", sf::Style::Default}
 	{
 		AssetManager::Get().SetAssetRootDirctory(GetAssetDirectory());
 		weak<Play> PlayChess = LoadWorld<Play>();
