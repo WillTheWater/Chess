@@ -42,7 +42,7 @@ namespace we
 
         virtual void BeginPlay() override;
         virtual void Tick(float DeltaTime) override;
-        virtual void Render(Renderer& GameRenderer) override;
+        void Render(Renderer& GameRenderer);
 
     private:
         // ----------------------------------------------------
@@ -91,7 +91,7 @@ namespace we
         sf::Vector2i HoveredGridPos{ -1, -1 };
         weak<ChessPiece> HoveredPiece;
         void HandleMouseHover();
-        void HandleInput();
+        void HandleInput(const std::optional<sf::Event> Event);
 
         // ----------------------------------------------------
         // Drag & Drop Handling

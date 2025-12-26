@@ -12,10 +12,6 @@ namespace we
 	public:
 		Game();
 
-		virtual void Tick(float DeltaTime) override;
-
 	private:
-		weak<Board> ChessBoard;
-		weak<GameHUD> ChessGameHUD;
 	};
 }

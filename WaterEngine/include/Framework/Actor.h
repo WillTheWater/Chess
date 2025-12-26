@@ -19,7 +19,6 @@ namespace we
 
 		void BeginPlayGlobal();
 		void TickGlobal(float DeltaTime);
-		void Render(class Renderer& GameRenderer);
 		
 		const World* GetWorld() const { return OwningWorld; }
 		World* GetWorld() { return OwningWorld; }
@@ -27,6 +26,7 @@ namespace we
 
 		virtual void BeginPlay();
 		virtual void Tick(float DeltaTime);
+		virtual void Render(class Renderer& GameRenderer);
 		virtual void Destroy() override;
 		virtual void OnActorBeginOverlap(Actor* OtherActor);
 		virtual void OnActorEndOverlap(Actor* OtherActor);

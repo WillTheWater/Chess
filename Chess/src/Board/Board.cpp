@@ -32,7 +32,7 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::Tick(float DeltaTime)
     {
-        HandleInput();
+        //HandleInput();
         Actor::Tick(DeltaTime);
     }
 
@@ -208,10 +208,8 @@ namespace we
         }
     }
 
-    void Board::HandleInput()
+    void Board::HandleInput(const std::optional<sf::Event> Event)
     {
-        UpdateMousePosition();
-
         bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
         if (bLeftMouseDown)
