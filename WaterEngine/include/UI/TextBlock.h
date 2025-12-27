@@ -7,7 +7,7 @@ namespace we
 	class TextBlock : public Widget
 	{
 	public:
-		TextBlock(const string& Text, const string& FontPath = "SpaceShooterRedux/Bonus/kenvector_future.ttf", unsigned int FontSize = 40);
+		TextBlock(const string& Text, const string& FontPath = "font/diablo.ttf", unsigned int FontSize = 40);
 
 		void SetText(const string& InputText);
 		void SetFontSize(unsigned int NewSize);

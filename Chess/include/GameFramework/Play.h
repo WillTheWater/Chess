@@ -1,9 +1,11 @@
 #pragma once
 #include "Framework/World.h"
 #include "Framework/Core.h"
+#include "Widgets/Menu.h"
 
 namespace we
 {
+	class StartGame;
 
 	class Play : public World
 	{
@@ -18,5 +20,7 @@ namespace we
 		void GameOver();
 		void RestartGame();
 		void QuitGame();
+		weak<Menu> GameMenu;
+		shared<StartGame> NewChessGame;
 	};
 }

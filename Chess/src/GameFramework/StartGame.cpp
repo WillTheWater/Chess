@@ -6,16 +6,27 @@ namespace we
 {
 	StartGame::StartGame(World* World)
 		: Level{World}
+		, ChessBoard{}
 	{
 	}
 
 	void StartGame::BeginLevel()
 	{
 		SpawnBoard();
+		if (!ChessBoard.expired())
+		{
+			ChessBoard.lock()->OnCheckmate.Bind(GetObject(), &StartGame::Checkmate);
+		}
 	}
 
 	void StartGame::TickLevel(float DeltaTime)
 	{
+	}
+
+	void StartGame::Checkmate()
+	{
+		OnCheckmate.Broadcast();
+		LOG("Chackmate Delegate Passed")
 	}
 
 	void StartGame::EndLevel()
@@ -24,6 +35,6 @@ namespace we
 
 	void StartGame::SpawnBoard()
 	{
-		weak<Board> NewFighter = GetWorld()->SpawnActor<Board>();
+		ChessBoard = GetWorld()->SpawnActor<Board>();
 	}
 }

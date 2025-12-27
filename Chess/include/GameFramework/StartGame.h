@@ -1,6 +1,7 @@
 
 #pragma once
 #include "GameMode/Level.h"
+#include "Board/Board.h"
 
 namespace we
 {
@@ -12,8 +13,12 @@ namespace we
 		virtual void BeginLevel() override;
 		virtual void TickLevel(float DeltaTime) override;
 
+		Delegate<> OnCheckmate;
+		void Checkmate();
+
 	private:
 		virtual void EndLevel() override;
 		void SpawnBoard();
+		weak<Board> ChessBoard;
 	};
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "Framework/Actor.h"
 #include "Board/ChessPieces.h"
+#include "Framework/Delegate.h"
 
 namespace we
 {
@@ -36,6 +37,8 @@ namespace we
         virtual void BeginPlay() override;
         virtual void Tick(float DeltaTime) override;
         virtual void Render(class Renderer& GameRenderer) override;
+
+        Delegate<> OnCheckmate;
 
     private:
         // ----------------------------------------------------

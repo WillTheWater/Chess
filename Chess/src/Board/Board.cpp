@@ -336,6 +336,7 @@ namespace we
         // ----------------------------------------------------
         if (Result.bIsCheckmate)
         {
+            OnCheckmate.Broadcast();
             LOG("Checkmate!")
         }
         else if (Result.bIsStalemate)

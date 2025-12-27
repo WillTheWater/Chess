@@ -6,8 +6,8 @@ namespace we
 	Button::Button(const string& TexturePath)
 		: ButtonTexture{ AssetManager::Get().LoadTexture(TexturePath) }
 		, ButtonSprite{ *ButtonTexture }
-		, DefaultColor{ sf::Color {150, 150, 150, 255} }
-		, HoverColor{ sf::Color::White }
+		, DefaultColor{ sf::Color::White }
+		, HoverColor{ sf::Color {150, 150, 150, 255} }
 		, PressedColor{ sf::Color {55, 55, 55, 255} }
 		, bIsButtonPressed{ false }
 	{
