@@ -16,6 +16,7 @@ namespace we
 		if (!ChessBoard.expired())
 		{
 			ChessBoard.lock()->OnCheckmate.Bind(GetObject(), &StartGame::Checkmate);
+			ChessBoard.lock()->OnStalemate.Bind(GetObject(), &StartGame::Stalemate);
 		}
 	}
 
@@ -26,7 +27,11 @@ namespace we
 	void StartGame::Checkmate()
 	{
 		OnCheckmate.Broadcast();
-		LOG("Chackmate Delegate Passed")
+	}
+
+	void StartGame::Stalemate()
+	{
+		OnStalemate.Broadcast();
 	}
 
 	void StartGame::EndLevel()

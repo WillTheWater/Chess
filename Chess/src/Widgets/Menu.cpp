@@ -3,12 +3,16 @@
 namespace we
 {
 	Menu::Menu()
-		: RestartButton{ "/button.png" }
-		, RestartButtonText{ "Restart" }
+		: RestartButton{ "button.png" }
 		, QuitButton{ "closebutton.png" }
+		, RestartButtonText{ "Restart" }
+		, CheckmateText{"Checkmate"}
+		, StalemateText{"Stalemate"}
 	{
 		RestartButton.SetVisibility(false);
 		RestartButtonText.SetVisibility(false);
+		CheckmateText.SetVisibility(true);
+		StalemateText.SetVisibility(false);
 	}
 
 	void Menu::Render(Renderer& GameRenderer)
@@ -16,6 +20,8 @@ namespace we
 		RestartButton.NativeRender(GameRenderer);
 		RestartButtonText.NativeRender(GameRenderer);
 		QuitButton.NativeRender(GameRenderer);
+		CheckmateText.NativeRender(GameRenderer);
+		StalemateText.NativeRender(GameRenderer);
 	}
 
 	void Menu::Tick(float DeltaTime)
@@ -29,7 +35,9 @@ namespace we
 
 	void Menu::Initialize(Renderer& GameRenderer)
 	{
-		InitializeButtons(GameRenderer.GetViewportSize());
+		const auto& Viewport = GameRenderer.GetViewportSize();
+		InitializeButtons(Viewport);
+		InitializeText(Viewport);
 		RestartButton.OnButtonClicked.Bind(GetObject(), &Menu::StartButtonClicked);
 		QuitButton.OnButtonClicked.Bind(GetObject(), &Menu::QuitButtonClicked);
 	}
@@ -53,6 +61,20 @@ namespace we
 		RestartButton.SetWidgetPosition({ ViewportSize.x / 2.f, ViewportSize.y / 2.f + 204.f });
 		RestartButtonText.SetWidgetPosition(RestartButton.GetWidgetPosition());
 		QuitButton.SetWidgetPosition({ ViewportSize.x - 40.f, 40.f });
+	}
+
+	void Menu::InitializeText(const sf::Vector2u& ViewportSize)
+	{
+		CheckmateText.SetFontSize(80);
+		StalemateText.SetFontSize(80);
+		CheckmateText.CenterOrigin();
+		StalemateText.CenterOrigin();
+		CheckmateText.SetColor(TextColor);
+		StalemateText.SetColor(TextColor);
+		CheckmateText.SetOutline(OutlineColor, 3.f);
+		StalemateText.SetOutline(OutlineColor, 3.f);
+		CheckmateText.SetWidgetPosition({ ViewportSize.x / 2.f, 200.f });
+		StalemateText.SetWidgetPosition({ ViewportSize.x / 2.f, 200.f });
 	}
 
 	void Menu::SetVisibility(bool NewVisibility)

@@ -15,14 +15,11 @@ namespace we
 	{
 		GameMenu.lock()->OnRestartButtonClicked.Bind(GetObject(), &Play::RestartGame);
 		GameMenu.lock()->OnQuitButtonClicked.Bind(GetObject(), &Play::QuitGame);
-		NewChessGame->OnCheckmate.Bind(GetObject(), &Play::GameOver);
+		NewChessGame->OnCheckmate.Bind(GetObject(), &Play::Checkmate);
+		NewChessGame->OnStalemate.Bind(GetObject(), &Play::Stalemate);
 	}
 
 	void Play::Tick(float DeltaTime)
-	{
-	}
-
-	void Play::EndLevels()
 	{
 	}
 
@@ -31,7 +28,12 @@ namespace we
 		AddLevel(NewChessGame);
 	}
 
-	void Play::GameOver()
+	void Play::Checkmate()
+	{
+		GameMenu.lock()->SetVisibility(true);
+	}
+
+	void Play::Stalemate()
 	{
 		GameMenu.lock()->SetVisibility(true);
 	}

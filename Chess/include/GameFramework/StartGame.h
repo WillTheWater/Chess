@@ -14,7 +14,9 @@ namespace we
 		virtual void TickLevel(float DeltaTime) override;
 
 		Delegate<> OnCheckmate;
+		Delegate<> OnStalemate;
 		void Checkmate();
+		void Stalemate();
 
 	private:
 		virtual void EndLevel() override;

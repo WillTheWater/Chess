@@ -25,6 +25,12 @@ namespace we
 		DisplayText.setFillColor(NewColor);
 	}
 
+	void TextBlock::SetOutline(sf::Color OutlineColor, float OutlineThickness)
+	{
+		DisplayText.setOutlineColor(OutlineColor);
+		DisplayText.setOutlineThickness(OutlineThickness);
+	}
+
 	void TextBlock::CenterOrigin()
 	{
 		DisplayText.setOrigin({ DisplayText.getLocalBounds().getCenter().x, DisplayText.getLocalBounds().getCenter().y });

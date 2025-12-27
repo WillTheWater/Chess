@@ -24,11 +24,16 @@ namespace we
 
 	private:
 		virtual void Initialize(Renderer& GameRenderer) override;
-		Button RestartButton;
-		TextBlock RestartButtonText;
-		Button QuitButton;
 		void StartButtonClicked();
 		void QuitButtonClicked();
 		void InitializeButtons(const sf::Vector2u& ViewportSize);
+		void InitializeText(const sf::Vector2u& ViewportSize);
+		Button RestartButton;
+		Button QuitButton;
+		TextBlock RestartButtonText;
+		TextBlock CheckmateText;
+		TextBlock StalemateText;
+		sf::Color TextColor{ 205, 27, 0, 255 };
+		sf::Color OutlineColor{ 0, 0, 0, 255 };
 	};
 }

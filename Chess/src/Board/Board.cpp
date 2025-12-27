@@ -337,11 +337,10 @@ namespace we
         if (Result.bIsCheckmate)
         {
             OnCheckmate.Broadcast();
-            LOG("Checkmate!")
         }
         else if (Result.bIsStalemate)
         {
-            LOG("Stalemate!")
+            OnStalemate.Broadcast();
         }
         else if (Result.bIsDraw)
         {

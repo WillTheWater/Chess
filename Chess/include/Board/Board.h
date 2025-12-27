@@ -39,6 +39,7 @@ namespace we
         virtual void Render(class Renderer& GameRenderer) override;
 
         Delegate<> OnCheckmate;
+        Delegate<> OnStalemate;
 
     private:
         // ----------------------------------------------------

@@ -15,9 +15,9 @@ namespace we
 	private:
 		virtual void BeginPlay() override;
 		virtual void Tick(float DeltaTime) override;
-		virtual void EndLevels() override;
 		virtual void InitLevels() override;
-		void GameOver();
+		void Checkmate();
+		void Stalemate();
 		void RestartGame();
 		void QuitGame();
 		weak<Menu> GameMenu;
