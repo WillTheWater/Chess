@@ -1,46 +1,33 @@
 #include "Board/Board.h"
-#include "Framework/World.h"
 #include "Framework/Renderer.h"
+#include "Framework/World.h"
 #include <sstream>
 
 namespace we
 {
-    // -------------------------------------------------------------------------
-    // Constructor
-    // -------------------------------------------------------------------------
     Board::Board(World* OwningWorld, const std::string& TexturePath)
         : Actor{ OwningWorld, TexturePath }
         , Pieces{}
     {
     }
 
-    // -------------------------------------------------------------------------
-    // BeginPlay
-    // -------------------------------------------------------------------------
     void Board::BeginPlay()
     {
-        Actor::BeginPlay();
-
         SetActorLocation(sf::Vector2f{ float(GetWindowSize().x) / 2.0f, float(GetWindowSize().y) / 2.0f });
-
         InitializeBoard();
     }
 
-    // -------------------------------------------------------------------------
-    // Tick
-    // -------------------------------------------------------------------------
     void Board::Tick(float DeltaTime)
     {
-        //HandleInput();
-        Actor::Tick(DeltaTime);
+        HandleInput();
     }
 
-    // -------------------------------------------------------------------------
-    // Render
-    // -------------------------------------------------------------------------
     void Board::Render(Renderer& GameRenderer)
     {
         Actor::Render(GameRenderer);
+        sf::RenderWindow& Window = GameRenderer.GetRenderWindow();
+        MousePixelPosition = sf::Mouse::getPosition(Window);
+        MouseWorldPosition = Window.mapPixelToCoords(MousePixelPosition);
 
         for (const auto& Piece : Pieces)
         {
@@ -56,54 +43,6 @@ namespace we
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Grid World Conversion
-    // -------------------------------------------------------------------------
-    sf::Vector2i Board::WorldToGrid(const sf::Vector2f& WorldPos)
-    {
-        float RelativeX = WorldPos.x - GRID_ABS_OFFSET_X;
-        float RelativeY = WorldPos.y - GRID_ABS_OFFSET_Y;
-
-        int GridX = static_cast<int>(std::floor(RelativeX / SquareSize));
-        int GridY = static_cast<int>(std::floor(RelativeY / SquareSize));
-
-        GridX = std::clamp(GridX, 0, GridSize - 1);
-        GridY = std::clamp(GridY, 0, GridSize - 1);
-
-        return { GridX, GridY };
-    }
-
-    sf::Vector2f Board::GridToWorld(const sf::Vector2i& GridPos)
-    {
-        float PixelX = GRID_ABS_OFFSET_X + GridPos.x * SquareSize;
-        float PixelY = GRID_ABS_OFFSET_Y + GridPos.y * SquareSize;
-
-        return { PixelX, PixelY };
-    }
-
-    sf::Vector2f Board::GridToCenterSquare(const sf::Vector2i& GridPos)
-    {
-        return {
-        GRID_ABS_OFFSET_X + GridPos.x * SquareSize + SquareSize * 0.5f,
-        GRID_ABS_OFFSET_Y + GridPos.y * SquareSize + SquareSize * 0.5f
-        };
-    }
-
-    std::string Board::GridToAlgebraic(const sf::Vector2i& GridPos)
-    {
-        if (GridPos.x < 0 || GridPos.x >= 8 || GridPos.y < 0 || GridPos.y >= 8) { return "Invalid"; }
-
-        char File = 'a' + GridPos.x;
-        char Rank = '8' - GridPos.y;
-
-        std::stringstream ss;
-        ss << File << Rank;
-        return ss.str();
-    }
-
-    // -------------------------------------------------------------------------
-    // Initialization
-    // -------------------------------------------------------------------------
     void Board::InitializeBoard()
     {
         ClearBoard();
@@ -170,14 +109,75 @@ namespace we
     }
 
     // -------------------------------------------------------------------------
+    // Grid World Conversion
+    // -------------------------------------------------------------------------
+    sf::Vector2i Board::WorldToGrid(const sf::Vector2f& WorldPos)
+    {
+        float RelativeX = WorldPos.x - GRID_ABS_OFFSET_X;
+        float RelativeY = WorldPos.y - GRID_ABS_OFFSET_Y;
+
+        int GridX = static_cast<int>(std::floor(RelativeX / SquareSize));
+        int GridY = static_cast<int>(std::floor(RelativeY / SquareSize));
+
+        GridX = std::clamp(GridX, 0, GridSize - 1);
+        GridY = std::clamp(GridY, 0, GridSize - 1);
+
+        return { GridX, GridY };
+    }
+
+    sf::Vector2f Board::GridToWorld(const sf::Vector2i& GridPos)
+    {
+        float PixelX = GRID_ABS_OFFSET_X + GridPos.x * SquareSize;
+        float PixelY = GRID_ABS_OFFSET_Y + GridPos.y * SquareSize;
+
+        return { PixelX, PixelY };
+    }
+
+    sf::Vector2f Board::GridToCenterSquare(const sf::Vector2i& GridPos)
+    {
+        return {
+        GRID_ABS_OFFSET_X + GridPos.x * SquareSize + SquareSize * 0.5f,
+        GRID_ABS_OFFSET_Y + GridPos.y * SquareSize + SquareSize * 0.5f
+        };
+    }
+
+    std::string Board::GridToAlgebraic(const sf::Vector2i& GridPos)
+    {
+        if (GridPos.x < 0 || GridPos.x >= 8 || GridPos.y < 0 || GridPos.y >= 8) { return "Invalid"; }
+
+        char File = 'a' + GridPos.x;
+        char Rank = '8' - GridPos.y;
+
+        std::stringstream ss;
+        ss << File << Rank;
+        return ss.str();
+    }
+
+    // -------------------------------------------------------------------------
     // Input Handling
     // -------------------------------------------------------------------------
-    void Board::UpdateMousePosition(Renderer& GameRenderer)
+    void Board::HandleInput()
     {
-        sf::RenderWindow& Window = GameRenderer.GetRenderWindow();
+        bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
-        MousePixelPosition = sf::Mouse::getPosition(Window);
-        MouseWorldPosition = Window.mapPixelToCoords(MousePixelPosition);
+        if (bLeftMouseDown)
+        {
+            if (!bLeftMouseButtonPressedLastFrame)
+                HandleDragStart(MouseWorldPosition);
+            else if (bIsDragging)
+                HandleDragTick(MouseWorldPosition);
+        }
+        else if (bLeftMouseButtonPressedLastFrame)
+        {
+            HandleDragEnd(MouseWorldPosition);
+        }
+
+        bLeftMouseButtonPressedLastFrame = bLeftMouseDown;
+
+        if (!bIsDragging)
+        {
+            HandleMouseHover();
+        }
     }
 
     void Board::HandleMouseHover()
@@ -207,31 +207,9 @@ namespace we
         }
     }
 
-    void Board::HandleInput(const std::optional<sf::Event> Event)
-    {
-        bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
-
-        if (bLeftMouseDown)
-        {
-            if (!bLeftMouseButtonPressedLastFrame)
-                HandleDragStart(MouseWorldPosition);
-            else if (bIsDragging)
-                HandleDragTick(MouseWorldPosition);
-        }
-        else if (bLeftMouseButtonPressedLastFrame)
-        {
-            HandleDragEnd(MouseWorldPosition);
-        }
-
-        bLeftMouseButtonPressedLastFrame = bLeftMouseDown;
-
-        if (!bIsDragging)
-            HandleMouseHover();
-    }
-
     // -------------------------------------------------------------------------
-    // Piece Drag & Drop
-    // -------------------------------------------------------------------------
+   // Piece Drag & Drop
+   // -------------------------------------------------------------------------
     void Board::HandleDragStart(const sf::Vector2f& MousePos)
     {
         sf::Vector2i gridPos = WorldToGrid(MousePos);
@@ -278,6 +256,47 @@ namespace we
         }
     }
 
+    std::string Board::GetPieceName(EChessPieceType Type)
+    {
+        switch (Type)
+        {
+        case EChessPieceType::King:   return "King";
+        case EChessPieceType::Queen:  return "Queen";
+        case EChessPieceType::Bishop: return "Bishop";
+        case EChessPieceType::Knight: return "Knight";
+        case EChessPieceType::Rook:   return "Rook";
+        case EChessPieceType::Pawn:   return "Pawn";
+        default:                      return "Unknown";
+        }
+    }
+
+    shared<ChessPiece> Board::GetPieceAt(const sf::Vector2i& GridPos) const
+    {
+        return BoardGrid[GridPos.x][GridPos.y];
+    }
+
+    shared<ChessPiece> Board::GetPieceAt(shared<ChessPiece> InBoard[GridSize][GridSize], const sf::Vector2i& GridPos) const
+    {
+        return InBoard[GridPos.x][GridPos.y];
+    }
+
+    sf::Vector2i Board::GetKing(shared<ChessPiece> Board[GridSize][GridSize], EChessColor Color)
+    {
+        for (int x = 0; x < GridSize; ++x)
+            for (int y = 0; y < GridSize; ++y)
+                if (Board[x][y] &&
+                    Board[x][y]->GetPieceType() == EChessPieceType::King &&
+                    Board[x][y]->GetColor() == Color)
+                    return { x, y };
+
+        return { -1, -1 };
+    }
+
+    bool Board::IsPlayersPiece(const ChessPiece* Piece) const
+    {
+        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) || (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
+    }
+
     void Board::UpdateBoard(const MoveResult& Result)
     {
         if (!Result.bValid) { return; }
@@ -294,7 +313,7 @@ namespace we
         // Move Piece
         // ----------------------------------------------------
 
-            Move(BoardGrid[Result.From.x][Result.From.y], Result.From, Result.To);
+        Move(BoardGrid[Result.From.x][Result.From.y], Result.From, Result.To);
 
         // ----------------------------------------------------
         // Handle Castling
@@ -336,50 +355,6 @@ namespace we
     bool Board::IsInBounds(const sf::Vector2i& GridPos) const
     {
         return GridPos.x >= 0 && GridPos.x < GridSize && GridPos.y >= 0 && GridPos.y < GridSize;
-    }
-
-    // -------------------------------------------------------------------------
-    // Piece Helpers
-    // -------------------------------------------------------------------------
-    std::string Board::GetPieceName(EChessPieceType Type)
-    {
-        switch (Type)
-        {
-        case EChessPieceType::King:   return "King";
-        case EChessPieceType::Queen:  return "Queen";
-        case EChessPieceType::Bishop: return "Bishop";
-        case EChessPieceType::Knight: return "Knight";
-        case EChessPieceType::Rook:   return "Rook";
-        case EChessPieceType::Pawn:   return "Pawn";
-        default:                      return "Unknown";
-        }
-    }
-
-    shared<ChessPiece> Board::GetPieceAt(const sf::Vector2i& GridPos) const
-    {
-        return BoardGrid[GridPos.x][GridPos.y];
-    }
-
-    shared<ChessPiece> Board::GetPieceAt(shared<ChessPiece> InBoard[GridSize][GridSize], const sf::Vector2i& GridPos) const
-    {
-        return InBoard[GridPos.x][GridPos.y];
-    }
-
-    sf::Vector2i Board::GetKing(shared<ChessPiece> Board[GridSize][GridSize], EChessColor Color)
-    {
-        for (int x = 0; x < GridSize; ++x)
-            for (int y = 0; y < GridSize; ++y)
-                if (Board[x][y] &&
-                    Board[x][y]->GetPieceType() == EChessPieceType::King &&
-                    Board[x][y]->GetColor() == Color)
-                    return { x, y };
-
-        return { -1, -1 };
-    }
-    
-    bool Board::IsPlayersPiece(const ChessPiece* Piece) const
-    {
-        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) || (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
     }
 
     // -------------------------------------------------------------------------
@@ -614,7 +589,7 @@ namespace we
         Rook->SetActorLocation(GridToCenterSquare(To));
         Rook->SetHasMoved();
     }
-    
+
     void Board::Castle(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, MoveResult& Result)
     {
         if (Piece->GetPieceType() == EChessPieceType::King &&
@@ -642,7 +617,7 @@ namespace we
 
         SpawnPiece(PromotionType, PieceColor, pos);
     }
-    
+
     void Board::PromotePawn(shared<ChessPiece>& Piece, sf::Vector2i& To, MoveResult& Result)
     {
         if (Piece->GetPieceType() == EChessPieceType::Pawn)
@@ -672,79 +647,79 @@ namespace we
 
                 switch (Piece->GetPieceType())
                 {
-                    case EChessPieceType::Pawn:
-                    {
-                        int dir = (AttackerColor == EChessColor::White) ? -1 : 1;
+                case EChessPieceType::Pawn:
+                {
+                    int dir = (AttackerColor == EChessColor::White) ? -1 : 1;
 
-                        if (Pos.y - From.y == dir &&
-                            std::abs(Pos.x - From.x) == 1)
-                            return true;
+                    if (Pos.y - From.y == dir &&
+                        std::abs(Pos.x - From.x) == 1)
+                        return true;
 
+                    break;
+                }
+
+                case EChessPieceType::Knight:
+                {
+                    int dx = std::abs(Pos.x - From.x);
+                    int dy = std::abs(Pos.y - From.y);
+
+                    if ((dx == 2 && dy == 1) || (dx == 1 && dy == 2))
+                        return true;
+
+                    break;
+                }
+
+                case EChessPieceType::King:
+                {
+                    int dx = std::abs(Pos.x - From.x);
+                    int dy = std::abs(Pos.y - From.y);
+
+                    if (dx <= 1 && dy <= 1)
+                        return true;
+
+                    break;
+                }
+
+                case EChessPieceType::Rook:
+                case EChessPieceType::Bishop:
+                case EChessPieceType::Queen:
+                {
+                    int dx = Pos.x - From.x;
+                    int dy = Pos.y - From.y;
+
+                    // Direction validity
+                    if (Piece->GetPieceType() == EChessPieceType::Rook &&
+                        dx != 0 && dy != 0)
                         break;
-                    }
 
-                    case EChessPieceType::Knight:
-                    {
-                        int dx = std::abs(Pos.x - From.x);
-                        int dy = std::abs(Pos.y - From.y);
-
-                        if ((dx == 2 && dy == 1) || (dx == 1 && dy == 2))
-                            return true;
-
+                    if (Piece->GetPieceType() == EChessPieceType::Bishop &&
+                        std::abs(dx) != std::abs(dy))
                         break;
-                    }
 
-                    case EChessPieceType::King:
+                    int stepX = (dx == 0) ? 0 : (dx > 0 ? 1 : -1);
+                    int stepY = (dy == 0) ? 0 : (dy > 0 ? 1 : -1);
+
+                    sf::Vector2i checkPos = From;
+
+                    while (true)
                     {
-                        int dx = std::abs(Pos.x - From.x);
-                        int dy = std::abs(Pos.y - From.y);
+                        checkPos.x += stepX;
+                        checkPos.y += stepY;
 
-                        if (dx <= 1 && dy <= 1)
-                            return true;
-
-                        break;
-                    }
-
-                    case EChessPieceType::Rook:
-                    case EChessPieceType::Bishop:
-                    case EChessPieceType::Queen:
-                    {
-                        int dx = Pos.x - From.x;
-                        int dy = Pos.y - From.y;
-
-                        // Direction validity
-                        if (Piece->GetPieceType() == EChessPieceType::Rook &&
-                            dx != 0 && dy != 0)
+                        // Bounds first
+                        if (checkPos.x < 0 || checkPos.x >= GridSize ||
+                            checkPos.y < 0 || checkPos.y >= GridSize)
                             break;
 
-                        if (Piece->GetPieceType() == EChessPieceType::Bishop &&
-                            std::abs(dx) != std::abs(dy))
+                        if (checkPos == Pos)
+                            return true;
+
+                        // Blocked by any piece
+                        if (Board[checkPos.x][checkPos.y])
                             break;
-
-                        int stepX = (dx == 0) ? 0 : (dx > 0 ? 1 : -1);
-                        int stepY = (dy == 0) ? 0 : (dy > 0 ? 1 : -1);
-
-                        sf::Vector2i checkPos = From;
-
-                        while (true)
-                        {
-                            checkPos.x += stepX;
-                            checkPos.y += stepY;
-
-                            // Bounds first
-                            if (checkPos.x < 0 || checkPos.x >= GridSize ||
-                                checkPos.y < 0 || checkPos.y >= GridSize)
-                                break;
-
-                            if (checkPos == Pos)
-                                return true;
-
-                            // Blocked by any piece
-                            if (Board[checkPos.x][checkPos.y])
-                                break;
-                        }
-                        break;
                     }
+                    break;
+                }
                 }
             }
         }

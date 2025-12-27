@@ -1,22 +1,18 @@
 #pragma once
-
 #include "Framework/Actor.h"
 #include "Board/ChessPieces.h"
 
 namespace we
 {
-    // ----------------------------------------------------
-    // Move Simulation Struct
-    // ----------------------------------------------------
     struct MoveResult
     {
-        bool bValid = false; 
+        bool bValid = false;
         sf::Vector2i From;
         sf::Vector2i To;
-        shared<ChessPiece> CapturedPiece; 
-        bool bPawnPromoted = false;  
-        EChessPieceType PromotionType; 
-        bool bCastling = false;  
+        shared<ChessPiece> CapturedPiece;
+        bool bPawnPromoted = false;
+        EChessPieceType PromotionType;
+        bool bCastling = false;
         sf::Vector2i RookFrom, RookTo;
 
         bool bEnPassant = false;
@@ -35,23 +31,20 @@ namespace we
     class Board : public Actor
     {
     public:
-        // ----------------------------------------------------
-        // Constructor & Engine Overrides
-        // ----------------------------------------------------
         Board(World* OwningWorld, const std::string& TexturePath = "/board.png");
 
         virtual void BeginPlay() override;
         virtual void Tick(float DeltaTime) override;
-        void Render(Renderer& GameRenderer);
+        virtual void Render(class Renderer& GameRenderer) override;
 
     private:
         // ----------------------------------------------------
         // Board Constraints
         // ----------------------------------------------------
         static constexpr int GridSize = 8;
-        static constexpr int SquareSize = 78;
-        static constexpr float GRID_ABS_OFFSET_X = 328.0f;
-        static constexpr float GRID_ABS_OFFSET_Y = 49.0f;
+        static constexpr int SquareSize = 120;
+        static constexpr float GRID_ABS_OFFSET_X = 480.f;
+        static constexpr float GRID_ABS_OFFSET_Y = 60.f;
         shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
 
         static constexpr int InitialBoard[GridSize][GridSize] = {
@@ -72,7 +65,10 @@ namespace we
         void ClearBoard();
         EChessColor GetPieceColor(int value);
         EChessPieceType GetPieceType(int value);
+        EPlayerTurn CurrentTurn = EPlayerTurn::White;
         void SpawnPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos);
+        weak<ChessPiece> SelectedPiece;
+        List<shared<ChessPiece>> Pieces;
 
         // ----------------------------------------------------
         // Board World Conversion
@@ -85,32 +81,24 @@ namespace we
         // ----------------------------------------------------
         // Input Handling
         // ----------------------------------------------------
-        sf::Vector2i MousePixelPosition;
-        sf::Vector2f MouseWorldPosition;
-        void UpdateMousePosition(Renderer& GameRenderer);
-        sf::Vector2i HoveredGridPos{ -1, -1 };
-        weak<ChessPiece> HoveredPiece;
         void HandleMouseHover();
-        void HandleInput(const std::optional<sf::Event> Event);
-
-        // ----------------------------------------------------
-        // Drag & Drop Handling
-        // ----------------------------------------------------
+        void HandleInput();
+        bool IsInBounds(const sf::Vector2i& GridPos) const;
         void HandleDragStart(const sf::Vector2f& MousePos);
         void HandleDragTick(const sf::Vector2f& MousePos);
         void HandleDragEnd(const sf::Vector2f& MousePos);
-        void Board::UpdateBoard(const MoveResult& Result);
-
-        bool IsInBounds(const sf::Vector2i& GridPos) const;
+        void UpdateBoard(const MoveResult& Result);
+        sf::Vector2i MousePixelPosition;
+        sf::Vector2f MouseWorldPosition;
+        sf::Vector2i HoveredGridPos{ -1, -1 };
+        weak<ChessPiece> HoveredPiece;
         bool bIsDragging = false;
         bool bLeftMouseButtonPressedLastFrame = false;
-        weak<ChessPiece> SelectedPiece;
         sf::Vector2i DragStartGridPosition{ -1, -1 };
 
         // ----------------------------------------------------
         // Pieces Helpers
         // ----------------------------------------------------
-        List<shared<ChessPiece>> Pieces;
         std::string GetPieceName(EChessPieceType Type);
         shared<ChessPiece> GetPieceAt(const sf::Vector2i& GridPos) const;
         shared<ChessPiece> GetPieceAt(shared<ChessPiece> InBoard[GridSize][GridSize], const sf::Vector2i& GridPos) const;
@@ -120,7 +108,6 @@ namespace we
         // ----------------------------------------------------
         // Game Logic
         // ----------------------------------------------------
-        EPlayerTurn CurrentTurn = EPlayerTurn::White;
 
         bool IsMoveValid(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsMoveLegal(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To);
@@ -136,7 +123,7 @@ namespace we
         void PromotePawn(shared<ChessPiece>& Piece, sf::Vector2i& To, MoveResult& Result);
         bool IsSquareAttacked(shared<ChessPiece> Board[GridSize][GridSize], const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         void CheckmatOrStalemate(shared<ChessPiece>  SimBoard[8][8], EChessColor OpponentColor, MoveResult& Result);
-               
+
         bool IsRookMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
         bool IsQueenMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;

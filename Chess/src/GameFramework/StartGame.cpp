@@ -1,6 +1,6 @@
 #include "GameFramework/StartGame.h"
 #include "Framework/World.h"
-#include "Board/TestBoard.h"
+#include "Board/Board.h"
 
 namespace we
 {
@@ -24,6 +24,6 @@ namespace we
 
 	void StartGame::SpawnBoard()
 	{
-		weak<TestBoard> NewFighter = GetWorld()->SpawnActor<TestBoard>();
+		weak<Board> NewFighter = GetWorld()->SpawnActor<Board>();
 	}
 }

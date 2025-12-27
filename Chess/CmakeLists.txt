@@ -11,9 +11,6 @@ add_executable(${WATER_GAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Board/Board.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Board/Board.cpp
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/Board/TestBoard.h
-	${CMAKE_CURRENT_SOURCE_DIR}/src/Board/TestBoard.cpp
-
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Board/ChessPieces.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Board/ChessPieces.cpp
 )
