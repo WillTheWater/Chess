@@ -17,9 +17,17 @@ namespace we
         InitializeBoard();
 	}
 
+    void TestBoard::Tick(float DeltaTime)
+    {
+        HandleInput();
+    }
+
 	void TestBoard::Render(Renderer& GameRenderer)
 	{
 		Actor::Render(GameRenderer);
+        sf::RenderWindow& Window = GameRenderer.GetRenderWindow();
+        MousePixelPosition = sf::Mouse::getPosition(Window);
+        MouseWorldPosition = Window.mapPixelToCoords(MousePixelPosition);
 		
         for (const auto& Piece : Pieces)
         {
@@ -143,5 +151,149 @@ namespace we
         std::stringstream ss;
         ss << File << Rank;
         return ss.str();
+    }
+
+    // -------------------------------------------------------------------------
+    // Input Handling
+    // -------------------------------------------------------------------------
+    void TestBoard::HandleInput()
+    {
+        bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+
+        if (bLeftMouseDown)
+        {
+            if (!bLeftMouseButtonPressedLastFrame)
+                HandleDragStart(MouseWorldPosition);
+            else if (bIsDragging)
+                HandleDragTick(MouseWorldPosition);
+        }
+        else if (bLeftMouseButtonPressedLastFrame)
+        {
+            HandleDragEnd(MouseWorldPosition);
+        }
+
+        bLeftMouseButtonPressedLastFrame = bLeftMouseDown;
+
+        if (!bIsDragging)
+        {
+            HandleMouseHover();
+        }
+    }
+
+    void TestBoard::HandleMouseHover()
+    {
+        if (bIsDragging) { return; }
+
+        sf::Vector2i gridPos = WorldToGrid(MouseWorldPosition);
+
+        if (gridPos != HoveredGridPos)
+        {
+            HoveredGridPos = gridPos;
+
+            shared<ChessPiece> piece = GetPieceAt(gridPos);
+
+            for (auto& p : Pieces)
+            {
+                if (p && p != piece)
+                {
+                    p->SetHovered(false);
+                }
+            }
+
+            if (piece && IsPlayersPiece(piece.get()))
+            {
+                piece->SetHovered(true);
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+   // Piece Drag & Drop
+   // -------------------------------------------------------------------------
+    void TestBoard::HandleDragStart(const sf::Vector2f& MousePos)
+    {
+        /*sf::Vector2i gridPos = WorldToGrid(MousePos);
+        shared<ChessPiece> piece = GetPieceAt(gridPos);
+
+        if (!piece) { return; }
+
+        if (!IsPlayersPiece(piece.get())) { return; }
+
+        SelectedPiece = piece;
+        bIsDragging = true;
+        piece->SetHovered(false);*/
+    }
+
+    void TestBoard::HandleDragTick(const sf::Vector2f& MousePos)
+    {
+        if (auto piece = SelectedPiece.lock())
+        {
+            piece->SetActorLocation(MousePos);
+        }
+    }
+
+    void TestBoard::HandleDragEnd(const sf::Vector2f& MouseWorldPos)
+    {
+        if (auto piece = SelectedPiece.lock())
+        {
+            /*sf::Vector2i to = WorldToGrid(MouseWorldPos);
+            sf::Vector2i from = piece->GetGridPosition();
+
+            auto MoveSim = HandleMove(piece, from, to);
+
+            if (MoveSim.has_value())
+            {
+                UpdateBoard(MoveSim.value());
+                SwitchTurn();
+            }
+            else
+            {
+                piece->SetActorLocation(GridToCenterSquare(from));
+            }
+
+            SelectedPiece.reset();
+            bIsDragging = false;*/
+        }
+    }
+
+    std::string TestBoard::GetPieceName(EChessPieceType Type)
+    {
+        switch (Type)
+        {
+        case EChessPieceType::King:   return "King";
+        case EChessPieceType::Queen:  return "Queen";
+        case EChessPieceType::Bishop: return "Bishop";
+        case EChessPieceType::Knight: return "Knight";
+        case EChessPieceType::Rook:   return "Rook";
+        case EChessPieceType::Pawn:   return "Pawn";
+        default:                      return "Unknown";
+        }
+    }
+
+    shared<ChessPiece> TestBoard::GetPieceAt(const sf::Vector2i& GridPos) const
+    {
+        return BoardGrid[GridPos.x][GridPos.y];
+    }
+
+    shared<ChessPiece> TestBoard::GetPieceAt(shared<ChessPiece> InBoard[GridSize][GridSize], const sf::Vector2i& GridPos) const
+    {
+        return InBoard[GridPos.x][GridPos.y];
+    }
+
+    sf::Vector2i TestBoard::GetKing(shared<ChessPiece> Board[GridSize][GridSize], EChessColor Color)
+    {
+        for (int x = 0; x < GridSize; ++x)
+            for (int y = 0; y < GridSize; ++y)
+                if (Board[x][y] &&
+                    Board[x][y]->GetPieceType() == EChessPieceType::King &&
+                    Board[x][y]->GetColor() == Color)
+                    return { x, y };
+
+        return { -1, -1 };
+    }
+
+    bool TestBoard::IsPlayersPiece(const ChessPiece* Piece) const
+    {
+        return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) || (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
     }
 }

@@ -34,6 +34,7 @@ namespace we
         TestBoard(World* OwningWorld, const std::string& TexturePath = "/board.png");
 
         virtual void BeginPlay() override;
+        virtual void Tick(float DeltaTime) override;
         virtual void Render(class Renderer& GameRenderer) override;
 
     private: 
@@ -76,5 +77,31 @@ namespace we
         sf::Vector2f GridToWorld(const sf::Vector2i& GridPos);
         sf::Vector2f GridToCenterSquare(const sf::Vector2i& GridPos);
         std::string GridToAlgebraic(const sf::Vector2i& GridPos);
+
+       // ----------------------------------------------------
+       // Input Handling
+       // ----------------------------------------------------
+        void HandleMouseHover();
+        void HandleInput();
+        bool IsInBounds(const sf::Vector2i& GridPos) const;
+        void HandleDragStart(const sf::Vector2f& MousePos);
+        void HandleDragTick(const sf::Vector2f& MousePos);
+        void HandleDragEnd(const sf::Vector2f& MousePos);
+        sf::Vector2i MousePixelPosition;
+        sf::Vector2f MouseWorldPosition;
+        sf::Vector2i HoveredGridPos{ -1, -1 };
+        weak<ChessPiece> HoveredPiece;
+        bool bIsDragging = false;
+        bool bLeftMouseButtonPressedLastFrame = false;
+        sf::Vector2i DragStartGridPosition{ -1, -1 };
+
+       // ----------------------------------------------------
+       // Pieces Helpers
+       // ----------------------------------------------------
+        std::string GetPieceName(EChessPieceType Type);
+        shared<ChessPiece> GetPieceAt(const sf::Vector2i& GridPos) const;
+        shared<ChessPiece> GetPieceAt(shared<ChessPiece> InBoard[GridSize][GridSize], const sf::Vector2i& GridPos) const;
+        sf::Vector2i GetKing(shared<ChessPiece> Board[GridSize][GridSize], EChessColor Color);
+        bool IsPlayersPiece(const ChessPiece* Piece) const;
 	};
 }

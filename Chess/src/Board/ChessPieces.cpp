@@ -45,7 +45,7 @@ namespace we
     {
         if (bIsHovered)
         {
-            GetSprite().setColor(sf::Color(255, 255, 255, 150));
+            GetSprite().setColor(sf::Color(255, 255, 255, 50));
         }
         else
         {
