@@ -50,6 +50,9 @@ namespace we
         static constexpr int SquareSize = 120;
         static constexpr float GRID_ABS_OFFSET_X = 480.f;
         static constexpr float GRID_ABS_OFFSET_Y = 60.f;
+        static constexpr float BoardPixelWidth = 1920.f;
+        static constexpr float BoardPixelHeight = 1080.f;
+
         shared<ChessPiece> BoardGrid[GridSize][GridSize] = {};
 
         static constexpr int InitialBoard[GridSize][GridSize] = {
@@ -74,10 +77,12 @@ namespace we
         void SpawnPiece(EChessPieceType type, EChessColor color, const sf::Vector2i& pos);
         weak<ChessPiece> SelectedPiece;
         List<shared<ChessPiece>> Pieces;
+        bool bIsGameOver = false;
 
         // ----------------------------------------------------
         // Board World Conversion
         // ----------------------------------------------------
+        sf::Vector2f GetBoardTopLeft() const;
         sf::Vector2i WorldToGrid(const sf::Vector2f& WorldPos);
         sf::Vector2f GridToWorld(const sf::Vector2i& GridPos);
         sf::Vector2f GridToCenterSquare(const sf::Vector2i& GridPos);
@@ -86,8 +91,8 @@ namespace we
         // ----------------------------------------------------
         // Input Handling
         // ----------------------------------------------------
-        void HandleMouseHover();
         void HandleInput();
+        void HandleMouseHover();
         bool IsInBounds(const sf::Vector2i& GridPos) const;
         void HandleDragStart(const sf::Vector2f& MousePos);
         void HandleDragTick(const sf::Vector2f& MousePos);
@@ -120,15 +125,15 @@ namespace we
         void SwitchTurn();
 
         void Capture(shared<ChessPiece> TargetPiece);
-        void EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, shared<ChessPiece>  SimBoard[GridSize][GridSize], MoveResult& Result);
+        void EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, shared<ChessPiece> SimBoard[GridSize][GridSize], MoveResult& Result);
         void Move(shared<ChessPiece> PieceToMove, sf::Vector2i From, sf::Vector2i To);
         void Castle(shared<ChessPiece> Rook, sf::Vector2i From, sf::Vector2i To);
         void Castle(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, MoveResult& Result);
         void PromotePawn(const sf::Vector2i& pos, EChessPieceType PromotionType);
         void PromotePawn(shared<ChessPiece>& Piece, sf::Vector2i& To, MoveResult& Result);
         bool IsSquareAttacked(shared<ChessPiece> Board[GridSize][GridSize], const sf::Vector2i& Pos, EChessColor DefenderColor) const;
-        void CheckmateOrStalemate(shared<ChessPiece>  SimBoard[GridSize][GridSize], EChessColor OpponentColor, MoveResult& Result);
-        void Draw(shared<ChessPiece>  SimBoard[GridSize][GridSize], MoveResult& Result);
+        void CheckmateOrStalemate(shared<ChessPiece> SimBoard[GridSize][GridSize], EChessColor OpponentColor, MoveResult& Result);
+        void Draw(shared<ChessPiece> SimBoard[GridSize][GridSize], MoveResult& Result);
 
         bool IsRookMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;

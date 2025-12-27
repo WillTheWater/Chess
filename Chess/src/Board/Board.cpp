@@ -111,34 +111,38 @@ namespace we
     // -------------------------------------------------------------------------
     // Grid World Conversion
     // -------------------------------------------------------------------------
+    sf::Vector2f Board::GetBoardTopLeft() const
+    {
+        return GetActorLocation() - sf::Vector2f(BoardPixelWidth * 0.5f, BoardPixelHeight * 0.5f);
+    }
+
     sf::Vector2i Board::WorldToGrid(const sf::Vector2f& WorldPos)
     {
-        float RelativeX = WorldPos.x - GRID_ABS_OFFSET_X;
-        float RelativeY = WorldPos.y - GRID_ABS_OFFSET_Y;
+        sf::Vector2f BoardTopLeft = GetBoardTopLeft();
+
+        float RelativeX = WorldPos.x - (BoardTopLeft.x + GRID_ABS_OFFSET_X);
+        float RelativeY = WorldPos.y - (BoardTopLeft.y + GRID_ABS_OFFSET_Y);
 
         int GridX = static_cast<int>(std::floor(RelativeX / SquareSize));
         int GridY = static_cast<int>(std::floor(RelativeY / SquareSize));
-
-        GridX = std::clamp(GridX, 0, GridSize - 1);
-        GridY = std::clamp(GridY, 0, GridSize - 1);
 
         return { GridX, GridY };
     }
 
     sf::Vector2f Board::GridToWorld(const sf::Vector2i& GridPos)
     {
-        float PixelX = GRID_ABS_OFFSET_X + GridPos.x * SquareSize;
-        float PixelY = GRID_ABS_OFFSET_Y + GridPos.y * SquareSize;
+        sf::Vector2f BoardTopLeft = GetBoardTopLeft();
+
+        float PixelX = BoardTopLeft.x + GRID_ABS_OFFSET_X + GridPos.x * SquareSize;
+        float PixelY = BoardTopLeft.y + GRID_ABS_OFFSET_Y + GridPos.y * SquareSize;
 
         return { PixelX, PixelY };
     }
 
     sf::Vector2f Board::GridToCenterSquare(const sf::Vector2i& GridPos)
     {
-        return {
-        GRID_ABS_OFFSET_X + GridPos.x * SquareSize + SquareSize * 0.5f,
-        GRID_ABS_OFFSET_Y + GridPos.y * SquareSize + SquareSize * 0.5f
-        };
+        sf::Vector2f WorldPos = GridToWorld(GridPos);
+        return { WorldPos.x + SquareSize * 0.5f, WorldPos.y + SquareSize * 0.5f };
     }
 
     std::string Board::GridToAlgebraic(const sf::Vector2i& GridPos)
@@ -158,6 +162,8 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::HandleInput()
     {
+        if (bIsGameOver) return;
+
         bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
         if (bLeftMouseDown)
@@ -182,9 +188,23 @@ namespace we
 
     void Board::HandleMouseHover()
     {
-        if (bIsDragging) { return; }
+        if (bIsGameOver || bIsDragging) return;
 
         sf::Vector2i gridPos = WorldToGrid(MouseWorldPosition);
+
+        if (gridPos.x < 0 || gridPos.x >= GridSize ||
+            gridPos.y < 0 || gridPos.y >= GridSize)
+        {
+            if (HoveredGridPos.x != -1)
+            {
+                for (auto& p : Pieces)
+                {
+                    if (p) p->SetHovered(false);
+                }
+                HoveredGridPos = { -1, -1 };
+            }
+            return;
+        }
 
         if (gridPos != HoveredGridPos)
         {
@@ -213,6 +233,12 @@ namespace we
     void Board::HandleDragStart(const sf::Vector2f& MousePos)
     {
         sf::Vector2i gridPos = WorldToGrid(MousePos);
+
+        if (!IsInBounds(gridPos))
+        {
+            return;
+        }
+
         shared<ChessPiece> piece = GetPieceAt(gridPos);
 
         if (!piece) { return; }
@@ -302,17 +328,22 @@ namespace we
         if (!Result.bValid) { return; }
 
         // ----------------------------------------------------
-        // Handle Capture
+        // Handle Capture (Standard or En Passant)
         // ----------------------------------------------------
         if (Result.CapturedPiece)
         {
             Capture(Result.CapturedPiece);
         }
+        else if (Result.bEnPassant)
+        {
+            sf::Vector2i sidePawnPos{ Result.To.x, Result.From.y };
+            auto sidePawn = BoardGrid[sidePawnPos.x][sidePawnPos.y];
+            if (sidePawn) Capture(sidePawn);
+        }
 
         // ----------------------------------------------------
         // Move Piece
         // ----------------------------------------------------
-
         Move(BoardGrid[Result.From.x][Result.From.y], Result.From, Result.To);
 
         // ----------------------------------------------------
@@ -324,6 +355,30 @@ namespace we
         }
 
         // ----------------------------------------------------
+        // Handle Pawn State (Moved two squares)
+        // ----------------------------------------------------
+        auto MovedPiece = BoardGrid[Result.To.x][Result.To.y];
+        if (MovedPiece && MovedPiece->GetPieceType() == EChessPieceType::Pawn)
+        {
+            int dy = Result.To.y - Result.From.y;
+
+            if (std::abs(dy) == 2)
+            {
+                MovedPiece->SetWasPawnMovedTwo(true);
+            }
+
+            for (auto& P : Pieces)
+            {
+                if (P && P != MovedPiece &&
+                    P->GetPieceType() == EChessPieceType::Pawn &&
+                    P->GetColor() == MovedPiece->GetColor())
+                {
+                    P->SetWasPawnMovedTwo(false);
+                }
+            }
+        }
+
+        // ----------------------------------------------------
         // Pawn Promotion 
         // ----------------------------------------------------
         if (Result.bPawnPromoted)
@@ -332,23 +387,26 @@ namespace we
         }
 
         // ----------------------------------------------------
-        // Check / Checkmate / Stalemate / Draw
+        // Game Over States
         // ----------------------------------------------------
         if (Result.bIsCheckmate)
         {
             OnCheckmate.Broadcast();
+            bIsGameOver = true;
         }
         else if (Result.bIsStalemate)
         {
             OnStalemate.Broadcast();
+            bIsGameOver = true;
         }
         else if (Result.bIsDraw)
         {
             OnDraw.Broadcast();
+            bIsGameOver = true;
         }
         else if (Result.bIsCheck)
         {
-            
+            // Optional: Play sound or show visual check indicator
         }
     }
 
@@ -475,7 +533,7 @@ namespace we
         return Result;
     }
 
-    void Board::CheckmateOrStalemate(shared<ChessPiece>  SimBoard[GridSize][GridSize], EChessColor OpponentColor, MoveResult& Result)
+    void Board::CheckmateOrStalemate(shared<ChessPiece> SimBoard[GridSize][GridSize], EChessColor OpponentColor, MoveResult& Result)
     {
         bool bOpponentHasMove = false;
 
@@ -508,21 +566,25 @@ namespace we
             }
         }
 
+        if (bOpponentHasMove) return;
+
         if (Result.bIsCheck)
         {
-            Result.bIsCheckmate = !bOpponentHasMove;
+            Result.bIsCheckmate = true;
         }
         else
         {
-            Result.bIsStalemate = !bOpponentHasMove;
+            Draw(SimBoard, Result);
+
+            if (!Result.bIsDraw)
+            {
+                Result.bIsStalemate = true;
+            }
         }
     }
 
     void Board::Draw(shared<ChessPiece> SimBoard[GridSize][GridSize], MoveResult& Result)
     {
-        // ----------------------------------------------------
-        // Piece counts and bishop colors
-        // ----------------------------------------------------
         struct PiecesInPlay
         {
             int Knights = 0;
@@ -534,9 +596,6 @@ namespace we
         PiecesInPlay White;
         PiecesInPlay Black;
 
-        // ----------------------------------------------------
-        // Piece data
-        // ----------------------------------------------------
         for (int x = 0; x < GridSize; ++x)
         {
             for (int y = 0; y < GridSize; ++y)
@@ -572,9 +631,6 @@ namespace we
             }
         }
 
-        // ----------------------------------------------------
-        // Check for Pawns, Rooks, or Queens
-        // ----------------------------------------------------
         auto HasMajorOrPawn = [&SimBoard](EChessColor Color) -> bool
             {
                 for (int x = 0; x < GridSize; ++x)
@@ -602,9 +658,6 @@ namespace we
             return;
         }
 
-        // ----------------------------------------------------
-        // Check for Winnable Piece Combinations
-        // ----------------------------------------------------
         auto IsWinnableArmy = [](const PiecesInPlay& Army) -> bool
             {
                 if (Army.Knights >= 1 && Army.Bishops >= 1) return true;
@@ -617,9 +670,6 @@ namespace we
             return;
         }
 
-        // ----------------------------------------------------
-        // King + Bishop vs King + Bishop
-        // ----------------------------------------------------
         if (White.Bishops == 1 && Black.Bishops == 1)
         {
             if (White.HasBishopOnWhite != Black.HasBishopOnWhite)
@@ -627,16 +677,6 @@ namespace we
                 return;
             }
         }
-
-        // ----------------------------------------------------
-        // Final Result
-        // ----------------------------------------------------
-        // K vs K
-        // K+N vs K
-        // K+B vs K
-        // K+N vs K+N
-        // K+B vs K+B (Same color)
-        // K+2N vs K
 
         Result.bIsDraw = true;
     }
@@ -653,27 +693,12 @@ namespace we
         TargetPiece->Destroy();
     }
 
-    void Board::EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, shared<ChessPiece>  SimBoard[GridSize][GridSize], MoveResult& Result)
+    void Board::EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, shared<ChessPiece> SimBoard[GridSize][GridSize], MoveResult& Result)
     {
         if (Piece->GetPieceType() == EChessPieceType::Pawn)
         {
             int dy = To.y - From.y;
             int dir = (Piece->GetColor() == EChessColor::White) ? -1 : 1;
-
-            Piece->SetWasPawnMovedTwo(std::abs(dy) == 2);
-
-            for (int x = 0; x < GridSize; ++x)
-            {
-                for (int y = 0; y < GridSize; ++y)
-                {
-                    auto P = SimBoard[x][y];
-                    if (P && P != Piece && P->GetPieceType() == EChessPieceType::Pawn &&
-                        P->GetColor() == Piece->GetColor())
-                    {
-                        P->SetWasPawnMovedTwo(false);
-                    }
-                }
-            }
 
             if (std::abs(To.x - From.x) == 1 && dy == dir && !BoardGrid[To.x][To.y])
             {
@@ -681,6 +706,7 @@ namespace we
                 auto sidePawn = BoardGrid[sidePawnPos.x][sidePawnPos.y];
 
                 if (sidePawn && sidePawn->GetPieceType() == EChessPieceType::Pawn &&
+                    sidePawn->GetColor() != Piece->GetColor() &&
                     sidePawn->GetWasPawnMovedTwo())
                 {
                     Result.bEnPassant = true;
