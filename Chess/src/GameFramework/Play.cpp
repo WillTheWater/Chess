@@ -1,4 +1,5 @@
 #include "Framework/Application.h"
+#include "Framework/PropActor.h"
 #include "GameFramework/Play.h"
 #include "GameFramework/StartGame.h"
 
@@ -17,6 +18,7 @@ namespace we
 		GameMenu.lock()->OnQuitButtonClicked.Bind(GetObject(), &Play::QuitGame);
 		NewChessGame->OnCheckmate.Bind(GetObject(), &Play::Checkmate);
 		NewChessGame->OnStalemate.Bind(GetObject(), &Play::Stalemate);
+		NewChessGame->OnDraw.Bind(GetObject(), &Play::Draw);
 	}
 
 	void Play::Tick(float DeltaTime)
@@ -32,12 +34,19 @@ namespace we
 	{
 		GameMenu.lock()->SetVisibility(true);
 		GameMenu.lock()->Checkmated();
+		Overlay();
 	}
 
 	void Play::Stalemate()
 	{
 		GameMenu.lock()->SetVisibility(true);
 		GameMenu.lock()->Stalemated();
+	}
+
+	void Play::Draw()
+	{
+		GameMenu.lock()->SetVisibility(true);
+		GameMenu.lock()->Drawn();
 	}
 
 	void Play::RestartGame()
@@ -48,5 +57,13 @@ namespace we
 	void Play::QuitGame()
 	{
 		GetApplication()->QuitApplication();
+	}
+
+	void Play::Overlay()
+	{
+		auto OverlayBG = SpawnActor<Prop>("overlay.png");
+		auto Overlay = OverlayBG.lock();
+		Overlay->SetActorLocation({ GetWindowSize().x / 2.f, GetWindowSize().y / 2.f });
+		Overlay->GetSprite().setColor({ 0, 0, 0, 140 });
 	}
 }

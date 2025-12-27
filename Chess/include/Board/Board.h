@@ -40,6 +40,7 @@ namespace we
 
         Delegate<> OnCheckmate;
         Delegate<> OnStalemate;
+        Delegate<> OnDraw;
 
     private:
         // ----------------------------------------------------

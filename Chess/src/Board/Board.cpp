@@ -207,7 +207,7 @@ namespace we
         }
     }
 
-    // -------------------------------------------------------------------------
+   // -------------------------------------------------------------------------
    // Piece Drag & Drop
    // -------------------------------------------------------------------------
     void Board::HandleDragStart(const sf::Vector2f& MousePos)
@@ -344,11 +344,11 @@ namespace we
         }
         else if (Result.bIsDraw)
         {
-            LOG("Draw")
+            OnDraw.Broadcast();
         }
         else if (Result.bIsCheck)
         {
-            LOG("Check!")
+            
         }
     }
 
@@ -516,12 +516,129 @@ namespace we
         {
             Result.bIsStalemate = !bOpponentHasMove;
         }
-
-        Result.bIsDraw = Result.bIsStalemate;
     }
 
     void Board::Draw(shared<ChessPiece> SimBoard[GridSize][GridSize], MoveResult& Result)
     {
+        // ----------------------------------------------------
+        // Piece counts and bishop colors
+        // ----------------------------------------------------
+        struct PiecesInPlay
+        {
+            int Knights = 0;
+            int Bishops = 0;
+            bool HasBishopOnWhite = false;
+            bool HasBishopOnBlack = false;
+        };
+
+        PiecesInPlay White;
+        PiecesInPlay Black;
+
+        // ----------------------------------------------------
+        // Piece data
+        // ----------------------------------------------------
+        for (int x = 0; x < GridSize; ++x)
+        {
+            for (int y = 0; y < GridSize; ++y)
+            {
+                auto Piece = SimBoard[x][y];
+                if (Piece)
+                {
+                    EChessPieceType Type = Piece->GetPieceType();
+
+                    if (Type == EChessPieceType::Knight)
+                    {
+                        if (Piece->GetColor() == EChessColor::White) White.Knights++;
+                        else Black.Knights++;
+                    }
+                    else if (Type == EChessPieceType::Bishop)
+                    {
+                        bool bIsWhiteSquare = ((x + y) % 2) != 0;
+
+                        if (Piece->GetColor() == EChessColor::White)
+                        {
+                            White.Bishops++;
+                            if (bIsWhiteSquare) White.HasBishopOnWhite = true;
+                            else White.HasBishopOnBlack = true;
+                        }
+                        else
+                        {
+                            Black.Bishops++;
+                            if (bIsWhiteSquare) Black.HasBishopOnWhite = true;
+                            else Black.HasBishopOnBlack = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ----------------------------------------------------
+        // Check for Pawns, Rooks, or Queens
+        // ----------------------------------------------------
+        auto HasMajorOrPawn = [&SimBoard](EChessColor Color) -> bool
+            {
+                for (int x = 0; x < GridSize; ++x)
+                {
+                    for (int y = 0; y < GridSize; ++y)
+                    {
+                        auto Piece = SimBoard[x][y];
+                        if (Piece && Piece->GetColor() == Color)
+                        {
+                            EChessPieceType Type = Piece->GetPieceType();
+                            if (Type == EChessPieceType::Pawn ||
+                                Type == EChessPieceType::Rook ||
+                                Type == EChessPieceType::Queen)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            };
+
+        if (HasMajorOrPawn(EChessColor::White) || HasMajorOrPawn(EChessColor::Black))
+        {
+            return;
+        }
+
+        // ----------------------------------------------------
+        // Check for Winnable Piece Combinations
+        // ----------------------------------------------------
+        auto IsWinnableArmy = [](const PiecesInPlay& Army) -> bool
+            {
+                if (Army.Knights >= 1 && Army.Bishops >= 1) return true;
+                if (Army.Bishops >= 2) return true;
+                return false;
+            };
+
+        if (IsWinnableArmy(White) || IsWinnableArmy(Black))
+        {
+            return;
+        }
+
+        // ----------------------------------------------------
+        // King + Bishop vs King + Bishop
+        // ----------------------------------------------------
+        if (White.Bishops == 1 && Black.Bishops == 1)
+        {
+            if (White.HasBishopOnWhite != Black.HasBishopOnWhite)
+            {
+                return;
+            }
+        }
+
+        // ----------------------------------------------------
+        // Final Result
+        // ----------------------------------------------------
+        // K vs K
+        // K+N vs K
+        // K+B vs K
+        // K+N vs K+N
+        // K+B vs K+B (Same color)
+        // K+2N vs K
+
+        Result.bIsDraw = true;
     }
 
     void Board::Capture(shared<ChessPiece> TargetPiece)
@@ -798,7 +915,6 @@ namespace we
         int dx = std::abs(To.x - From.x);
         int dy = std::abs(To.y - From.y);
 
-        // ---- Normal move ----
         if (dx <= 1 && dy <= 1)
         {
             auto captured = Board[To.x][To.y];
@@ -806,20 +922,17 @@ namespace we
             if (captured && captured->GetColor() == Piece->GetColor())
                 return false;
 
-            // --- simulate king move ---
             Board[To.x][To.y] = Piece;
             Board[From.x][From.y] = nullptr;
 
             bool safe = !IsSquareAttacked(Board, To, Piece->GetColor());
 
-            // --- undo ---
             Board[From.x][From.y] = Piece;
             Board[To.x][To.y] = captured;
 
             return safe;
         }
 
-        // ---- Castling ----
         if (dy == 0 && dx == 2 && !Piece->GetHasMoved())
         {
             int dir = (To.x > From.x) ? 1 : -1;
@@ -831,14 +944,12 @@ namespace we
                 rook->GetHasMoved())
                 return false;
 
-            // Path clear
             for (int x = From.x + dir; x != rookX; x += dir)
             {
                 if (Board[x][From.y])
                     return false;
             }
 
-            // King not in / through / into check
             if (IsSquareAttacked(Board, From, Piece->GetColor()) ||
                 IsSquareAttacked(Board, { From.x + dir, From.y }, Piece->GetColor()) ||
                 IsSquareAttacked(Board, To, Piece->GetColor()))
@@ -856,11 +967,9 @@ namespace we
         int dx = To.x - From.x;
         int dy = To.y - From.y;
 
-        // ---- Forward 1 ----
         if (dx == 0 && dy == dir && !Board[To.x][To.y])
             return true;
 
-        // ---- Forward 2 ----
         if (dx == 0 && dy == 2 * dir && !Piece->GetHasMoved())
         {
             sf::Vector2i mid{ From.x, From.y + dir };
@@ -868,16 +977,13 @@ namespace we
                 return true;
         }
 
-        // ---- Diagonal capture ----
         if (std::abs(dx) == 1 && dy == dir)
         {
             auto target = Board[To.x][To.y];
 
-            // Normal capture
             if (target && target->GetColor() != Piece->GetColor())
                 return true;
 
-            // ---- En passant ----
             sf::Vector2i sidePawnPos{ To.x, From.y };
             auto sidePawn = Board[sidePawnPos.x][sidePawnPos.y];
 

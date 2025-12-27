@@ -18,8 +18,10 @@ namespace we
 		virtual void InitLevels() override;
 		void Checkmate();
 		void Stalemate();
+		void Draw();
 		void RestartGame();
 		void QuitGame();
+		void Overlay();
 		weak<Menu> GameMenu;
 		shared<StartGame> NewChessGame;
 	};

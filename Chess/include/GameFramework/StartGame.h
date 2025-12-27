@@ -15,11 +15,12 @@ namespace we
 
 		Delegate<> OnCheckmate;
 		Delegate<> OnStalemate;
+		Delegate<> OnDraw;
 		void Checkmate();
 		void Stalemate();
+		void Draw();
 
 	private:
-		virtual void EndLevel() override;
 		void SpawnBoard();
 		weak<Board> ChessBoard;
 	};

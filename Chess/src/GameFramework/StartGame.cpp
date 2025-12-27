@@ -17,6 +17,7 @@ namespace we
 		{
 			ChessBoard.lock()->OnCheckmate.Bind(GetObject(), &StartGame::Checkmate);
 			ChessBoard.lock()->OnStalemate.Bind(GetObject(), &StartGame::Stalemate);
+			ChessBoard.lock()->OnDraw.Bind(GetObject(), &StartGame::Draw);
 		}
 	}
 
@@ -34,8 +35,9 @@ namespace we
 		OnStalemate.Broadcast();
 	}
 
-	void StartGame::EndLevel()
+	void StartGame::Draw()
 	{
+		OnDraw.Broadcast();
 	}
 
 	void StartGame::SpawnBoard()

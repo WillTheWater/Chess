@@ -21,6 +21,7 @@ namespace we
 		void SetVisibility(bool NewVisibility);
 		void Checkmated();
 		void Stalemated();
+		void Drawn();
 		Delegate<> OnRestartButtonClicked;
 		Delegate<> OnQuitButtonClicked;
 
@@ -35,6 +36,7 @@ namespace we
 		TextBlock RestartButtonText;
 		TextBlock CheckmateText;
 		TextBlock StalemateText;
+		TextBlock DrawText;
 		TextBlock FlavorText;
 		sf::Color TextColor{ 192, 35, 10, 255 };
 		sf::Color OutlineColor{ 0, 0, 0, 255 };
