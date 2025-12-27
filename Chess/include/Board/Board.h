@@ -119,14 +119,15 @@ namespace we
         void SwitchTurn();
 
         void Capture(shared<ChessPiece> TargetPiece);
-        void EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, shared<ChessPiece>  SimBoard[8][8], MoveResult& Result);
+        void EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, shared<ChessPiece>  SimBoard[GridSize][GridSize], MoveResult& Result);
         void Move(shared<ChessPiece> PieceToMove, sf::Vector2i From, sf::Vector2i To);
         void Castle(shared<ChessPiece> Rook, sf::Vector2i From, sf::Vector2i To);
         void Castle(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, MoveResult& Result);
         void PromotePawn(const sf::Vector2i& pos, EChessPieceType PromotionType);
         void PromotePawn(shared<ChessPiece>& Piece, sf::Vector2i& To, MoveResult& Result);
         bool IsSquareAttacked(shared<ChessPiece> Board[GridSize][GridSize], const sf::Vector2i& Pos, EChessColor DefenderColor) const;
-        void CheckmatOrStalemate(shared<ChessPiece>  SimBoard[8][8], EChessColor OpponentColor, MoveResult& Result);
+        void CheckmateOrStalemate(shared<ChessPiece>  SimBoard[GridSize][GridSize], EChessColor OpponentColor, MoveResult& Result);
+        void Draw(shared<ChessPiece>  SimBoard[GridSize][GridSize], MoveResult& Result);
 
         bool IsRookMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;

@@ -399,7 +399,6 @@ namespace we
     {
         auto captured = Board[To.x][To.y];
 
-        // apply
         Board[To.x][To.y] = Piece;
         Board[From.x][From.y] = nullptr;
 
@@ -412,7 +411,6 @@ namespace we
             kingPos.x != -1 &&
             !IsSquareAttacked(Board, kingPos, Piece->GetColor());
 
-        // undo
         Board[From.x][From.y] = Piece;
         Board[To.x][To.y] = captured;
 
@@ -469,14 +467,15 @@ namespace we
         Result.bIsCheck = (OpponentKing.x != -1) && IsSquareAttacked(SimBoard, OpponentKing, OpponentColor);
 
         // ----------------------------------------------------
-        // Checkmate / Stalemate
+        // Checkmate / Stalemate / Draw
         // ----------------------------------------------------
-        CheckmatOrStalemate(SimBoard, OpponentColor, Result);
+        CheckmateOrStalemate(SimBoard, OpponentColor, Result);
+        Draw(SimBoard, Result);
 
         return Result;
     }
 
-    void Board::CheckmatOrStalemate(shared<ChessPiece>  SimBoard[8][8], we::EChessColor OpponentColor, we::MoveResult& Result)
+    void Board::CheckmateOrStalemate(shared<ChessPiece>  SimBoard[GridSize][GridSize], EChessColor OpponentColor, MoveResult& Result)
     {
         bool bOpponentHasMove = false;
 
@@ -521,6 +520,10 @@ namespace we
         Result.bIsDraw = Result.bIsStalemate;
     }
 
+    void Board::Draw(shared<ChessPiece> SimBoard[GridSize][GridSize], MoveResult& Result)
+    {
+    }
+
     void Board::Capture(shared<ChessPiece> TargetPiece)
     {
         if (!TargetPiece) return;
@@ -533,7 +536,7 @@ namespace we
         TargetPiece->Destroy();
     }
 
-    void Board::EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, we::shared<we::ChessPiece>  SimBoard[8][8], MoveResult& Result)
+    void Board::EnPassant(shared<ChessPiece>& Piece, sf::Vector2i& To, sf::Vector2i& From, shared<ChessPiece>  SimBoard[GridSize][GridSize], MoveResult& Result)
     {
         if (Piece->GetPieceType() == EChessPieceType::Pawn)
         {
@@ -687,7 +690,6 @@ namespace we
                     int dx = Pos.x - From.x;
                     int dy = Pos.y - From.y;
 
-                    // Direction validity
                     if (Piece->GetPieceType() == EChessPieceType::Rook &&
                         dx != 0 && dy != 0)
                         break;
@@ -706,7 +708,6 @@ namespace we
                         checkPos.x += stepX;
                         checkPos.y += stepY;
 
-                        // Bounds first
                         if (checkPos.x < 0 || checkPos.x >= GridSize ||
                             checkPos.y < 0 || checkPos.y >= GridSize)
                             break;
@@ -714,7 +715,6 @@ namespace we
                         if (checkPos == Pos)
                             return true;
 
-                        // Blocked by any piece
                         if (Board[checkPos.x][checkPos.y])
                             break;
                     }

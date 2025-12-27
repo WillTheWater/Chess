@@ -8,11 +8,13 @@ namespace we
 		, RestartButtonText{ "Restart" }
 		, CheckmateText{"Checkmate"}
 		, StalemateText{"Stalemate"}
+		, FlavorText{"Your deeds of valor will be forgotten"}
 	{
 		RestartButton.SetVisibility(false);
 		RestartButtonText.SetVisibility(false);
-		CheckmateText.SetVisibility(true);
+		CheckmateText.SetVisibility(false);
 		StalemateText.SetVisibility(false);
+		FlavorText.SetVisibility(false);
 	}
 
 	void Menu::Render(Renderer& GameRenderer)
@@ -22,6 +24,7 @@ namespace we
 		QuitButton.NativeRender(GameRenderer);
 		CheckmateText.NativeRender(GameRenderer);
 		StalemateText.NativeRender(GameRenderer);
+		FlavorText.NativeRender(GameRenderer);
 	}
 
 	void Menu::Tick(float DeltaTime)
@@ -73,13 +76,29 @@ namespace we
 		StalemateText.SetColor(TextColor);
 		CheckmateText.SetOutline(OutlineColor, 3.f);
 		StalemateText.SetOutline(OutlineColor, 3.f);
-		CheckmateText.SetWidgetPosition({ ViewportSize.x / 2.f, 200.f });
+		CheckmateText.SetWidgetPosition({ ViewportSize.x / 2.f, 400.f });
 		StalemateText.SetWidgetPosition({ ViewportSize.x / 2.f, 200.f });
+
+		FlavorText.CenterOrigin();
+		FlavorText.SetColor(TextColor);
+		FlavorText.SetOutline(OutlineColor, 2.f);
+		FlavorText.SetWidgetPosition({ ViewportSize.x / 2.f, 500.f });
 	}
 
 	void Menu::SetVisibility(bool NewVisibility)
 	{
 		RestartButton.SetVisibility(NewVisibility);
 		RestartButtonText.SetVisibility(NewVisibility);
+	}
+
+	void Menu::Checkmated()
+	{
+		CheckmateText.SetVisibility(true);
+		FlavorText.SetVisibility(true);
+	}
+
+	void Menu::Stalemated()
+	{
+		StalemateText.SetVisibility(true);
 	}
 }

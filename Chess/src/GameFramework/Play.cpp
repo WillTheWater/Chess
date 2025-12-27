@@ -31,11 +31,13 @@ namespace we
 	void Play::Checkmate()
 	{
 		GameMenu.lock()->SetVisibility(true);
+		GameMenu.lock()->Checkmated();
 	}
 
 	void Play::Stalemate()
 	{
 		GameMenu.lock()->SetVisibility(true);
+		GameMenu.lock()->Stalemated();
 	}
 
 	void Play::RestartGame()

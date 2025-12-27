@@ -19,6 +19,8 @@ namespace we
 		virtual bool HandleEvent(const optional<sf::Event> Event) override;
 
 		void SetVisibility(bool NewVisibility);
+		void Checkmated();
+		void Stalemated();
 		Delegate<> OnRestartButtonClicked;
 		Delegate<> OnQuitButtonClicked;
 
@@ -33,7 +35,8 @@ namespace we
 		TextBlock RestartButtonText;
 		TextBlock CheckmateText;
 		TextBlock StalemateText;
-		sf::Color TextColor{ 205, 27, 0, 255 };
+		TextBlock FlavorText;
+		sf::Color TextColor{ 192, 35, 10, 255 };
 		sf::Color OutlineColor{ 0, 0, 0, 255 };
 	};
 }
