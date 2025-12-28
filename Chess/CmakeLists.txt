@@ -16,6 +16,8 @@ add_executable(${WATER_GAME}
 
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Widgets/Menu.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Widgets/Menu.cpp
+
+	${CMAKE_CURRENT_SOURCE_DIR}/icon.rc
 )
 
 target_include_directories(${WATER_GAME} PUBLIC
