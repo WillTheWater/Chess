@@ -141,5 +141,12 @@ namespace we
         bool IsKnightMoveValid(sf::Vector2i From, sf::Vector2i To) const;
         bool IsKingMoveValid(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
         bool IsPawnMoveValid(shared<ChessPiece> Board[GridSize][GridSize], shared<ChessPiece> Piece, sf::Vector2i From, sf::Vector2i To) const;
+
+        // ----------------------------------------------------
+        // Window Functionality
+        // ----------------------------------------------------
+        bool bIsDraggingWindow = false;
+        sf::Vector2i WindowDragOffset;
+        sf::RenderWindow* m_WindowRef = nullptr;
     };
 }

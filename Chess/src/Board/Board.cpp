@@ -1,6 +1,7 @@
 #include "Board/Board.h"
 #include "Framework/Renderer.h"
 #include "Framework/World.h"
+#include "Framework/Application.h"
 #include <sstream>
 
 namespace we
@@ -13,6 +14,7 @@ namespace we
 
     void Board::BeginPlay()
     {
+        m_WindowRef = &GetWorld()->GetApplication()->GetRenderer()->GetRenderWindow();
         SetActorLocation(sf::Vector2f{ float(GetWindowSize().x) / 2.0f, float(GetWindowSize().y) / 2.0f });
         InitializeBoard();
     }
@@ -162,27 +164,48 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::HandleInput()
     {
-        if (bIsGameOver) return;
-
         bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
         if (bLeftMouseDown)
         {
-            if (!bLeftMouseButtonPressedLastFrame)
+            if (!bLeftMouseButtonPressedLastFrame && !bIsGameOver)
+            {
                 HandleDragStart(MouseWorldPosition);
+            }
             else if (bIsDragging)
+            {
                 HandleDragTick(MouseWorldPosition);
+            }
+            else
+            {
+                sf::Vector2i gridPos = WorldToGrid(MouseWorldPosition);
+                if (!IsInBounds(gridPos) && !bIsDraggingWindow)
+                {
+                    bIsDraggingWindow = true;
+                    WindowDragOffset = sf::Mouse::getPosition() - m_WindowRef->getPosition();
+                }
+            }
         }
-        else if (bLeftMouseButtonPressedLastFrame)
+        else 
         {
-            HandleDragEnd(MouseWorldPosition);
+            if (bLeftMouseButtonPressedLastFrame)
+            {
+                HandleDragEnd(MouseWorldPosition);
+            }
+            bIsDraggingWindow = false;
         }
 
         bLeftMouseButtonPressedLastFrame = bLeftMouseDown;
 
-        if (!bIsDragging)
+        if (!bIsDragging && !bIsDraggingWindow && !bIsGameOver)
         {
             HandleMouseHover();
+        }
+
+        if (bIsDraggingWindow && m_WindowRef)
+        {
+            sf::Vector2i NewMousePos = sf::Mouse::getPosition();
+            m_WindowRef->setPosition(NewMousePos - WindowDragOffset);
         }
     }
 

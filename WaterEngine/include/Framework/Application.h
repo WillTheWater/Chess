@@ -22,6 +22,7 @@ namespace we
 		weak<WorldType> LoadWorld();
 
 		sf::Vector2u GetWindowSize() const;
+		unique<Renderer>& GetRenderer() { return GameRenderer; }
 
 	private:
 		void TickGlobal(float DeltaTime);
