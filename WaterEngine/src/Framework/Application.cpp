@@ -122,4 +122,27 @@ namespace we
 	{
 		return GameRenderer->GetViewportSize();
 	}
+
+	void Application::SetFullscreen(bool bSetFullscreen)
+	{
+		if (bSetFullscreen == bIsFullscreen) return;
+
+		if (bSetFullscreen)
+		{
+			PreFullscreenPosition = Window.getPosition();
+			PreFullscreenSize = Window.getSize();
+
+			sf::VideoMode DesktopMode = sf::VideoMode::getDesktopMode();
+			Window.setSize(DesktopMode.size);
+			Window.setPosition(sf::Vector2i(0, 0));
+
+			bIsFullscreen = true;
+		}
+		else
+		{
+			Window.setSize(PreFullscreenSize);
+			Window.setPosition(PreFullscreenPosition);
+			bIsFullscreen = false;
+		}
+	}
 }

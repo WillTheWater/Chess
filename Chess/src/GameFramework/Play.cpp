@@ -22,7 +22,9 @@ namespace we
 		NewChessGame->OnCheckmate.Bind(GetWeakObject(), &Play::Checkmate);
 		NewChessGame->OnStalemate.Bind(GetWeakObject(), &Play::Stalemate);
 		NewChessGame->OnDraw.Bind(GetWeakObject(), &Play::Draw);
-		WindowRef = &(GetApplication()->GetRenderer()->GetRenderWindow());
+		sf::RenderWindow& Win = GetApplication()->GetRenderer()->GetRenderWindow();
+		sf::Vector2u GameResolution = { 1920, 1080 };
+		ApplyAspectRatio(GetApplication()->IsFullscreen(), Win.getSize(), GameResolution);
 	}
 
 	void Play::Tick(float DeltaTime)
@@ -58,19 +60,7 @@ namespace we
 
 	void Play::RestartGame()
 	{
-		bool bWasFullscreen = bIsFullscreen;
-
-		if (bWasFullscreen)
-		{
-			ToggleFullScreen();
-		}
-
-		auto NewWorld = GetApplication()->LoadWorld<Play>();
-
-		if (bWasFullscreen)
-		{
-			NewWorld.lock()->ToggleFullScreen();
-		}
+		GetApplication()->LoadWorld<Play>();
 	}
 
 	void Play::QuitGame()
@@ -80,70 +70,59 @@ namespace we
 
 	void Play::ToggleFullScreen()
 	{
-		if (!WindowRef) return;
+		Application* App = GetApplication();
+		sf::RenderWindow& Win = App->GetRenderer()->GetRenderWindow();
 
-		if (!bIsFullscreen)
-		{
-			PreFullscreenPosition = WindowRef->getPosition();
-			PreFullscreenSize = WindowRef->getSize();
+		bool bIsNowFullscreen = !App->IsFullscreen();
+		App->SetFullscreen(bIsNowFullscreen);
 
-			sf::VideoMode DesktopMode = sf::VideoMode::getDesktopMode();
-			WindowRef->setSize(DesktopMode.size);
-			WindowRef->setPosition(sf::Vector2i(0, 0));
-
-			float ScreenAspect = static_cast<float>(DesktopMode.size.x) / static_cast<float>(DesktopMode.size.y);
-			float GameAspect = static_cast<float>(PreFullscreenSize.x) / static_cast<float>(PreFullscreenSize.y);
-
-			sf::FloatRect Viewport({ 0.f, 0.f }, { 1.f, 1.f });
-
-			if (ScreenAspect > GameAspect)
-			{
-				Viewport.size.x = GameAspect / ScreenAspect;
-				Viewport.position.x = (1.f - Viewport.size.x) / 2.f;
-			}
-			else
-			{
-				Viewport.size.y = ScreenAspect / GameAspect;
-				Viewport.position.y = (1.f - Viewport.size.y) / 2.f;
-			}
-
-			sf::View CurrentView(sf::FloatRect({ 0, 0 }, { static_cast<float>(PreFullscreenSize.x), static_cast<float>(PreFullscreenSize.y) }));
-
-			CurrentView.setViewport(Viewport);
-
-			WindowRef->setView(CurrentView);
-
-			bIsFullscreen = true;
-		}
-		else
-		{
-			WindowRef->setSize(PreFullscreenSize);
-			WindowRef->setPosition(PreFullscreenPosition);
-
-			sf::View DefaultView(sf::FloatRect({ 0, 0 }, { static_cast<float>(PreFullscreenSize.x), static_cast<float>(PreFullscreenSize.y) }));
-			WindowRef->setView(DefaultView);
-
-			bIsFullscreen = false;
-		}
+		sf::Vector2u GameResolution = { 1920, 1080 };
+		ApplyAspectRatio(bIsNowFullscreen, Win.getSize(), GameResolution);
 	}
 
 	void Play::Minimize()
 	{
-		if (WindowRef)
-		{
-			sf::WindowHandle handle = WindowRef->getNativeHandle();
-			ShowWindow(static_cast<HWND>(handle), SW_MINIMIZE);
-		}
+		Application* App = GetApplication();
+		sf::RenderWindow& Win = App->GetRenderer()->GetRenderWindow();
+		sf::WindowHandle handle = Win.getNativeHandle();
+		ShowWindow(static_cast<HWND>(handle), SW_MINIMIZE);
 	}
 
 	void Play::Overlay()
 	{
+		Application* App = GetApplication();
+		sf::RenderWindow& Win = App->GetRenderer()->GetRenderWindow();
 		auto OverlayBG = SpawnActor<Prop>("overlay.png");
 		auto Overlay = OverlayBG.lock();
-		sf::Vector2f ViewSize = WindowRef->getView().getSize();
+		sf::Vector2f ViewSize = Win.getView().getSize();
 		Overlay->SetSpriteScale({ 4.f,4.f });
 		Overlay->CenterPivot();
 		Overlay->SetActorLocation({ ViewSize.x / 2.f, ViewSize.y / 2.f });
 		Overlay->GetSprite().setColor({ 0, 0, 0, 140 });
+	}
+
+	void Play::ApplyAspectRatio(bool bIsFullscreenMode, const sf::Vector2u& WindowSize, const sf::Vector2u& GameResolution)
+	{
+		Application* App = GetApplication();
+		sf::RenderWindow& Win = App->GetRenderer()->GetRenderWindow();
+		float ScreenAspect = static_cast<float>(WindowSize.x) / static_cast<float>(WindowSize.y);
+		float GameAspect = static_cast<float>(GameResolution.x) / static_cast<float>(GameResolution.y);
+
+		sf::FloatRect Viewport({ 0.f, 0.f }, { 1.f, 1.f });
+
+		if (ScreenAspect > GameAspect)
+		{
+			Viewport.size.x = GameAspect / ScreenAspect;
+			Viewport.position.x = (1.f - Viewport.size.x) / 2.f;
+		}
+		else
+		{
+			Viewport.size.y = ScreenAspect / GameAspect;
+			Viewport.position.y = (1.f - Viewport.size.y) / 2.f;
+		}
+
+		sf::View CurrentView(sf::FloatRect({ 0, 0 }, { static_cast<float>(GameResolution.x), static_cast<float>(GameResolution.y) }));
+		CurrentView.setViewport(Viewport);
+		Win.setView(CurrentView);
 	}
 }

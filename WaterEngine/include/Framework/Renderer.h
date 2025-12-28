@@ -17,7 +17,11 @@ namespace we
 		void Draw(const DrawableType& Drawable);
 
 		sf::RenderWindow& GetRenderWindow() const { return Window; }
-		sf::Vector2u GetViewportSize() const { return Window.getSize(); }
+		sf::Vector2u GetViewportSize() const 
+		{ 
+			sf::Vector2f size = Window.getView().getSize();
+			return sf::Vector2u(static_cast<unsigned int>(size.x), static_cast<unsigned int>(size.y));
+		}
 
 	private:
 		sf::RenderWindow& Window;

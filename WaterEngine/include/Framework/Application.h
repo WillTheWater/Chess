@@ -21,6 +21,8 @@ namespace we
 		template<typename WorldType>
 		weak<WorldType> LoadWorld();
 
+		void SetFullscreen(bool bFullscreen);
+		bool IsFullscreen() const { return bIsFullscreen; }
 		sf::Vector2u GetWindowSize() const;
 		unique<Renderer>& GetRenderer() { return GameRenderer; }
 
@@ -42,6 +44,10 @@ namespace we
 
 		shared<World> CurrentWorld;
 		shared<World> PendingWorld;
+
+		bool bIsFullscreen = false;
+		sf::Vector2i PreFullscreenPosition;
+		sf::Vector2u PreFullscreenSize;
 	};
 
 	template<typename WorldType>
