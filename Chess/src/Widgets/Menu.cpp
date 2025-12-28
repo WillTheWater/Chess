@@ -10,15 +10,17 @@ namespace we
 		, RestartButtonText{ "Restart" }
 		, CheckmateText{"Checkmate"}
 		, StalemateText{"Stalemate"}
-		, DrawText{"Draw"}
+		, DrawnText{"Draw"}
 		, FlavorText{"Your deeds of valor will be forgotten"}
+		, WinnerText{"Winner"}
 	{
 		RestartButton.SetVisibility(false);
 		RestartButtonText.SetVisibility(false);
 		CheckmateText.SetVisibility(false);
 		StalemateText.SetVisibility(false);
-		DrawText.SetVisibility(false);
+		DrawnText.SetVisibility(false);
 		FlavorText.SetVisibility(false);
+		WinnerText.SetVisibility(false);
 	}
 
 	void Menu::Render(Renderer& GameRenderer)
@@ -30,8 +32,9 @@ namespace we
 		MinimizeButton.NativeRender(GameRenderer);
 		CheckmateText.NativeRender(GameRenderer);
 		StalemateText.NativeRender(GameRenderer);
-		DrawText.NativeRender(GameRenderer);
+		DrawnText.NativeRender(GameRenderer);
 		FlavorText.NativeRender(GameRenderer);
+		WinnerText.NativeRender(GameRenderer);
 	}
 
 	void Menu::Tick(float DeltaTime)
@@ -52,13 +55,13 @@ namespace we
 		const auto& Viewport = GameRenderer.GetViewportSize();
 		InitializeButtons(Viewport);
 		InitializeText(Viewport);
-		RestartButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::StartButtonClicked);
+		RestartButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::RestartButtonClicked);
 		QuitButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::QuitButtonClicked);
 		FullScreenButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::FullScreenButtonClicked);
 		MinimizeButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::MinimizeButtonClicked);
 	}
 
-	void Menu::StartButtonClicked()
+	void Menu::RestartButtonClicked()
 	{
 		OnRestartButtonClicked.Broadcast();
 	}
@@ -83,6 +86,7 @@ namespace we
 		RestartButton.CenterOrigin();
 		RestartButtonText.CenterOrigin();
 		RestartButtonText.SetColor(sf::Color::Black);
+		RestartButtonText.SetOutline(sf::Color::Black, 1.f);
 		RestartButton.SetWidgetPosition({ ViewportSize.x / 2.f, ViewportSize.y / 2.f + 204.f });
 		RestartButtonText.SetWidgetPosition(RestartButton.GetWidgetPosition());
 		QuitButton.CenterOrigin();
@@ -97,24 +101,47 @@ namespace we
 	{
 		CheckmateText.SetFontSize(80);
 		StalemateText.SetFontSize(80);
-		DrawText.SetFontSize(80);
+		DrawnText.SetFontSize(80);
 		CheckmateText.CenterOrigin();
 		StalemateText.CenterOrigin();
-		DrawText.CenterOrigin();
+		DrawnText.CenterOrigin();
 		CheckmateText.SetColor(TextColor);
 		StalemateText.SetColor(TextColor);
-		DrawText.SetColor(TextColor);
+		DrawnText.SetColor(TextColor);
 		CheckmateText.SetOutline(OutlineColor, 3.f);
 		StalemateText.SetOutline(OutlineColor, 3.f);
-		DrawText.SetOutline(OutlineColor, 3.f);
+		DrawnText.SetOutline(OutlineColor, 3.f);
 		CheckmateText.SetWidgetPosition({ ViewportSize.x / 2.f, 400.f });
 		StalemateText.SetWidgetPosition({ ViewportSize.x / 2.f, 200.f });
-		DrawText.SetWidgetPosition({ ViewportSize.x / 2.f, 200.f });
+		DrawnText.SetWidgetPosition({ ViewportSize.x / 2.f, 200.f });
 
 		FlavorText.CenterOrigin();
 		FlavorText.SetColor(TextColor);
 		FlavorText.SetOutline(OutlineColor, 2.f);
 		FlavorText.SetWidgetPosition({ ViewportSize.x / 2.f, 500.f });
+
+		WinnerText.SetFontSize(80);
+		WinnerText.CenterOrigin();
+		WinnerText.SetColor(TextColor);
+		WinnerText.SetOutline(OutlineColor, 3.f);
+		WinnerText.SetWidgetPosition({ ViewportSize.x / 2.f, 300.f });
+	}
+
+	void Menu::SetWinnerText(EPlayerTurn Winner)
+	{
+		switch (Winner)
+		{
+			case EPlayerTurn::White:
+			{
+				WinnerText.SetText("White won by");
+				break;
+			}
+			case EPlayerTurn::Black:
+			{
+				WinnerText.SetText("Black won by");
+				break;
+			}
+		}
 	}
 
 	void Menu::SetVisibility(bool NewVisibility)
@@ -127,6 +154,8 @@ namespace we
 	{
 		CheckmateText.SetVisibility(true);
 		FlavorText.SetVisibility(true);
+		WinnerText.CenterOrigin();
+		WinnerText.SetVisibility(true);
 	}
 
 	void Menu::Stalemated()
@@ -136,6 +165,6 @@ namespace we
 
 	void Menu::Drawn()
 	{
-		DrawText.SetVisibility(true);
+		DrawnText.SetVisibility(true);
 	}
 }

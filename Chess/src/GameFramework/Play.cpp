@@ -36,19 +36,7 @@ namespace we
 
 	void Play::Checkmate(EPlayerTurn Winner)
 	{
-		switch (Winner)
-		{
-			case EPlayerTurn::White:
-			{
-				LOG("White Wins")
-				break;
-			}
-			case EPlayerTurn::Black:
-			{
-				LOG("Black Wins")
-				break;
-			}
-		}
+		GameMenu.lock()->SetWinnerText(Winner);
 		GameMenu.lock()->SetVisibility(true);
 		GameMenu.lock()->Checkmated();
 		Overlay();
@@ -58,17 +46,31 @@ namespace we
 	{
 		GameMenu.lock()->SetVisibility(true);
 		GameMenu.lock()->Stalemated();
+		Overlay();
 	}
 
 	void Play::Draw()
 	{
 		GameMenu.lock()->SetVisibility(true);
 		GameMenu.lock()->Drawn();
+		Overlay();
 	}
 
 	void Play::RestartGame()
 	{
-		GetApplication()->LoadWorld<Play>();
+		bool bWasFullscreen = bIsFullscreen;
+
+		if (bWasFullscreen)
+		{
+			ToggleFullScreen();
+		}
+
+		auto NewWorld = GetApplication()->LoadWorld<Play>();
+
+		if (bWasFullscreen)
+		{
+			NewWorld.lock()->ToggleFullScreen();
+		}
 	}
 
 	void Play::QuitGame()
@@ -138,7 +140,10 @@ namespace we
 	{
 		auto OverlayBG = SpawnActor<Prop>("overlay.png");
 		auto Overlay = OverlayBG.lock();
-		Overlay->SetActorLocation({ GetWindowSize().x / 2.f, GetWindowSize().y / 2.f });
+		sf::Vector2f ViewSize = WindowRef->getView().getSize();
+		Overlay->SetSpriteScale({ 4.f,4.f });
+		Overlay->CenterPivot();
+		Overlay->SetActorLocation({ ViewSize.x / 2.f, ViewSize.y / 2.f });
 		Overlay->GetSprite().setColor({ 0, 0, 0, 140 });
 	}
 }

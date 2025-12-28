@@ -4,6 +4,7 @@
 #include "UI/ProgressBar.h"
 #include "UI/Image.h"
 #include "UI/Button.h"
+#include "Board/Board.h"
 
 namespace we
 {
@@ -19,6 +20,7 @@ namespace we
 		virtual bool HandleEvent(const optional<sf::Event> Event, Renderer& GameRenderer) override;
 
 		void SetVisibility(bool NewVisibility);
+		void SetWinnerText(EPlayerTurn Winner);
 		void Checkmated();
 		void Stalemated();
 		void Drawn();
@@ -29,7 +31,7 @@ namespace we
 
 	private:
 		virtual void Initialize(Renderer& GameRenderer) override;
-		void StartButtonClicked();
+		void RestartButtonClicked();
 		void QuitButtonClicked();
 		void FullScreenButtonClicked();
 		void MinimizeButtonClicked();
@@ -42,8 +44,9 @@ namespace we
 		TextBlock RestartButtonText;
 		TextBlock CheckmateText;
 		TextBlock StalemateText;
-		TextBlock DrawText;
+		TextBlock DrawnText;
 		TextBlock FlavorText;
+		TextBlock WinnerText;
 		sf::Color TextColor{ 192, 35, 10, 255 };
 		sf::Color OutlineColor{ 0, 0, 0, 255 };
 	};
