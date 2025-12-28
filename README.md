@@ -22,11 +22,11 @@ The Chess project is built on top of the Water Engine's core systems:
 | **Actor** | Base for all game objects: rendering, position, bounds checking | Essential for board/pieces |
 | **World** | Handles game state, object spawning, update & render cycles | Central game orchestrator |
 | **Input System** | Provides frame-by-frame mouse position queries | Fully integrated and active |
+| **Integrated UI** | Allows native full-screen using Windows API | Fully integrated and active |
 
 ---
 
 
 
 ## 📌 Project Status
-This is an early-stage but functional architecture, designed to be expanded into a complete chess experience.
-
+Currently 90% complete. Need to allow users to choose promotion piece and integrate it into the UI. On promotion needs to recheck for wins/check/stalemate.
