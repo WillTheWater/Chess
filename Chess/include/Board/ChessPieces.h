@@ -58,7 +58,7 @@ namespace we
         void SetSpriteSheetFrame();
         void UpdateVisualState();
 
-        static constexpr int PIECE_SIZE = 78;
+        static constexpr int PIECE_SIZE = 120;
         EChessPieceType PieceType;
         EChessColor Color;
         bool bIsHovered = false;

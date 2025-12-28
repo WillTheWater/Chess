@@ -12,7 +12,7 @@ namespace we
     {
         SetSpriteSheetFrame();
         CenterPivot();
-        SetSpriteScale({ 1.54f,1.54f });
+        //SetSpriteScale({ 1.54f,1.54f });
     }
 
     // ----------------------------------------------------
