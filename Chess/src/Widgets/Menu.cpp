@@ -66,7 +66,7 @@ namespace we
 		QuitButton.CenterOrigin();
 		RestartButton.SetWidgetPosition({ ViewportSize.x / 2.f, ViewportSize.y / 2.f + 204.f });
 		RestartButtonText.SetWidgetPosition(RestartButton.GetWidgetPosition());
-		QuitButton.SetWidgetPosition({ ViewportSize.x - 40.f, 40.f });
+		QuitButton.SetWidgetPosition({ ViewportSize.x - 70.f, 70.f });
 	}
 
 	void Menu::InitializeText(const sf::Vector2u& ViewportSize)
