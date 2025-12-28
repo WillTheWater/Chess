@@ -414,7 +414,7 @@ namespace we
         // ----------------------------------------------------
         if (Result.bIsCheckmate)
         {
-            OnCheckmate.Broadcast();
+            OnCheckmate.Broadcast(CurrentTurn);
             bIsGameOver = true;
         }
         else if (Result.bIsStalemate)

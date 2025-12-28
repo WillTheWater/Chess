@@ -13,8 +13,8 @@ namespace we
 		virtual void Destroy();
 		bool IsPendingDestroy() const { return bIsPendingDestroy; }
 
-		weak<Object> GetObject();
-		weak<const Object> GetObject() const;
+		weak<Object> GetWeakObject();
+		weak<const Object> GetWeakObject() const;
 
 		Delegate<Object*> OnDestroy;
 

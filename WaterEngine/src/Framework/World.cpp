@@ -103,7 +103,7 @@ namespace we
 		if (CurrentLevel != Levels.end())
 		{
 			CurrentLevel->get()->BeginLevel();
-			CurrentLevel->get()->OnLevelEnd.Bind(GetObject(), &World::LoadNextLevel);
+			CurrentLevel->get()->OnLevelEnd.Bind(GetWeakObject(), &World::LoadNextLevel);
 		}
 		else
 		{
@@ -117,7 +117,7 @@ namespace we
 		if (CurrentLevel != Levels.end())
 		{
 			CurrentLevel->get()->BeginLevel();
-			CurrentLevel->get()->OnLevelEnd.Bind(GetObject(), &World::LoadNextLevel);
+			CurrentLevel->get()->OnLevelEnd.Bind(GetWeakObject(), &World::LoadNextLevel);
 		}
 	}
 
@@ -146,7 +146,7 @@ namespace we
 	{
 		if (GameHUD)
 		{
-			return GameHUD->HandleEvent(Event);
+			return GameHUD->HandleEvent(Event, *OwningApp->GetRenderer());
 		}
 		return false;
 	}

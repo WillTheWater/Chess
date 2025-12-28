@@ -13,10 +13,10 @@ namespace we
 		virtual void BeginLevel() override;
 		virtual void TickLevel(float DeltaTime) override;
 
-		Delegate<> OnCheckmate;
+		Delegate<EPlayerTurn> OnCheckmate;
 		Delegate<> OnStalemate;
 		Delegate<> OnDraw;
-		void Checkmate();
+		void Checkmate(EPlayerTurn Winner);
 		void Stalemate();
 		void Draw();
 

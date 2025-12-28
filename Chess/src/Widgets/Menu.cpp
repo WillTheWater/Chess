@@ -5,6 +5,8 @@ namespace we
 	Menu::Menu()
 		: RestartButton{ "button.png" }
 		, QuitButton{ "closebutton.png" }
+		, FullScreenButton{"fullscreenbutton.png"}
+		, MinimizeButton{"minimizebutton.png"}
 		, RestartButtonText{ "Restart" }
 		, CheckmateText{"Checkmate"}
 		, StalemateText{"Stalemate"}
@@ -24,6 +26,8 @@ namespace we
 		RestartButton.NativeRender(GameRenderer);
 		RestartButtonText.NativeRender(GameRenderer);
 		QuitButton.NativeRender(GameRenderer);
+		FullScreenButton.NativeRender(GameRenderer);
+		MinimizeButton.NativeRender(GameRenderer);
 		CheckmateText.NativeRender(GameRenderer);
 		StalemateText.NativeRender(GameRenderer);
 		DrawText.NativeRender(GameRenderer);
@@ -34,9 +38,13 @@ namespace we
 	{
 	}
 
-	bool Menu::HandleEvent(const optional<sf::Event> Event)
+	bool Menu::HandleEvent(const optional<sf::Event> Event, Renderer& GameRenderer)
 	{
-		return RestartButton.HandleEvent(Event) || QuitButton.HandleEvent(Event) || HUD::HandleEvent(Event);
+		return RestartButton.HandleEvent(Event, GameRenderer)
+			|| QuitButton.HandleEvent(Event, GameRenderer)
+			|| FullScreenButton.HandleEvent(Event, GameRenderer)
+			|| MinimizeButton.HandleEvent(Event, GameRenderer)
+			|| HUD::HandleEvent(Event, GameRenderer);
 	}
 
 	void Menu::Initialize(Renderer& GameRenderer)
@@ -44,8 +52,10 @@ namespace we
 		const auto& Viewport = GameRenderer.GetViewportSize();
 		InitializeButtons(Viewport);
 		InitializeText(Viewport);
-		RestartButton.OnButtonClicked.Bind(GetObject(), &Menu::StartButtonClicked);
-		QuitButton.OnButtonClicked.Bind(GetObject(), &Menu::QuitButtonClicked);
+		RestartButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::StartButtonClicked);
+		QuitButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::QuitButtonClicked);
+		FullScreenButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::FullScreenButtonClicked);
+		MinimizeButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::MinimizeButtonClicked);
 	}
 
 	void Menu::StartButtonClicked()
@@ -58,15 +68,29 @@ namespace we
 		OnQuitButtonClicked.Broadcast();
 	}
 
+	void Menu::FullScreenButtonClicked()
+	{
+		OnFullScreenButtonClicked.Broadcast();
+	}
+
+	void Menu::MinimizeButtonClicked()
+	{
+		OnMinimizeButtonClicked.Broadcast();
+	}
+
 	void Menu::InitializeButtons(const sf::Vector2u& ViewportSize)
 	{
 		RestartButton.CenterOrigin();
 		RestartButtonText.CenterOrigin();
 		RestartButtonText.SetColor(sf::Color::Black);
-		QuitButton.CenterOrigin();
 		RestartButton.SetWidgetPosition({ ViewportSize.x / 2.f, ViewportSize.y / 2.f + 204.f });
 		RestartButtonText.SetWidgetPosition(RestartButton.GetWidgetPosition());
-		QuitButton.SetWidgetPosition({ ViewportSize.x - 70.f, 70.f });
+		QuitButton.CenterOrigin();
+		FullScreenButton.CenterOrigin();
+		MinimizeButton.CenterOrigin();
+		QuitButton.SetWidgetPosition({ ViewportSize.x - 40.f, 70.f });
+		FullScreenButton.SetWidgetPosition({ ViewportSize.x - 114.f, 70.f });
+		MinimizeButton.SetWidgetPosition({ ViewportSize.x - 188.f, 70.f });
 	}
 
 	void Menu::InitializeText(const sf::Vector2u& ViewportSize)

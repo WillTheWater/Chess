@@ -15,9 +15,9 @@ namespace we
 		SpawnBoard();
 		if (!ChessBoard.expired())
 		{
-			ChessBoard.lock()->OnCheckmate.Bind(GetObject(), &StartGame::Checkmate);
-			ChessBoard.lock()->OnStalemate.Bind(GetObject(), &StartGame::Stalemate);
-			ChessBoard.lock()->OnDraw.Bind(GetObject(), &StartGame::Draw);
+			ChessBoard.lock()->OnCheckmate.Bind(GetWeakObject(), &StartGame::Checkmate);
+			ChessBoard.lock()->OnStalemate.Bind(GetWeakObject(), &StartGame::Stalemate);
+			ChessBoard.lock()->OnDraw.Bind(GetWeakObject(), &StartGame::Draw);
 		}
 	}
 
@@ -25,9 +25,9 @@ namespace we
 	{
 	}
 
-	void StartGame::Checkmate()
+	void StartGame::Checkmate(EPlayerTurn Winner)
 	{
-		OnCheckmate.Broadcast();
+		OnCheckmate.Broadcast(Winner);
 	}
 
 	void StartGame::Stalemate()

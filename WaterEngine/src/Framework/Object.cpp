@@ -19,11 +19,11 @@ namespace we
 		bIsPendingDestroy = true;
 	}
 
-	weak<Object> Object::GetObject()
+	weak<Object> Object::GetWeakObject()
 	{
 		return weak_from_this();
 	}
-	weak<const Object> Object::GetObject() const
+	weak<const Object> Object::GetWeakObject() const
 	{
 		return weak_from_this();
 	}

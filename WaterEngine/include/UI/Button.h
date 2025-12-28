@@ -7,9 +7,9 @@ namespace we
 	class Button : public Widget
 	{
 	public:
-		Button(const string& TexturePath = "SpaceShooterRedux/PNG/UI/buttonRed.png");
+		Button(const string& TexturePath = "");
 
-		virtual bool HandleEvent(const optional<sf::Event> Event) override;
+		virtual bool HandleEvent(const optional<sf::Event> Event, Renderer& GameRenderer) override;
 		Delegate<> OnButtonClicked;
 		void ButtonUp();
 		void ButtonDown();

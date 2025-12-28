@@ -16,7 +16,7 @@ namespace we
 
 		virtual void Render(Renderer& GameRenderer) override;
 		virtual void Tick(float DeltaTime) override;
-		virtual bool HandleEvent(const optional<sf::Event> Event) override;
+		virtual bool HandleEvent(const optional<sf::Event> Event, Renderer& GameRenderer) override;
 
 		void SetVisibility(bool NewVisibility);
 		void Checkmated();
@@ -24,15 +24,21 @@ namespace we
 		void Drawn();
 		Delegate<> OnRestartButtonClicked;
 		Delegate<> OnQuitButtonClicked;
+		Delegate<> OnFullScreenButtonClicked;
+		Delegate<> OnMinimizeButtonClicked;
 
 	private:
 		virtual void Initialize(Renderer& GameRenderer) override;
 		void StartButtonClicked();
 		void QuitButtonClicked();
+		void FullScreenButtonClicked();
+		void MinimizeButtonClicked();
 		void InitializeButtons(const sf::Vector2u& ViewportSize);
 		void InitializeText(const sf::Vector2u& ViewportSize);
 		Button RestartButton;
 		Button QuitButton;
+		Button FullScreenButton;
+		Button MinimizeButton;
 		TextBlock RestartButtonText;
 		TextBlock CheckmateText;
 		TextBlock StalemateText;

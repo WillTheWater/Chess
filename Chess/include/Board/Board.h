@@ -38,7 +38,7 @@ namespace we
         virtual void Tick(float DeltaTime) override;
         virtual void Render(class Renderer& GameRenderer) override;
 
-        Delegate<> OnCheckmate;
+        Delegate<EPlayerTurn> OnCheckmate;
         Delegate<> OnStalemate;
         Delegate<> OnDraw;
 

@@ -25,7 +25,7 @@ namespace we
 
 	}
 	
-	bool HUD::HandleEvent(const optional<sf::Event> Event)
+	bool HUD::HandleEvent(const optional<sf::Event> Event, Renderer& GameRenderer)
 	{
 		return false;
 	}

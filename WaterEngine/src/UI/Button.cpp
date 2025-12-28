@@ -14,19 +14,16 @@ namespace we
 		ButtonSprite.setColor(DefaultColor);
 	}
 
-	bool Button::HandleEvent(const std::optional<sf::Event> Event)
+	bool Button::HandleEvent(const std::optional<sf::Event> Event, Renderer& GameRenderer)
 	{
 		if (!GetVisibility()) { return false; }
 		bool handled = false;
 
 		if (const auto* event = Event->getIf<sf::Event::MouseMoved>())
 		{
-			sf::Vector2f mousePos{
-				static_cast<float>(event->position.x),
-				static_cast<float>(event->position.y)
-			};
+			sf::Vector2f mouseWorldPos = GameRenderer.GetRenderWindow().mapPixelToCoords(event->position);
 
-			bool isInside = ButtonSprite.getGlobalBounds().contains(mousePos);
+			bool isInside = ButtonSprite.getGlobalBounds().contains(mouseWorldPos);
 
 			if (!bIsButtonPressed)
 			{
@@ -43,12 +40,9 @@ namespace we
 		{
 			if (event->button == sf::Mouse::Button::Left)
 			{
-				sf::Vector2f mousePos{
-					static_cast<float>(event->position.x),
-					static_cast<float>(event->position.y)
-				};
+				sf::Vector2f mouseWorldPos = GameRenderer.GetRenderWindow().mapPixelToCoords(event->position);
 
-				if (ButtonSprite.getGlobalBounds().contains(mousePos))
+				if (ButtonSprite.getGlobalBounds().contains(mouseWorldPos))
 				{
 					bIsButtonPressed = true;
 					ButtonSprite.setColor(PressedColor);
@@ -61,12 +55,9 @@ namespace we
 		{
 			if (event->button == sf::Mouse::Button::Left && bIsButtonPressed)
 			{
-				sf::Vector2f mousePos{
-					static_cast<float>(event->position.x),
-					static_cast<float>(event->position.y)
-				};
+				sf::Vector2f mouseWorldPos = GameRenderer.GetRenderWindow().mapPixelToCoords(event->position);
 
-				bool isInside = ButtonSprite.getGlobalBounds().contains(mousePos);
+				bool isInside = ButtonSprite.getGlobalBounds().contains(mouseWorldPos);
 
 				if (isInside)
 				{
@@ -83,7 +74,7 @@ namespace we
 			}
 		}
 
-		return handled || Widget::HandleEvent(Event);
+		return handled || Widget::HandleEvent(Event, GameRenderer);
 	}
 
 	void Button::ButtonUp()

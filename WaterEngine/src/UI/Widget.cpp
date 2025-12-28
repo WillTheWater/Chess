@@ -17,7 +17,7 @@ namespace we
 		}
 	}
 
-	bool Widget::HandleEvent(const optional<sf::Event> Event)
+	bool Widget::HandleEvent(const optional<sf::Event> Event, Renderer& GameRenderer)
 	{
 		return false;
 	}

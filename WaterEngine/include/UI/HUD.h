@@ -11,7 +11,7 @@ namespace we
     public:
         virtual void Render(Renderer& GameRenderer) = 0;
         virtual void Tick(float DeltaTime);
-        virtual bool HandleEvent(const optional<sf::Event> Event);
+        virtual bool HandleEvent(const optional<sf::Event> Event, Renderer& GameRenderer);
 
         void NativeInitialize(Renderer& GameRenderer);
         bool IsInitialized() const { return bIsInitialized; }

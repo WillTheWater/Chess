@@ -11,6 +11,6 @@ namespace we
 
 	void LevelTransition::BeginLevel()
 	{
-		TimerManager::Get().SetTimer(GetObject(), &LevelTransition::LevelEnd, TransitionTime);
+		TimerManager::Get().SetTimer(GetWeakObject(), &LevelTransition::LevelEnd, TransitionTime);
 	}
 }
