@@ -346,7 +346,7 @@ namespace we
         return (CurrentTurn == EPlayerTurn::White && Piece->GetColor() == EChessColor::White) || (CurrentTurn == EPlayerTurn::Black && Piece->GetColor() == EChessColor::Black);
     }
 
-    void Board::UpdateBoard(const MoveResult& Result)
+    void Board::UpdateBoard(MoveResult& Result)
     {
         if (!Result.bValid) { return; }
 
@@ -407,6 +407,21 @@ namespace we
         if (Result.bPawnPromoted)
         {
             PromotePawn(Result.To, Result.PromotionType);
+        }
+
+        if (Result.bPawnPromoted)
+        {
+            EChessColor OpponentColor = (CurrentTurn == EPlayerTurn::White) ? EChessColor::Black : EChessColor::White;
+
+            Result.bIsCheckmate = false;
+            Result.bIsStalemate = false;
+            Result.bIsDraw = false;
+
+            sf::Vector2i OpponentKing = GetKing(BoardGrid, OpponentColor);
+            Result.bIsCheck = (OpponentKing.x != -1) && IsSquareAttacked(BoardGrid, OpponentKing, OpponentColor);
+
+            CheckmateOrStalemate(BoardGrid, OpponentColor, Result);
+            Draw(BoardGrid, Result);
         }
 
         // ----------------------------------------------------
@@ -550,8 +565,11 @@ namespace we
         // ----------------------------------------------------
         // Checkmate / Stalemate / Draw
         // ----------------------------------------------------
-        CheckmateOrStalemate(SimBoard, OpponentColor, Result);
-        Draw(SimBoard, Result);
+        if (!Result.bPawnPromoted)
+        {
+            CheckmateOrStalemate(SimBoard, OpponentColor, Result);
+            Draw(SimBoard, Result);
+        }
 
         return Result;
     }

@@ -97,7 +97,7 @@ namespace we
         void HandleDragStart(const sf::Vector2f& MousePos);
         void HandleDragTick(const sf::Vector2f& MousePos);
         void HandleDragEnd(const sf::Vector2f& MousePos);
-        void UpdateBoard(const MoveResult& Result);
+        void UpdateBoard(MoveResult& Result);
         sf::Vector2i MousePixelPosition;
         sf::Vector2f MouseWorldPosition;
         sf::Vector2i HoveredGridPos{ -1, -1 };
