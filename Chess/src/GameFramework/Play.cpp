@@ -9,6 +9,7 @@ namespace we
 	Play::Play(Application* OwningApp)
 		: World{OwningApp}
 		, NewChessGame{ new StartGame{ this } }
+		, PromotionSquare{ sf::Vector2i{0,0}}
 	{
 		GameMenu = CreateHUD<Menu>();
 	}
@@ -63,9 +64,10 @@ namespace we
 		Overlay();
 	}
 
-	void Play::Promotion(sf::Vector2i PromotionSquare)
+	void Play::Promotion(sf::Vector2i NewPromotionSquare)
 	{
 		GameMenu.lock()->PromotionVisibility(true);
+		PromotionSquare = NewPromotionSquare;
 	}
 
 	void Play::RestartGame()
@@ -100,22 +102,22 @@ namespace we
 
 	void Play::ChooseQueen()
 	{
-		LOG("Queen has been selected");
+		NewChessGame->PromoteTo(EChessPieceType::Queen, PromotionSquare);
 	}
 
 	void Play::ChooseRook()
 	{
-		LOG("Rook has been selected");
+		NewChessGame->PromoteTo(EChessPieceType::Rook, PromotionSquare);
 	}
 
 	void Play::ChooseBishop()
 	{
-		LOG("Bishop has been selected");
+		NewChessGame->PromoteTo(EChessPieceType::Bishop, PromotionSquare);
 	}
 
 	void Play::ChooseKnight()
 	{
-		LOG("Knight has been selected");
+		NewChessGame->PromoteTo(EChessPieceType::Knight, PromotionSquare);
 	}
 
 	void Play::Overlay()

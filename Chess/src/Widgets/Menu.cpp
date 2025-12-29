@@ -97,28 +97,24 @@ namespace we
 
 	void Menu::QueenButtonClicked()
 	{
-		LOG("Queen Selected");
 		OnQueenSelected.Broadcast();
 		PromotionVisibility(false);
 	}
 
 	void Menu::RookButtonClicked()
 	{
-		LOG("Rook Selected");
 		OnRookSelected.Broadcast();
 		PromotionVisibility(false);
 	}
 
 	void Menu::BishopButtonClicked()
 	{
-		LOG("Bishop Selected");
 		OnBishopSelected.Broadcast();
 		PromotionVisibility(false);
 	}
 
 	void Menu::KnightButtonClicked()
 	{
-		LOG("Knight Selected");
 		OnKnightSelected.Broadcast();
 		PromotionVisibility(false);
 	}

@@ -45,6 +45,50 @@ namespace we
         }
     }
 
+    void Board::ApplyPromotionChoice(EChessPieceType PromotionType, sf::Vector2i PromotionSquare)
+    {
+        PromotePawn(PromotionSquare, PromotionType);
+
+        EChessColor OpponentColor = (CurrentTurn == EPlayerTurn::White) ? EChessColor::Black : EChessColor::White;
+
+        sf::Vector2i OpponentKing = GetKing(BoardGrid, OpponentColor);
+        bool bIsCheck = (OpponentKing.x != -1) && IsSquareAttacked(BoardGrid, OpponentKing, OpponentColor);
+
+        MoveResult Result{};
+        Result.bIsCheck = bIsCheck;
+
+        Result.bIsCheckmate = false;
+        Result.bIsStalemate = false;
+        Result.bIsDraw = false;
+
+        CheckmateOrStalemate(BoardGrid, OpponentColor, Result);
+        Draw(BoardGrid, Result);
+
+        if (Result.bIsCheckmate)
+        {
+            OnCheckmate.Broadcast(CurrentTurn);
+            bIsGameOver = true;
+        }
+        else if (Result.bIsStalemate)
+        {
+            OnStalemate.Broadcast();
+            bIsGameOver = true;
+        }
+        else if (Result.bIsDraw)
+        {
+            OnDraw.Broadcast();
+            bIsGameOver = true;
+        }
+
+        if (!bIsGameOver)
+        {
+            SwitchTurn();
+        }
+
+        bIsWaitingForPromotion = false;
+        PendingPromotionSquare = sf::Vector2i{ -1, -1 };
+    }
+
     void Board::InitializeBoard()
     {
         ClearBoard();
@@ -294,7 +338,10 @@ namespace we
             if (MoveSim.has_value())
             {
                 UpdateBoard(MoveSim.value());
-                SwitchTurn();
+                if (!bIsWaitingForPromotion)
+                {
+                    SwitchTurn();
+                }
             }
             else
             {

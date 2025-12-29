@@ -20,7 +20,7 @@ namespace we
         void Checkmate(EPlayerTurn Winner);
         void Stalemate();
         void Draw();
-        void Promotion(sf::Vector2i PromotionSquare);
+        void Promotion(sf::Vector2i NewPromotionSquare);
         void RestartGame();
         void QuitGame();
         void ToggleFullScreen();
@@ -35,5 +35,6 @@ namespace we
 
         weak<Menu> GameMenu;
         shared<StartGame> NewChessGame;
+        sf::Vector2i PromotionSquare;
     };
 }

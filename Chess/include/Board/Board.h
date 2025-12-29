@@ -42,6 +42,7 @@ namespace we
         Delegate<> OnStalemate;
         Delegate<> OnDraw;
         Delegate<sf::Vector2i> OnPromotionRequested;
+        void ApplyPromotionChoice(EChessPieceType PromotionType, sf::Vector2i PromotionSquare);
 
     private:
         // ----------------------------------------------------

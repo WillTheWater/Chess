@@ -46,6 +46,11 @@ namespace we
 		OnPromotionRequested.Broadcast(PromotionSquare);
 	}
 
+	void StartGame::PromoteTo(EChessPieceType Choice, sf::Vector2i PromotionSquare)
+	{
+		ChessBoard.lock()->ApplyPromotionChoice(Choice, PromotionSquare);
+	}
+
 	void StartGame::SpawnBoard()
 	{
 		ChessBoard = GetWorld()->SpawnActor<Board>();

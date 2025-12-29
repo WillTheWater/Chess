@@ -21,6 +21,7 @@ namespace we
 		void Stalemate();
 		void Draw();
 		void Promotion(sf::Vector2i PromotionSquare);
+		void PromoteTo(EChessPieceType Choice, sf::Vector2i PromotionSquare);
 
 	private:
 		void SpawnBoard();
