@@ -64,9 +64,9 @@ namespace we
 		Overlay();
 	}
 
-	void Play::Promotion(sf::Vector2i NewPromotionSquare)
+	void Play::Promotion(EPlayerTurn Color, sf::Vector2i NewPromotionSquare)
 	{
-		GameMenu.lock()->PromotionVisibility(true);
+		GameMenu.lock()->PromotionVisibility(Color, true);
 		PromotionSquare = NewPromotionSquare;
 	}
 

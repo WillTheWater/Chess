@@ -25,6 +25,7 @@ namespace we
 		void Checkmated();
 		void Stalemated();
 		void Drawn();
+		void PromotionVisibility(EPlayerTurn Color, bool Visibility);
 		void PromotionVisibility(bool Visibility);
 		Delegate<> OnRestartButtonClicked;
 		Delegate<> OnQuitButtonClicked;

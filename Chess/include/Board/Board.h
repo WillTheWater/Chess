@@ -1,6 +1,7 @@
 #pragma once
 #include "Framework/Actor.h"
 #include "Board/ChessPieces.h"
+#include "Board/Types.h"
 #include "Framework/Delegate.h"
 
 namespace we
@@ -23,12 +24,6 @@ namespace we
         bool bIsDraw = false;
     };
 
-    enum class EPlayerTurn
-    {
-        White,
-        Black
-    };
-
     class Board : public Actor
     {
     public:
@@ -41,7 +36,7 @@ namespace we
         Delegate<EPlayerTurn> OnCheckmate;
         Delegate<> OnStalemate;
         Delegate<> OnDraw;
-        Delegate<sf::Vector2i> OnPromotionRequested;
+        Delegate<EPlayerTurn, sf::Vector2i> OnPromotionRequested;
         void ApplyPromotionChoice(EChessPieceType PromotionType, sf::Vector2i PromotionSquare);
 
     private:

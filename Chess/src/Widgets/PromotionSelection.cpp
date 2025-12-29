@@ -31,10 +31,10 @@ namespace we
         float Gap = 120.f;
 
         auto CenterOriginOnRect = [](Button& Btn)
-            {
-                sf::IntRect Rect = Btn.GetButtonSprite().getTextureRect();
-                Btn.GetButtonSprite().setOrigin({ Rect.size.x * 0.5f, Rect.size.y * 0.5f });
-            };
+        {
+            sf::IntRect Rect = Btn.GetButtonSprite().getTextureRect();
+            Btn.GetButtonSprite().setOrigin({ Rect.size.x * 0.5f, Rect.size.y * 0.5f });
+        };
 
         CenterOriginOnRect(QueenSelected);
         CenterOriginOnRect(RookSelected);
@@ -50,5 +50,26 @@ namespace we
         RookSelected.SetVisibility(false);
         BishopSelected.SetVisibility(false);
         KnightSelected.SetVisibility(false);
+    }
+
+    void PromotionSelector::SetPieceColor(EPlayerTurn Color)
+    {
+        int TextureY = (Color == EPlayerTurn::White) ? 0 : 120;
+
+        QueenSelected.SetTextureRect(sf::IntRect({ 120, TextureY }, { 120, 120 }));
+        RookSelected.SetTextureRect(sf::IntRect({ 480, TextureY }, { 120, 120 }));
+        BishopSelected.SetTextureRect(sf::IntRect({ 240, TextureY }, { 120, 120 }));
+        KnightSelected.SetTextureRect(sf::IntRect({ 360, TextureY }, { 120, 120 }));
+
+        auto CenterOriginOnRect = [](Button& Btn) 
+        {
+            sf::IntRect Rect = Btn.GetButtonSprite().getTextureRect();
+            Btn.GetButtonSprite().setOrigin({ Rect.size.x * 0.5f, Rect.size.y * 0.5f });
+        };
+
+        CenterOriginOnRect(QueenSelected);
+        CenterOriginOnRect(RookSelected);
+        CenterOriginOnRect(BishopSelected);
+        CenterOriginOnRect(KnightSelected);
     }
 }

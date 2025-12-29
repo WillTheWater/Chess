@@ -16,11 +16,11 @@ namespace we
 		Delegate<EPlayerTurn> OnCheckmate;
 		Delegate<> OnStalemate;
 		Delegate<> OnDraw;
-		Delegate<sf::Vector2i> OnPromotionRequested;
+		Delegate<EPlayerTurn, sf::Vector2i> OnPromotionRequested;
 		void Checkmate(EPlayerTurn Winner);
 		void Stalemate();
 		void Draw();
-		void Promotion(sf::Vector2i PromotionSquare);
+		void Promotion(EPlayerTurn Color, sf::Vector2i PromotionSquare);
 		void PromoteTo(EChessPieceType Choice, sf::Vector2i PromotionSquare);
 
 	private:

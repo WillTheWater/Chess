@@ -207,9 +207,18 @@ namespace we
 		DrawnText.SetVisibility(true);
 	}
 
+	void Menu::PromotionVisibility(EPlayerTurn Color, bool Visibility)
+	{
+		PromotionMenu.SetPieceColor(Color);
+		PromotionMenu.SetVisibility(Visibility);
+		PromotionMenu.QueenSelected.SetVisibility(Visibility);
+		PromotionMenu.RookSelected.SetVisibility(Visibility);
+		PromotionMenu.BishopSelected.SetVisibility(Visibility);
+		PromotionMenu.KnightSelected.SetVisibility(Visibility);
+	}
+
 	void Menu::PromotionVisibility(bool Visibility)
 	{
-		PromotionMenu.SetVisibility(Visibility);
 		PromotionMenu.QueenSelected.SetVisibility(Visibility);
 		PromotionMenu.RookSelected.SetVisibility(Visibility);
 		PromotionMenu.BishopSelected.SetVisibility(Visibility);

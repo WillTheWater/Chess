@@ -456,7 +456,7 @@ namespace we
         {
             PendingPromotionSquare = Result.To;
             bIsWaitingForPromotion = true;
-            OnPromotionRequested.Broadcast(Result.To);
+            OnPromotionRequested.Broadcast(CurrentTurn, Result.To);
             return;
         }
 

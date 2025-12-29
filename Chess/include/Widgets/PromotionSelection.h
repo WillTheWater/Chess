@@ -1,6 +1,7 @@
 #pragma once
 #include "UI/Image.h"
 #include "UI/Button.h"
+#include "Board/Types.h"
 #include "Framework/Delegate.h"
 
 namespace we
@@ -12,6 +13,7 @@ namespace we
 
 		void DrawChoices(Renderer& GameRenderer);
 		void Init();
+		void SetPieceColor(EPlayerTurn Color);
 
 		Delegate<> OnQueenSelected;
 		Delegate<> OnRookSelected;

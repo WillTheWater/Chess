@@ -41,9 +41,9 @@ namespace we
 		OnDraw.Broadcast();
 	}
 
-	void StartGame::Promotion(sf::Vector2i PromotionSquare)
+	void StartGame::Promotion(EPlayerTurn Color, sf::Vector2i PromotionSquare)
 	{
-		OnPromotionRequested.Broadcast(PromotionSquare);
+		OnPromotionRequested.Broadcast(Color, PromotionSquare);
 	}
 
 	void StartGame::PromoteTo(EChessPieceType Choice, sf::Vector2i PromotionSquare)
