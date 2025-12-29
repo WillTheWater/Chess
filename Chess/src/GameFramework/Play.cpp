@@ -19,6 +19,10 @@ namespace we
 		GameMenu.lock()->OnQuitButtonClicked.Bind(GetWeakObject(), &Play::QuitGame);
 		GameMenu.lock()->OnFullScreenButtonClicked.Bind(GetWeakObject(), &Play::ToggleFullScreen);
 		GameMenu.lock()->OnMinimizeButtonClicked.Bind(GetWeakObject(), &Play::Minimize);
+		GameMenu.lock()->OnQueenSelected.Bind(GetWeakObject(), &Play::ChooseQueen);
+		GameMenu.lock()->OnRookSelected.Bind(GetWeakObject(), &Play::ChooseRook);
+		GameMenu.lock()->OnBishopSelected.Bind(GetWeakObject(), &Play::ChooseBishop);
+		GameMenu.lock()->OnKnightSelected.Bind(GetWeakObject(), &Play::ChooseKnight);
 		NewChessGame->OnCheckmate.Bind(GetWeakObject(), &Play::Checkmate);
 		NewChessGame->OnStalemate.Bind(GetWeakObject(), &Play::Stalemate);
 		NewChessGame->OnDraw.Bind(GetWeakObject(), &Play::Draw);
@@ -61,8 +65,7 @@ namespace we
 
 	void Play::Promotion(sf::Vector2i PromotionSquare)
 	{
-		// TODO: Show Choice widget
-		LOG("Promotion")
+		GameMenu.lock()->PromotionVisibility(true);
 	}
 
 	void Play::RestartGame()
@@ -93,6 +96,26 @@ namespace we
 		sf::RenderWindow& Win = App->GetRenderer()->GetRenderWindow();
 		sf::WindowHandle handle = Win.getNativeHandle();
 		ShowWindow(static_cast<HWND>(handle), SW_MINIMIZE);
+	}
+
+	void Play::ChooseQueen()
+	{
+		LOG("Queen has been selected");
+	}
+
+	void Play::ChooseRook()
+	{
+		LOG("Rook has been selected");
+	}
+
+	void Play::ChooseBishop()
+	{
+		LOG("Bishop has been selected");
+	}
+
+	void Play::ChooseKnight()
+	{
+		LOG("Knight has been selected");
 	}
 
 	void Play::Overlay()

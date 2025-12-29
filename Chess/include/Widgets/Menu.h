@@ -25,10 +25,15 @@ namespace we
 		void Checkmated();
 		void Stalemated();
 		void Drawn();
+		void PromotionVisibility(bool Visibility);
 		Delegate<> OnRestartButtonClicked;
 		Delegate<> OnQuitButtonClicked;
 		Delegate<> OnFullScreenButtonClicked;
 		Delegate<> OnMinimizeButtonClicked;
+		Delegate<> OnQueenSelected;
+		Delegate<> OnRookSelected;
+		Delegate<> OnBishopSelected;
+		Delegate<> OnKnightSelected;
 
 	private:
 		virtual void Initialize(Renderer& GameRenderer) override;

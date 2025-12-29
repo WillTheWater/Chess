@@ -45,5 +45,10 @@ namespace we
         RookSelected.SetWidgetPosition({ SelectorPos.x, SelectorPos.y - 182.f + Gap });
         BishopSelected.SetWidgetPosition({ SelectorPos.x, SelectorPos.y - 182.f + Gap * 2 });
         KnightSelected.SetWidgetPosition({ SelectorPos.x, SelectorPos.y - 182.f + Gap * 3 });
+
+        QueenSelected.SetVisibility(false);
+        RookSelected.SetVisibility(false);
+        BishopSelected.SetVisibility(false);
+        KnightSelected.SetVisibility(false);
     }
 }

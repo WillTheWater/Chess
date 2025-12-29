@@ -22,7 +22,7 @@ namespace we
 		DrawnText.SetVisibility(false);
 		FlavorText.SetVisibility(false);
 		WinnerText.SetVisibility(false);
-		PromotionMenu.SetVisibility(true);
+		PromotionMenu.SetVisibility(false);
 	}
 
 	void Menu::Render(Renderer& GameRenderer)
@@ -97,22 +97,30 @@ namespace we
 
 	void Menu::QueenButtonClicked()
 	{
-		LOG("Queen Selected")
+		LOG("Queen Selected");
+		OnQueenSelected.Broadcast();
+		PromotionVisibility(false);
 	}
 
 	void Menu::RookButtonClicked()
 	{
-		LOG("Rook Selected")
+		LOG("Rook Selected");
+		OnRookSelected.Broadcast();
+		PromotionVisibility(false);
 	}
 
 	void Menu::BishopButtonClicked()
 	{
-		LOG("Bishop Selected")
+		LOG("Bishop Selected");
+		OnBishopSelected.Broadcast();
+		PromotionVisibility(false);
 	}
 
 	void Menu::KnightButtonClicked()
 	{
-		LOG("Knight Selected")
+		LOG("Knight Selected");
+		OnKnightSelected.Broadcast();
+		PromotionVisibility(false);
 	}
 
 	void Menu::InitializeButtons(const sf::Vector2u& ViewportSize)
@@ -201,5 +209,14 @@ namespace we
 	void Menu::Drawn()
 	{
 		DrawnText.SetVisibility(true);
+	}
+
+	void Menu::PromotionVisibility(bool Visibility)
+	{
+		PromotionMenu.SetVisibility(Visibility);
+		PromotionMenu.QueenSelected.SetVisibility(Visibility);
+		PromotionMenu.RookSelected.SetVisibility(Visibility);
+		PromotionMenu.BishopSelected.SetVisibility(Visibility);
+		PromotionMenu.KnightSelected.SetVisibility(Visibility);
 	}
 }

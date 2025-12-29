@@ -25,6 +25,10 @@ namespace we
         void QuitGame();
         void ToggleFullScreen();
         void Minimize();
+        void ChooseQueen();
+        void ChooseRook();
+        void ChooseBishop();
+        void ChooseKnight();
         void Overlay();
 
         void ApplyAspectRatio(bool bIsFullscreenMode, const sf::Vector2u& WindowSize, const sf::Vector2u& GameResolution);
