@@ -36,6 +36,10 @@ namespace we
 		void QuitButtonClicked();
 		void FullScreenButtonClicked();
 		void MinimizeButtonClicked();
+		void QueenButtonClicked();
+		void RookButtonClicked();
+		void BishopButtonClicked();
+		void KnightButtonClicked();
 		void InitializeButtons(const sf::Vector2u& ViewportSize);
 		void InitializeText(const sf::Vector2u& ViewportSize);
 		Button RestartButton;

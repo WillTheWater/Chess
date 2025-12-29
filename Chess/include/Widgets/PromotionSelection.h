@@ -1,6 +1,7 @@
 #pragma once
 #include "UI/Image.h"
 #include "UI/Button.h"
+#include "Framework/Delegate.h"
 
 namespace we
 {
@@ -9,12 +10,14 @@ namespace we
 	public:
 		PromotionSelector(const string& TexturePath = "selection.png");
 
+		void DrawChoices(Renderer& GameRenderer);
+		void Init();
+
 		Delegate<> OnQueenSelected;
 		Delegate<> OnRookSelected;
 		Delegate<> OnBishopSelected;
 		Delegate<> OnKnightSelected;
 
-	private:
 		Button QueenSelected;
 		Button RookSelected;
 		Button BishopSelected;

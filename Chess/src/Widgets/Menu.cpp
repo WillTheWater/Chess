@@ -13,6 +13,7 @@ namespace we
 		, DrawnText{"Draw"}
 		, FlavorText{"Your deeds of valor will be forgotten"}
 		, WinnerText{"Winner"}
+		, PromotionMenu{}
 	{
 		RestartButton.SetVisibility(false);
 		RestartButtonText.SetVisibility(false);
@@ -36,7 +37,9 @@ namespace we
 		DrawnText.NativeRender(GameRenderer);
 		FlavorText.NativeRender(GameRenderer);
 		WinnerText.NativeRender(GameRenderer);
+
 		PromotionMenu.NativeRender(GameRenderer);
+		PromotionMenu.DrawChoices(GameRenderer);
 	}
 
 	void Menu::Tick(float DeltaTime)
@@ -49,6 +52,10 @@ namespace we
 			|| QuitButton.HandleEvent(Event, GameRenderer)
 			|| FullScreenButton.HandleEvent(Event, GameRenderer)
 			|| MinimizeButton.HandleEvent(Event, GameRenderer)
+			|| PromotionMenu.QueenSelected.HandleEvent(Event, GameRenderer)
+			|| PromotionMenu.RookSelected.HandleEvent(Event, GameRenderer)
+			|| PromotionMenu.BishopSelected.HandleEvent(Event, GameRenderer)
+			|| PromotionMenu.KnightSelected.HandleEvent(Event, GameRenderer)
 			|| HUD::HandleEvent(Event, GameRenderer);
 	}
 
@@ -57,10 +64,15 @@ namespace we
 		const auto& Viewport = GameRenderer.GetViewportSize();
 		InitializeButtons(Viewport);
 		InitializeText(Viewport);
+		PromotionMenu.Init();
 		RestartButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::RestartButtonClicked);
 		QuitButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::QuitButtonClicked);
 		FullScreenButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::FullScreenButtonClicked);
 		MinimizeButton.OnButtonClicked.Bind(GetWeakObject(), &Menu::MinimizeButtonClicked);
+		PromotionMenu.QueenSelected.OnButtonClicked.Bind(GetWeakObject(), &Menu::QueenButtonClicked);
+		PromotionMenu.RookSelected.OnButtonClicked.Bind(GetWeakObject(), &Menu::RookButtonClicked);
+		PromotionMenu.BishopSelected.OnButtonClicked.Bind(GetWeakObject(), &Menu::BishopButtonClicked);
+		PromotionMenu.KnightSelected.OnButtonClicked.Bind(GetWeakObject(), &Menu::KnightButtonClicked);
 	}
 
 	void Menu::RestartButtonClicked()
@@ -83,6 +95,26 @@ namespace we
 		OnMinimizeButtonClicked.Broadcast();
 	}
 
+	void Menu::QueenButtonClicked()
+	{
+		LOG("Queen Selected")
+	}
+
+	void Menu::RookButtonClicked()
+	{
+		LOG("Rook Selected")
+	}
+
+	void Menu::BishopButtonClicked()
+	{
+		LOG("Bishop Selected")
+	}
+
+	void Menu::KnightButtonClicked()
+	{
+		LOG("Knight Selected")
+	}
+
 	void Menu::InitializeButtons(const sf::Vector2u& ViewportSize)
 	{
 		RestartButton.CenterOrigin();
@@ -97,8 +129,7 @@ namespace we
 		QuitButton.SetWidgetPosition({ ViewportSize.x - 40.f, 70.f });
 		FullScreenButton.SetWidgetPosition({ ViewportSize.x - 114.f, 70.f });
 		MinimizeButton.SetWidgetPosition({ ViewportSize.x - 188.f, 70.f });
-
-		PromotionMenu.SetWidgetPosition({ ViewportSize.x / 2.f, ViewportSize.y / 2.f });
+		PromotionMenu.SetWidgetPosition({ ViewportSize.x - 124.f, ViewportSize.y / 2.f });
 	}
 
 	void Menu::InitializeText(const sf::Vector2u& ViewportSize)

@@ -132,4 +132,9 @@ namespace we
 	{
 		return ButtonSprite.getGlobalBounds();
 	}
+
+	void Button::SetTextureRect(const sf::IntRect& Rect)
+	{
+		ButtonSprite.setTextureRect(Rect);
+	}
 }

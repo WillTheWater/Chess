@@ -19,6 +19,8 @@ namespace we
 		void ScaleImage(const sf::Vector2f& NewScale);
 		void CenterOrigin();
 		sf::FloatRect GetGlobalBounds();
+		sf::Sprite& GetButtonSprite() { return ButtonSprite; }
+		void SetTextureRect(const sf::IntRect& Rect);
 
 	protected:
 		virtual void Render(Renderer& GameRenderer) override;
