@@ -1,7 +1,7 @@
-# ♟️ Chess — Built using Water Engine v1.0.0
+# ♟️ Diablo Inventory Chess — Built using Water Engine v1.0.0
 
-A **2D Chess game** using my **Water Engine**.  
-This project is currently a **Work in Progress (WIP)**.
+Diablo II Rune Chess is the classic game of chess in the Diablo Inventory.
+Built in C++ using my custom Water Engine (powered by SFML 3 + Box2D), this project is a love letter to both chess and Diablo II. My two favorite games..
 
 ---
 
@@ -26,7 +26,5 @@ The Chess project is built on top of the Water Engine's core systems:
 
 ---
 
-
-
 ## 📌 Project Status
-Currently 90% complete. Need to allow users to choose promotion piece and integrate it into the UI. On promotion needs to recheck for wins/check/stalemate.
+Complete
