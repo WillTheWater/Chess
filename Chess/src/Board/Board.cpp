@@ -164,6 +164,7 @@ namespace we
     // -------------------------------------------------------------------------
     void Board::HandleInput()
     {
+        if (bIsWaitingForPromotion) return;
         bool bLeftMouseDown = sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
 
         if (bLeftMouseDown)
@@ -406,7 +407,10 @@ namespace we
         // ----------------------------------------------------
         if (Result.bPawnPromoted)
         {
-            PromotePawn(Result.To, Result.PromotionType);
+            PendingPromotionSquare = Result.To;
+            bIsWaitingForPromotion = true;
+            OnPromotionRequested.Broadcast(Result.To);
+            return;
         }
 
         if (Result.bPawnPromoted)
@@ -444,7 +448,7 @@ namespace we
         }
         else if (Result.bIsCheck)
         {
-            // Optional: Play sound or show visual check indicator
+            // Maybe Something 
         }
     }
 

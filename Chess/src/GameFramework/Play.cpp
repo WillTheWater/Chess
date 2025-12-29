@@ -22,6 +22,7 @@ namespace we
 		NewChessGame->OnCheckmate.Bind(GetWeakObject(), &Play::Checkmate);
 		NewChessGame->OnStalemate.Bind(GetWeakObject(), &Play::Stalemate);
 		NewChessGame->OnDraw.Bind(GetWeakObject(), &Play::Draw);
+		NewChessGame->OnPromotionRequested.Bind(GetWeakObject(), &Play::Promotion);
 		sf::RenderWindow& Win = GetApplication()->GetRenderer()->GetRenderWindow();
 		sf::Vector2u GameResolution = { 1920, 1080 };
 		ApplyAspectRatio(GetApplication()->IsFullscreen(), Win.getSize(), GameResolution);
@@ -56,6 +57,12 @@ namespace we
 		GameMenu.lock()->SetVisibility(true);
 		GameMenu.lock()->Drawn();
 		Overlay();
+	}
+
+	void Play::Promotion(sf::Vector2i PromotionSquare)
+	{
+		// TODO: Show Choice widget
+		LOG("Promotion")
 	}
 
 	void Play::RestartGame()

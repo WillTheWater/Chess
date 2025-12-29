@@ -20,6 +20,7 @@ namespace we
         void Checkmate(EPlayerTurn Winner);
         void Stalemate();
         void Draw();
+        void Promotion(sf::Vector2i PromotionSquare);
         void RestartGame();
         void QuitGame();
         void ToggleFullScreen();

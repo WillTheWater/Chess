@@ -18,6 +18,7 @@ namespace we
 			ChessBoard.lock()->OnCheckmate.Bind(GetWeakObject(), &StartGame::Checkmate);
 			ChessBoard.lock()->OnStalemate.Bind(GetWeakObject(), &StartGame::Stalemate);
 			ChessBoard.lock()->OnDraw.Bind(GetWeakObject(), &StartGame::Draw);
+			ChessBoard.lock()->OnPromotionRequested.Bind(GetWeakObject(), &StartGame::Promotion);
 		}
 	}
 
@@ -38,6 +39,11 @@ namespace we
 	void StartGame::Draw()
 	{
 		OnDraw.Broadcast();
+	}
+
+	void StartGame::Promotion(sf::Vector2i PromotionSquare)
+	{
+		OnPromotionRequested.Broadcast(PromotionSquare);
 	}
 
 	void StartGame::SpawnBoard()

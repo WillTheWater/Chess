@@ -8,6 +8,8 @@ namespace we
 		: Texture{AssetManager::Get().LoadTexture(TexturePath)}
 		, Sprite{*Texture}
 	{
+		SetTexture(Texture);
+		CenterOrigin();
 	}
 
 	void Image::SetTexture(const shared<sf::Texture> NewTexture)

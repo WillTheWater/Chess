@@ -21,6 +21,7 @@ namespace we
 		DrawnText.SetVisibility(false);
 		FlavorText.SetVisibility(false);
 		WinnerText.SetVisibility(false);
+		PromotionMenu.SetVisibility(true);
 	}
 
 	void Menu::Render(Renderer& GameRenderer)
@@ -35,6 +36,7 @@ namespace we
 		DrawnText.NativeRender(GameRenderer);
 		FlavorText.NativeRender(GameRenderer);
 		WinnerText.NativeRender(GameRenderer);
+		PromotionMenu.NativeRender(GameRenderer);
 	}
 
 	void Menu::Tick(float DeltaTime)
@@ -95,6 +97,8 @@ namespace we
 		QuitButton.SetWidgetPosition({ ViewportSize.x - 40.f, 70.f });
 		FullScreenButton.SetWidgetPosition({ ViewportSize.x - 114.f, 70.f });
 		MinimizeButton.SetWidgetPosition({ ViewportSize.x - 188.f, 70.f });
+
+		PromotionMenu.SetWidgetPosition({ ViewportSize.x / 2.f, ViewportSize.y / 2.f });
 	}
 
 	void Menu::InitializeText(const sf::Vector2u& ViewportSize)

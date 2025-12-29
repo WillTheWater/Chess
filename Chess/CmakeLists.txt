@@ -17,6 +17,9 @@ add_executable(${WATER_GAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/Widgets/Menu.h
 	${CMAKE_CURRENT_SOURCE_DIR}/src/Widgets/Menu.cpp
 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/Widgets/PromotionSelection.h
+	${CMAKE_CURRENT_SOURCE_DIR}/src/Widgets/PromotionSelection.cpp
+
 	${CMAKE_CURRENT_SOURCE_DIR}/icon.rc
 )
 

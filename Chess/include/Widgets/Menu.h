@@ -5,6 +5,7 @@
 #include "UI/Image.h"
 #include "UI/Button.h"
 #include "Board/Board.h"
+#include "Widgets/PromotionSelection.h"
 
 namespace we
 {
@@ -49,5 +50,6 @@ namespace we
 		TextBlock WinnerText;
 		sf::Color TextColor{ 192, 35, 10, 255 };
 		sf::Color OutlineColor{ 0, 0, 0, 255 };
+		PromotionSelector PromotionMenu;
 	};
 }

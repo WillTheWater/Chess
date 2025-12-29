@@ -41,6 +41,7 @@ namespace we
         Delegate<EPlayerTurn> OnCheckmate;
         Delegate<> OnStalemate;
         Delegate<> OnDraw;
+        Delegate<sf::Vector2i> OnPromotionRequested;
 
     private:
         // ----------------------------------------------------
@@ -134,7 +135,8 @@ namespace we
         bool IsSquareAttacked(shared<ChessPiece> Board[GridSize][GridSize], const sf::Vector2i& Pos, EChessColor DefenderColor) const;
         void CheckmateOrStalemate(shared<ChessPiece> SimBoard[GridSize][GridSize], EChessColor OpponentColor, MoveResult& Result);
         void Draw(shared<ChessPiece> SimBoard[GridSize][GridSize], MoveResult& Result);
-
+        bool bIsWaitingForPromotion = false;
+        sf::Vector2i PendingPromotionSquare;
         bool IsRookMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
         bool IsBishopMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
         bool IsQueenMoveValid(shared<ChessPiece> Board[GridSize][GridSize], sf::Vector2i From, sf::Vector2i To) const;
